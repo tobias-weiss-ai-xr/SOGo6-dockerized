@@ -17,3 +17,6 @@ sogo6-server/
 secrets/
 sogo6/nginx/certs/
 backups/
+__pycache__/
+.pytest_cache/
+*.pyc

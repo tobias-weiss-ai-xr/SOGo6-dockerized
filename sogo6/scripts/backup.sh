@@ -1,44 +1,53 @@
 #!/bin/bash
-# Backup script for SOGo 6 evaluation data volumes
-# Usage: bash sogo6/scripts/backup.sh [output-dir]
-# Default output: ./backups/sogo6-<date>/
-
+# Backup all Docker volumes
 set -euo pipefail
 
-BACKUP_DIR="${1:-$(dirname "$0")/../../backups/sogo6-$(date +%Y%m%d-%H%M%S)}"
-mkdir -p "$BACKUP_DIR"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+OUTDIR="${1:-$PROJECT_DIR/backups}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DOCKER_CMD="docker"
+if command -v sudo &>/dev/null; then
+    DOCKER_CMD="sudo docker"
+fi
 
-echo "=== SOGo 6 Backup ==="
-echo "Output: $BACKUP_DIR"
-echo ""
+mkdir -p "$OUTDIR"
 
-# 1. PostgreSQL dump
-echo "[1/4] Dumping PostgreSQL ..."
-docker exec sogo6-postgres pg_dump -U sogo sogo6 > "$BACKUP_DIR/postgres.sql" 2>/dev/null || {
-  echo "  WARN: PostgreSQL dump failed (may need sudo)"
-  sudo docker exec sogo6-postgres pg_dump -U sogo sogo6 > "$BACKUP_DIR/postgres.sql" 2>&1
+echo "=== Backup started: $(date) ==="
+echo "Output directory: $OUTDIR"
+
+backup_volume() {
+    local volume=$1 name=$2
+    echo "Backing up $name ($volume)..."
+    if $DOCKER_CMD volume inspect "$volume" &>/dev/null; then
+        $DOCKER_CMD run --rm \
+            -v "$volume":/source:ro \
+            -v "$OUTDIR":/backup \
+            alpine tar czf "/backup/${name}-${TIMESTAMP}.tar.gz" -C /source . 2>/dev/null
+        echo "  -> ${name}-${TIMESTAMP}.tar.gz"
+    else
+        echo "  Volume $volume not found, skipping"
+    fi
 }
-wc -c "$BACKUP_DIR/postgres.sql" | awk '{print "  Size: "$1" bytes"}'
-
-# 2. LDAP data dump
-echo "[2/4] Dumping LDAP ..."
-docker exec sogo6-ldap ldapsearch -x -H ldap://localhost:389 \
-  -D "cn=admin,dc=example,dc=org" -w admin \
-  -b "dc=example,dc=org" \
-  > "$BACKUP_DIR/ldap.ldif" 2>&1
-wc -c "$BACKUP_DIR/ldap.ldif" | awk '{print "  Size: "$1" bytes"}'
-
-# 3. Redis dump
-echo "[3/4] Dumping Redis ..."
-docker exec sogo6-redis redis-cli SAVE > /dev/null 2>&1 && \
-docker cp sogo6-redis:/data/dump.rdb "$BACKUP_DIR/redis.rdb" 2>&1
-ls -la "$BACKUP_DIR/redis.rdb" 2>/dev/null | awk '{print "  Size: "$5" bytes"}' || echo "  WARN: Redis dump failed"
-
-# 4. Docker compose config backup
-echo "[4/4] Backing up compose configs ..."
-cp "$(dirname "$0")/../../docker-compose.yaml" "$BACKUP_DIR/" 2>/dev/null || true
 
 echo ""
-echo "=== Backup complete: $BACKUP_DIR ==="
-echo "Contents:"
-ls -lh "$BACKUP_DIR/"
+echo "[1/3] Backup PostgreSQL data"
+if $DOCKER_CMD ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-postgres; then
+    $DOCKER_CMD exec sogo6-postgres pg_dumpall -U sogo > "$OUTDIR/sogo6-postgresql-${TIMESTAMP}.sql" 2>/dev/null
+    echo "  -> sogo6-postgresql-${TIMESTAMP}.sql ($(wc -c < "$OUTDIR/sogo6-postgresql-${TIMESTAMP}.sql") bytes)"
+fi
+
+echo ""
+echo "[2/3] Export Docker volumes"
+backup_volume "sogo6-stalwart-data" "stalwart-data"
+backup_volume "sogo6-redis-data" "redis-data"
+
+echo ""
+echo "[3/3] Backup Docker compose config"
+cp "$PROJECT_DIR/docker-compose.yaml" "$OUTDIR/docker-compose-${TIMESTAMP}.yaml"
+echo "  -> docker-compose-${TIMESTAMP}.yaml"
+
+echo ""
+du -sh "$OUTDIR"/*-"${TIMESTAMP}".*
+echo ""
+echo "=== Backup complete: $(date) ==="
+echo "Total size: $(du -sh "$OUTDIR" | cut -f1)"

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized/actions/workflows/test.yml/badge.svg)](https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized/actions/workflows/test.yml)
-[![Tests](https://img.shields.io/badge/Tests-129%20shell%20%2B%2034%20Python-success?logo=github)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-145%20shell%20%2B%2034%20Python-success?logo=github)](tests/)
 [![Playwright](https://img.shields.io/badge/E2E-Playwright-45ba4b?logo=playwright)](tests/sogo6-e2e-test.js)
 [![Docker](https://img.shields.io/badge/Stack-8%20services-2496ED?logo=docker)](docker-compose.yaml)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)](.github/dependabot.yml)
