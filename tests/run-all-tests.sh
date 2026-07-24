@@ -117,12 +117,16 @@ run_playwright_test() {
 }
 
 run_test "Docker Container Tests" "$SCRIPT_DIR/docker-test.sh"
+run_test "Redis Cache Tests" "$SCRIPT_DIR/redis-test.sh"
 run_test "API Tests" "$SCRIPT_DIR/api-test.sh" 180
 run_test "API Write Tests" "$SCRIPT_DIR/api-write-test.sh" 180
-run_test "Mail Protocol Tests" "$SCRIPT_DIR/smtp-test.sh" 180
+run_test "Mail Protocol Tests" "$SCRIPT_DIR/smtp-test.sh" 300
 run_test "LDAP Tests" "$SCRIPT_DIR/ldap-test.sh"
 run_test "PostgreSQL Tests" "$SCRIPT_DIR/postgres-test.sh"
 run_test "Nginx Proxy Tests" "$SCRIPT_DIR/nginx-test.sh"
+run_test "Integration Flow Tests" "$SCRIPT_DIR/integration-test.sh" 180
+run_test "Security Tests" "$SCRIPT_DIR/security-test.sh" 120
+run_test "Configuration & Script Validation Tests" "$SCRIPT_DIR/script-test.sh"
 run_python_tests
 run_playwright_test
 

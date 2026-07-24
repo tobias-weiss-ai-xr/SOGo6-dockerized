@@ -12,6 +12,10 @@
     "test:docker": "bash docker-test.sh",
     "test:postgres": "bash postgres-test.sh",
     "test:nginx": "bash nginx-test.sh",
+    "test:redis": "bash redis-test.sh",
+    "test:integration": "bash integration-test.sh",
+    "test:security": "bash security-test.sh",
+    "test:scripts": "bash script-test.sh",
     "test:e2e": "node sogo6-e2e-test.js",
     "test:python": "SOGO_INTEGRATION_TESTS=1 python3 -m pytest integration/ -v",
     "test:headed": "node sogo6-e2e-test.js"
