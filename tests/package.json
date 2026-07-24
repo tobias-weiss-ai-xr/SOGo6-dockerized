@@ -2,9 +2,14 @@
   "name": "sogo6-e2e-tests",
   "version": "1.0.0",
   "private": true,
-  "description": "Playwright E2E tests for SOGo 6 evaluation environment",
+  "description": "Test suite for SOGo 6 + Stalwart + OpenLDAP evaluation environment",
   "scripts": {
-    "test": "node sogo6-e2e-test.js",
+    "test": "bash run-all-tests.sh",
+    "test:api": "bash api-test.sh",
+    "test:smtp": "bash smtp-test.sh",
+    "test:ldap": "bash ldap-test.sh",
+    "test:e2e": "node sogo6-e2e-test.js",
+    "test:python": "SOGO_INTEGRATION_TESTS=1 python3 -m pytest integration/ -v",
     "test:headed": "node sogo6-e2e-test.js"
   },
   "dependencies": {

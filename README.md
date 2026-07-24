@@ -109,7 +109,7 @@ open http://localhost:3000
 │       └── backup.sh              # Data volume backup
 ├── docs/
 │   └── SOGO6-EVALUATION.md        # Evaluation and testing guide
-└── tests/                         # E2E test directory
+└── tests/                         # Test suite: API, SMTP/IMAP, LDAP, E2E
 ```
 
 ## Detailed Setup
@@ -186,7 +186,51 @@ curl -sk http://localhost:5001/api/admin/v1/config/system \
 
 ## Running Tests
 
-Install dependencies and run the Playwright E2E test suite:
+The test suite is organized as shell scripts and optional
+[Playwright](https://playwright.dev/) E2E tests. Run everything with:
+
+```bash
+cd tests
+bash run-all-tests.sh
+```
+
+### Quick Test Categories
+
+Run individual test suites:
+
+```bash
+# API health, auth, and domain configuration
+bash tests/api-test.sh
+
+# SMTP, IMAP, Sieve protocol connectivity
+bash tests/smtp-test.sh
+
+# LDAP user search and attribute verification
+bash tests/ldap-test.sh
+
+# Python integration tests (requires pytest + psycopg2)
+SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v
+
+# Playwright E2E (requires Node.js + Playwright)
+cd tests && npm install && npm test
+```
+
+### Shell Tests (no dependencies, 21 checks)
+
+| Test Suite | Checks | What It Validates |
+|------------|--------|-------------------|
+| `api-test.sh` | 9 | SOGo API health, admin login, domain listing, system config, all 3 test user logins |
+| `smtp-test.sh` | 6 | SMTP port & EHLO, submission port, IMAP port & greeting, Sieve port |
+| `ldap-test.sh` | 6 | LDAP reachability, test users present, user count, mail attributes |
+
+### Python Integration Tests (optional)
+
+```bash
+pip install -r tests/integration/requirements.txt
+SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short
+```
+
+### Playwright E2E Test (optional)
 
 ```bash
 cd tests
@@ -194,21 +238,13 @@ npm install
 npm test
 ```
 
-The test:
+The Playwright test:
 - Navigates to `http://localhost:3000`
 - Logs in as `testuser@example.org` / `password123`
 - Checks for calendar navigation
 - Attempts event creation
 - Saves screenshots to `tests/screenshots/`
 - Outputs results to `tests/test-results-sogo6.json`
-
-### Test Results
-
-| Check | What It Validates |
-|-------|-------------------|
-| Login | Login form is present and credentials are accepted |
-| Calendar | Calendar navigation link exists and is clickable |
-| Events | New event modal can be opened and event saved |
 
 ## Backup
 
