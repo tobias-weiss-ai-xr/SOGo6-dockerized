@@ -6,6 +6,6 @@
   "authUsername": "stalwart",
   "authSecret": {
     "@type": "Value",
-    "secret": "change-me-stalwart-db-password"
+    "secret": "stalwart_sogo6_2026"
   }
 }

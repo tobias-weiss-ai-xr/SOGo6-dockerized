@@ -188,7 +188,7 @@ services:
         reservations:
           memory: 256M
     healthcheck:
-      test: ["CMD-SHELL", "/usr/bin/curl -sf http://localhost:8080/healthz || exit 1"]
+      test: ["CMD-SHELL", "/usr/bin/curl -skf https://localhost/healthz/live || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -223,6 +223,7 @@ services:
       - "443:443"
     volumes:
       - ./sogo6/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./sogo6/nginx/certs:/etc/nginx/certs:ro
     networks:
       - sogo6-net
     depends_on:

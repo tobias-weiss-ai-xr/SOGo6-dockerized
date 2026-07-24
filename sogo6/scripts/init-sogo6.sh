@@ -13,9 +13,9 @@
 
 set -euo pipefail
 
-# Auto-detect server URL - use localhost:5000 when running on host, sogo6-server:5000 inside network
+# Auto-detect server URL
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-server; then
-    DEFAULT_SERVER="http://localhost:5000"
+    DEFAULT_SERVER="http://localhost:5001"
 else
     DEFAULT_SERVER="http://sogo6-server:5000"
 fi
@@ -346,7 +346,7 @@ configure_domain_default() {
           "SOGO_D_MAIL_SERVER_TYPE": "imap",
           "SOGO_D_IMAP_SERVER": "sogo6-stalwart",
           "SOGO_D_IMAP_PORT": 20993,
-          "SOGO_D_IMAP_ENCRYPTION": "TLS",
+          "SOGO_D_IMAP_ENCRYPTION": "SSL/TLS",
           "SOGO_D_IMAP_AUTH_MECH": "login",
           "SOGO_D_SOFT_EMAIL_QUOTA": 10000,
           "SOGO_D_MAIL_PURGE_ALLOW": true,
@@ -356,12 +356,12 @@ configure_domain_default() {
           "SOGO_D_MAIL_FILTERING_TYPE": "sieve",
           "SOGO_D_SIEVE_SERVER": "sogo6-stalwart",
           "SOGO_D_SIEVE_PORT": 24190,
-          "SOGO_D_SIEVE_ENCRYPTION": "TLS",
+          "SOGO_D_SIEVE_ENCRYPTION": "SSL/TLS",
           "SOGO_D_SIEVE_AUTH_MECH": "plain",
           "SOGO_D_MAIL_OUTGOING_TYPE": "smtp",
           "SOGO_D_SMTP_SERVER": "sogo6-stalwart",
           "SOGO_D_SMTP_PORT": 20587,
-          "SOGO_D_SMTP_ENCRYPTION": "TLS",
+          "SOGO_D_SMTP_ENCRYPTION": "SSL/TLS",
           "SOGO_D_SMTP_AUTH_MECH": "plain"
         }
       }
@@ -411,7 +411,10 @@ create_domain() {
             "US_LDAP_BIND_DN_PWD": "admin",
             "US_LDAP_BASE_DN": "ou=users,dc=EXAMPLE,dc=org",
             "US_LDAP_UID": "uid",
-            "US_CAN_AUTH": true
+            "US_CAN_AUTH": true,
+            "US_MAIL": ["mail"],
+            "US_IS_ADDRESSBOOK": true,
+            "US_HAS_RESOURCE": true
           }
         },
         "USER_MODULE_SETTINGS": {
@@ -421,10 +424,13 @@ create_domain() {
           "SOGO_D_MAIL_SERVER_TYPE": "imap",
           "SOGO_D_IMAP_SERVER": "sogo6-stalwart",
           "SOGO_D_IMAP_PORT": 20993,
-          "SOGO_D_IMAP_ENCRYPTION": "TLS",
+          "SOGO_D_IMAP_ENCRYPTION": "SSL/TLS",
+          "SOGO_D_SIEVE_SERVER": "sogo6-stalwart",
+          "SOGO_D_SIEVE_PORT": 24190,
+          "SOGO_D_SIEVE_ENCRYPTION": "SSL/TLS",
           "SOGO_D_SMTP_SERVER": "sogo6-stalwart",
           "SOGO_D_SMTP_PORT": 20587,
-          "SOGO_D_SMTP_ENCRYPTION": "TLS"
+          "SOGO_D_SMTP_ENCRYPTION": "SSL/TLS"
         }
       }
     }' | python3 -c "import sys,json; d=json.load(sys.stdin); d['domain_info']['user_source']='ldap'; d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN'].replace('EXAMPLE','$DOMAIN'); d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN'].replace('EXAMPLE','$DOMAIN'); print(json.dumps(d))")
