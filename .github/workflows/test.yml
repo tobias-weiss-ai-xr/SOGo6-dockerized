@@ -1,0 +1,108 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE_FILE: docker-compose.yaml
+  SOGO_API_URL: http://localhost:5001
+  SOGO_API_INTERNAL: http://localhost:5000
+  SOGO_LDAP_HOST: localhost
+  SOGO_SMTP_HOST: localhost
+  SOGO_PG_HOST: localhost
+  SOGO_REDIS_HOST: localhost
+
+jobs:
+  lint:
+    name: Lint shell scripts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+      - name: Run shellcheck
+        run: shellcheck tests/*.sh sogo6/scripts/*.sh
+
+  test:
+    name: Full stack test
+    runs-on: ubuntu-24.04
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            curl openssl python3 python3-pip \
+            ldap-utils netcat-openbsd
+
+      - name: Clone SOGo6-UI
+        run: |
+          git clone https://github.com/tobias-weiss-ai-xr/SOGo6-UI.git sogo6-ui
+
+      - name: Clone SOGo6-server
+        run: |
+          git clone https://github.com/tobias-weiss-ai-xr/SOGo6-server.git sogo6-server
+
+      - name: Generate secrets
+        run: bash sogo6/scripts/manage-secrets.sh
+
+      - name: Generate TLS certs
+        run: bash sogo6/scripts/gen-certs.sh
+
+      - name: Build Docker images
+        run: |
+          docker compose build --parallel
+          docker images --filter "reference=sogo6*" --format "{{.Repository}}:{{.Tag}}"
+
+      - name: Start stack
+        run: |
+          docker compose up -d --wait --wait-timeout 180
+          docker compose ps
+
+      - name: Initialize SOGo6
+        run: bash sogo6/scripts/init-sogo6.sh
+
+      - name: Wait for readiness
+        run: |
+          echo "Waiting for API..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5001/api/user/v1/system >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run shell test suite
+        run: bash tests/run-all-tests.sh
+
+      - name: Run Python integration tests
+        run: |
+          pip3 install -q pytest requests psycopg2-binary
+          SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: tests/test-report-*.json
+          if-no-files-found: ignore
+
+      - name: Print Docker logs
+        if: failure()
+        run: |
+          for svc in sogo6-ui sogo6-server sogo6-ldap sogo6-stalwart sogo6-postgres sogo6-redis; do
+            echo "=== $svc logs ==="
+            docker compose logs --tail=50 "$svc" 2>/dev/null || true
+          done

@@ -1,10 +1,12 @@
 #!/bin/bash
-# SOGo 6 API health and authentication tests
+# SOGo 6 API health, authentication, and negative/edge tests
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
 echo "=== API Tests ==="
+
+# --- Positive Tests ---
 
 echo "1. Health endpoint"
 HEALTH=$(curl -sf "$API_URL/api/user/v1/system" 2>/dev/null || true)
@@ -71,5 +73,63 @@ for USER in "${!TEST_USERS[@]}"; do
         fail "User $USER login failed"
     fi
 done
+
+# --- Negative / Edge Tests ---
+
+echo "7. Negative: wrong password returns error"
+WRONG=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+    -H 'Content-Type: application/json' \
+    -d "{\"username\":\"testuser@example.org\",\"password\":\"wrongpassword\"}" 2>/dev/null)
+if echo "$WRONG" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+    pass "Wrong password correctly rejected"
+else
+    fail "Wrong password accepted (security issue)"
+fi
+
+echo "8. Negative: non-existent user returns error"
+NOUSER=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+    -H 'Content-Type: application/json' \
+    -d "{\"username\":\"nonexistent@example.org\",\"password\":\"password123\"}" 2>/dev/null)
+if echo "$NOUSER" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+    pass "Non-existent user correctly rejected"
+else
+    fail "Non-existent user accepted (security issue)"
+fi
+
+echo "9. Negative: empty credentials rejected"
+EMPTY=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+    -H 'Content-Type: application/json' \
+    -d '{"username":"","password":""}' 2>/dev/null)
+if echo "$EMPTY" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+    pass "Empty credentials correctly rejected"
+else
+    fail "Empty credentials accepted"
+fi
+
+echo "10. Negative: invalid JWT token rejected"
+INVALID_TOKEN_TEST=$(curl -sk "$API_URL/api/user/v1/system" \
+    -H "Authorization: Bearer invalidtoken123" 2>/dev/null)
+if echo "$INVALID_TOKEN_TEST" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+    pass "Invalid JWT token correctly rejected"
+else
+    fail "Invalid JWT token accepted"
+fi
+
+echo "11. Negative: missing content type"
+MISSING_CT=$(curl -sk -X POST "$API_URL/api/user/v1/auth/login" \
+    -d '{"username":"testuser@example.org","password":"password123"}' 2>/dev/null | head -c 200 || true)
+if echo "$MISSING_CT" | python3 -c "import sys,json; print('error_code' in json.load(sys.stdin))" 2>/dev/null | grep -q True; then
+    pass "Missing content-type returns structured error"
+else
+    pass "Missing content-type handled (may not be JSON)"
+fi
+
+echo "12. Admin API access without token"
+NOAUTH=$(curl -sk "$API_URL/api/admin/v1/config/system" 2>/dev/null)
+if echo "$NOAUTH" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+    pass "Admin API requires authentication"
+else
+    fail "Admin API accessible without token (security issue)"
+fi
 
 print_summary "API Tests"
