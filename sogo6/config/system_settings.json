@@ -1,0 +1,38 @@
+{
+  "sogo_settings": {
+    "sogo_bind_address": "0.0.0.0",
+    "sogo_bind_port": 5000,
+    "sogo_log_level": "INFO"
+  },
+  "database_settings": {
+    "sogo_db_uri": "postgresql://sogo:sogo@sogo6-postgres:5432/sogo",
+    "sogo_db_pool_size": 10,
+    "sogo_db_pool_timeout": 30
+  },
+  "redis_settings": {
+    "sogo_redis_uri": "redis://sogo6-redis:6379/0",
+    "sogo_redis_ttl": 3600
+  },
+  "ldap_settings": {
+    "sogo_ldap_uri": "ldap://sogo6-ldap:389",
+    "sogo_ldap_base_dn": "dc=example,dc=org",
+    "sogo_ldap_bind_dn": "cn=admin,dc=example,dc=org",
+    "sogo_ldap_bind_password": "admin",
+    "sogo_ldap_user_base": "ou=users,dc=example,dc=org",
+    "sogo_ldap_user_filter": "(objectClass=inetOrgPerson)",
+    "sogo_ldap_user_name_attribute": "uid",
+    "sogo_ldap_user_mail_attribute": "mail",
+    "sogo_ldap_user_cn_attribute": "cn"
+  },
+  "smtp_settings": {
+    "sogo_smtp_server": "sogo6-smtp",
+    "sogo_smtp_port": 25,
+    "sogo_smtp_use_tls": false,
+    "sogo_smtp_from_address": "noreply@example.org"
+  },
+  "security_settings": {
+    "sogo_secret_key": "change-me-in-production",
+    "sogo_session_ttl": 86400,
+    "sogo_password_min_length": 8
+  }
+}

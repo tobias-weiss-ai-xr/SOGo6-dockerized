@@ -1,0 +1,49 @@
+# Users container
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+# Test user 1
+dn: uid=testuser@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testuser@example.org
+cn: Test User
+sn: User
+givenName: Test
+mail: testuser@example.org
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/testuser
+userPassword: password123
+
+# Test admin
+dn: uid=testadmin@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testadmin@example.org
+cn: Test Admin
+sn: Admin
+givenName: Test
+mail: testadmin@example.org
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/testadmin
+userPassword: password123
+
+# Test user 2
+dn: uid=testuser2@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testuser2@example.org
+cn: Test User 2
+sn: User2
+givenName: Test
+mail: testuser2@example.org
+uidNumber: 1002
+gidNumber: 1002
+homeDirectory: /home/testuser2
+userPassword: password123

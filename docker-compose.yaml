@@ -1,0 +1,252 @@
+services:
+  sogo6-ui:
+    image: sogo6-ui:latest
+    container_name: sogo6-ui
+    build:
+      context: ./sogo6-ui
+      dockerfile: Dockerfile
+    environment:
+      REACT_APP_API_BASE_URL: http://sogo6-server:5000/api/user/v1
+      NEXT_PUBLIC_ADMIN_DOMAINS: admin.localhost
+      SSE_ENABLED: "false"
+      LOGIN_PREFILL_EMAIL: testuser@example.org
+      LOGIN_PREFILL_PASSWORD: password123
+    ports:
+      - "3000:3000"
+    networks:
+      - sogo6-net
+    depends_on:
+      - sogo6-server
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/env || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  sogo6-server:
+    image: sogo6-server:latest
+    container_name: sogo6-server
+    build:
+      context: ./sogo6-server
+      dockerfile: deploy/local/Dockerfile.local
+    environment:
+      FLASK_ENV: development
+      FLASK_APP: app
+      SOGO_DB_URI: postgresql://sogo:sogo@sogo6-postgres:5432/sogo
+      SOGO_REDIS_URI: redis://sogo6-redis:6379/0
+      SOGO_LDAP_URI: ldap://sogo6-ldap:389
+      SOGO_LDAP_BASE_DN: dc=example,dc=org
+      SOGO_LDAP_BIND_DN: cn=admin,dc=example,dc=org
+      SOGO_LDAP_BIND_PASSWORD: admin
+      SOGO_SMTP_SERVER: sogo6-stalwart
+      SOGO_SMTP_PORT: 20025
+      SOGO_P_DB_USER: sogo
+      SOGO_P_DB_HOST: sogo6-postgres
+      GUNICORN_WORKERS: "1"
+    env_file:
+      - ./secrets/sogo6.vault.env
+    volumes:
+      - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
+    ports:
+      - "5001:5000"
+    networks:
+      - sogo6-net
+    depends_on:
+      sogo6-postgres:
+        condition: service_healthy
+      sogo6-redis:
+        condition: service_healthy
+      sogo6-ldap:
+        condition: service_healthy
+      sogo6-stalwart:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: "1.0"
+        reservations:
+          memory: 192M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/user/v1/system"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  sogo6-postgres:
+    image: postgres:15-alpine
+    container_name: sogo6-postgres
+    environment:
+      POSTGRES_USER: sogo
+      POSTGRES_PASSWORD: sogo
+      POSTGRES_DB: sogo
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: >
+      postgres
+        -c shared_buffers=128MB
+        -c work_mem=4MB
+        -c max_connections=50
+    volumes:
+      - sogo6-postgres-data:/var/lib/postgresql/data
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sogo"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  sogo6-redis:
+    image: redis:7-alpine
+    container_name: sogo6-redis
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - sogo6-redis-data:/data
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  sogo6-ldap:
+    image: sogo6-ldap:latest
+    build:
+      context: ./sogo6/ldap
+      dockerfile: Dockerfile
+    container_name: sogo6-ldap
+    environment:
+      LDAP_ORGANISATION: Example Org
+      LDAP_DOMAIN: example.org
+      LDAP_ADMIN_PASSWORD: admin
+      LDAP_BASE_DN: dc=example,dc=org
+      LDAP_CONFIG_PASSWORD: admin
+      LDAP_TLS: "false"
+      LDAP_SEED_INTERNAL_LDIF_PATH: /ldif-seed
+    volumes:
+      - sogo6-ldap-data:/var/lib/ldap
+      - sogo6-ldap-config:/etc/ldap/slapd.d
+      - ./sogo6/ldap/init.ldif:/ldif-seed/00-init.ldif
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+    healthcheck:
+      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  sogo6-stalwart:
+    image: stalwartlabs/stalwart:v0.16.6
+    container_name: sogo6-stalwart
+    depends_on:
+      sogo6-postgres:
+        condition: service_healthy
+    environment:
+      STALWART_RECOVERY_ADMIN: admin:eval_admin_2026
+      STALWART_HOSTNAME: mail.example.org
+      STALWART_DB_PASSWORD: stalwart_sogo6_2026
+    volumes:
+      - sogo6-stalwart-data:/var/lib/stalwart
+      - ./sogo6/stalwart/config.json:/etc/stalwart/config.json
+    ports:
+      - "20025:25"
+      - "20465:465"
+      - "20587:587"
+      - "20143:143"
+      - "20993:993"
+      - "24190:4190"
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/bin/curl -sf http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  sogo6-smtp:
+    image: maildev/maildev:latest
+    container_name: sogo6-smtp
+    environment:
+      MAILDEV_SMTP_PORT: 25
+      MAILDEV_WEB_PORT: 1080
+    ports:
+      - "1080:1080"
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:1080/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  sogo6-nginx:
+    image: nginx:alpine
+    container_name: sogo6-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./sogo6/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - sogo6-net
+    depends_on:
+      - sogo6-ui
+      - sogo6-server
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+        reservations:
+          memory: 32M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -skf https://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 10s
+
+volumes:
+  sogo6-postgres-data:
+  sogo6-redis-data:
+  sogo6-stalwart-data:
+  sogo6-ldap-data:
+  sogo6-ldap-config:
+
+networks:
+  sogo6-net:
