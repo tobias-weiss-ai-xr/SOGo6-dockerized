@@ -1,5 +1,11 @@
 # SOGo 6 with Stalwart & OpenLDAP — Dockerized Test Environment
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2.20+-2496ED?logo=docker&logoColor=fff)](docker-compose.yaml)
+[![SOGo 6](https://img.shields.io/badge/SOGo%206-alpha-blueviolet)](https://www.sogo.nu/)
+[![Playwright](https://img.shields.io/badge/Tests-Playwright-45ba4b?logo=playwright)](tests/)
+[![GitHub](https://img.shields.io/github/stars/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized?style=social)](https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized)
+
 Docker Compose environment for evaluating [SOGo 6](https://www.sogo.nu/) — the next-generation groupware suite (Next.js + Python/Flask) with a full mail backend (Stalwart) and LDAP authentication (OpenLDAP).
 
 ## Architecture
@@ -178,6 +184,32 @@ curl -sk http://localhost:5001/api/admin/v1/config/system \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+## Running Tests
+
+Install dependencies and run the Playwright E2E test suite:
+
+```bash
+cd tests
+npm install
+npm test
+```
+
+The test:
+- Navigates to `http://localhost:3000`
+- Logs in as `testuser@example.org` / `password123`
+- Checks for calendar navigation
+- Attempts event creation
+- Saves screenshots to `tests/screenshots/`
+- Outputs results to `tests/test-results-sogo6.json`
+
+### Test Results
+
+| Check | What It Validates |
+|-------|-------------------|
+| Login | Login form is present and credentials are accepted |
+| Calendar | Calendar navigation link exists and is clickable |
+| Events | New event modal can be opened and event saved |
+
 ## Backup
 
 ```bash
@@ -200,6 +232,17 @@ Edit port mappings in `docker-compose.yaml` if you have conflicts.
 docker compose down -v
 docker compose up -d
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Tobias Weiß
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Please ensure no internal hostnames, IPs, or secrets leak into commits.
+
+This project adheres to a [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## Related Repositories
 

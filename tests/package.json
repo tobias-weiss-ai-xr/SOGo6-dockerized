@@ -1,0 +1,13 @@
+{
+  "name": "sogo6-e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E tests for SOGo 6 evaluation environment",
+  "scripts": {
+    "test": "node sogo6-e2e-test.js",
+    "test:headed": "node sogo6-e2e-test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
