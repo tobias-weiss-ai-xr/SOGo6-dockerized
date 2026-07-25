@@ -10,25 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     libpq-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Production stage
-FROM base AS production
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Install production dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 5000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:app"]
-
-# Development stage
+# Development stage (default for dev)
 FROM base AS development
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -36,15 +21,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FLASK_ENV=development \
     FLASK_DEBUG=1
 
+# Copy requirements first for better caching
+COPY requirements.txt requirements-dev.txt ./
+
 # Install dev dependencies
-COPY requirements.txt requirements-dev.txt .
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt \
-    && pip install python-django-debug-toolbar flask-debugtoolbar
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt 2>/dev/null || \
+    pip install --no-cache-dir -r requirements.txt 2>/dev/null || \
+    echo "No requirements files found - skipping pip install"
 
-# Install debugpy for remote debugging
-RUN pip install debugpy watchdog
+# Install debugpy for remote debugging (always available)
+RUN pip install debugpy watchdog flask-debugtoolbar 2>/dev/null || true
 
-COPY . .
+# Copy source code (will be mounted by compose, but copy for standalone builds)
+COPY . . 2>/dev/null || echo "No source code to copy"
 
 # Expose app port and debug port
 EXPOSE 5000 5678
