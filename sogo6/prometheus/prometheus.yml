@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'sogo6-server'
+    static_configs:
+      - targets: ['sogo6-server:5000']
+    metrics_path: '/metrics'
+
+  - job_name: 'sogo6-postgres'
+    static_configs:
+      - targets: ['sogo6-postgres:9187']
+
+  - job_name: 'sogo6-redis'
+    static_configs:
+      - targets: ['sogo6-redis:9121']
+
+  - job_name: 'sogo6-nginx'
+    static_configs:
+      - targets: ['sogo6-nginx:9113']

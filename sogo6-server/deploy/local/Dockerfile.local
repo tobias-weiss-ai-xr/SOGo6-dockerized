@@ -1,0 +1,54 @@
+# Development Dockerfile for SOGo 6 Server
+# Multi-stage build with development target
+
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Production stage
+FROM base AS production
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install production dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:app"]
+
+# Development stage
+FROM base AS development
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_ENV=development \
+    FLASK_DEBUG=1
+
+# Install dev dependencies
+COPY requirements.txt requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt \
+    && pip install python-django-debug-toolbar flask-debugtoolbar
+
+# Install debugpy for remote debugging
+RUN pip install debugpy watchdog
+
+COPY . .
+
+# Expose app port and debug port
+EXPOSE 5000 5678
+
+# Run with debug and auto-reload
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "flask", "run", \
+     "--host=0.0.0.0", "--port=5000", "--reload", "--with-threads"]

@@ -1,0 +1,52 @@
+{
+  "name": "SOGo 6 Development",
+  "dockerComposeFile": ["docker-compose.dev.yaml"],
+  "service": "sogo6-server",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "prometheus.prometheus-syntax"
+  ],
+  "forwardPorts": [5000, 3000, 5432, 6379, 5050, 5540, 9090, 3001, 8025],
+  "appPort": [5001:5000, 3000:3000],
+  "postCreateCommand": "pip install -e '.[dev]' && npm install",
+  "postStartCommand": "docker compose ps",
+  "remoteEnv": {
+    "FLASK_ENV": "development",
+    "FLASK_DEBUG": "1",
+    "NODE_ENV": "development",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.linting.enabled": true,
+        "python.linting.ruffEnabled": true,
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "files.watcherExclude": {
+          "**/node_modules/**": true,
+          "**/.git/**": true,
+          "**/__pycache__/**": true
+        },
+        "files.associations": {
+          "*.yaml": "yaml",
+          "*.yml": "yaml"
+        },
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true,
+          "source.fixAll.ruff": true
+        }
+      }
+    }
+  }
+}

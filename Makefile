@@ -1,7 +1,7 @@
 # SOGo 6 Evaluation Stack
 # Docker Compose orchestration targets
 
-.PHONY: setup build start stop restart status logs clean reset test
+.PHONY: setup build start stop restart status logs clean reset test setup-dev build-dev start-dev stop-dev restart-dev dev-status dev-logs dev-clean dev-reset dev-debug dev-debug-server dev-debug-ui dev-pgadmin dev-redis dev-ldap-tools dev-monitoring dev-shell-server dev-shell-ui test-dev
 
 setup:
 	bash sogo6/scripts/setup.sh
@@ -47,17 +47,107 @@ test-full:
 	bash tests/run-all-tests.sh
 	SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x 2>/dev/null || echo "Python tests skipped (set SOGO_INTEGRATION_TESTS=1)"
 
-secrets:
-	bash sogo6/scripts/manage-secrets.sh
+setup-dev:
+	bash sogo6/scripts/setup.sh
 
-certs:
-	bash sogo6/scripts/gen-certs.sh
+build-dev:
+	docker compose -f docker-compose.dev.yaml build --parallel
+	docker images --filter "reference=sogo6*" --format "{{.Repository}}:{{.Tag}}"
 
-backup:
-	bash sogo6/scripts/backup.sh
+start-dev:
+	docker compose -f docker-compose.dev.yaml up -d --wait --wait-timeout 180
+	docker compose -f docker-compose.dev.yaml ps
+
+stop-dev:
+	docker compose -f docker-compose.dev.yaml down
+
+restart-dev: stop-dev start-dev
+
+dev-status:
+	docker compose -f docker-compose.dev.yaml ps
+
+dev-logs:
+	docker compose -f docker-compose.dev.yaml logs --tail=100 -f
+
+dev-clean:
+	docker compose -f docker-compose.dev.yaml down -v
+	@echo "Dev volumes and containers removed."
+
+dev-reset: dev-clean start-dev
+	bash sogo6/scripts/init-sogo6.sh
+
+dev-debug:
+	@echo "Starting dev stack with full debugging tools..."
+	docker compose -f docker-compose.dev.yaml up -d --wait
+	@echo ""
+	@echo "Dev tools available:"
+	@echo "  - UI:              http://localhost:3000"
+	@echo "  - API Server:      http://localhost:5001"
+	@echo "  - PgAdmin:         http://localhost:5050 (dev@example.org / password123)"
+	@echo "  - Redis Insight:   http://localhost:5540"
+	@echo "  - Mailhog:         http://localhost:8025"
+	@echo "  - Prometheus:      http://localhost:9090"
+	@echo "  - Grafana:         http://localhost:3001 (admin / password123)"
+	@echo "  - Nginx:           http://localhost:80 / https://localhost:443"
+	@echo ""
+	@echo "Services exposed on host:"
+	@echo "  - PostgreSQL:      localhost:5432"
+	@echo "  - Redis:           localhost:6379"
+	@echo "  - LDAP:            localhost:389"
+	@echo "  - SMTP (Maildev):  localhost:1025 / Web: localhost:1080"
+	@echo "  - SMTP (Stalwart): localhost:20025"
+
+dev-shell-server:
+	docker compose -f docker-compose.dev.yaml exec sogo6-server /bin/sh
+
+dev-shell-ui:
+	docker compose -f docker-compose.dev.yaml exec sogo6-ui /bin/sh
+
+dev-shell-postgres:
+	docker compose -f docker-compose.dev.yaml exec sogo6-postgres psql -U sogo -d sogo
+
+dev-shell-redis:
+	docker compose -f docker-compose.dev.yaml exec sogo6-redis redis-cli
+
+dev-shell-ldap:
+	docker compose -f docker-compose.dev.yaml exec sogo6-ldap ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin
+
+dev-pgadmin:
+	docker compose -f docker-compose.dev.yaml up -d sogo6-pgadmin
+	@echo "PgAdmin started: http://localhost:5050"
+
+dev-redis:
+	docker compose -f docker-compose.dev.yaml up -d sogo6-redisinsight
+	@echo "Redis Insight started: http://localhost:5540"
+
+dev-monitoring:
+	docker compose -f docker-compose.dev.yaml --profile monitoring up -d
+	@echo "Monitoring stack started:"
+	@echo "  - Prometheus: http://localhost:9090"
+	@echo "  - Grafana:    http://localhost:3001"
+
+dev-ldap-tools:
+	docker compose -f docker-compose.dev.yaml --profile ldap-tools up -d
+	@echo "LDAP tools started:"
+	@echo "  - LDAP Admin:  http://localhost:8081"
+	@echo "  - LDAP UI:     http://localhost:8082"
+	@echo "  - Ladon:       http://localhost:8083"
+	@echo "  - phpLDAPadmin: http://localhost:8084"
+
+dev-mail-tools:
+	docker compose -f docker-compose.dev.yaml --profile mail-tools up -d
+	@echo "Mail tools started:"
+	@echo "  - Mailhog: http://localhost:8025"
+
+test-dev:
+	SOGO_INTEGRATION_TESTS=1 docker compose -f docker-compose.dev.yaml exec sogo6-server python -m pytest /app/tests -v --tb=short
+
+test-watch:
+	docker compose -f docker-compose.dev.yaml exec sogo6-server ptw --snapshot-update --on-pass "echo 'Tests passed!'"
 
 help:
 	@echo "Available targets:"
+	@echo "  === Production Stack ==="
 	@echo "  setup       - Clone repos + build Docker images"
 	@echo "  build       - Build Docker images"
 	@echo "  start       - Start the stack"
@@ -73,3 +163,23 @@ help:
 	@echo "  secrets     - Generate secrets vault"
 	@echo "  certs       - Generate TLS certificates"
 	@echo "  backup      - Backup all volumes"
+	@echo ""
+	@echo "  === Development Stack ==="
+	@echo "  build-dev       - Build dev Docker images"
+	@echo "  start-dev       - Start dev stack"
+	@echo "  stop-dev        - Stop dev stack"
+	@echo "  dev-status      - Show dev container status"
+	@echo "  dev-logs        - Tail dev logs"
+	@echo "  dev-clean        - Remove dev containers and volumes"
+	@echo "  dev-reset       - Clean + start + init dev stack"
+	@echo "  dev-debug       - Start dev stack with all debugging tools"
+	@echo "  dev-shell-server - Shell into server container"
+	@echo "  dev-shell-ui    - Shell into UI container"
+	@echo "  dev-shell-postgres - Shell into postgres with psql"
+	@echo "  dev-shell-redis - Shell into redis with redis-cli"
+	@echo "  dev-shell-ldap  - Test LDAP connection"
+	@echo "  dev-monitoring  - Start Prometheus + Grafana"
+	@echo "  dev-ldap-tools  - Start LDAP admin tools"
+	@echo "  dev-mail-tools  - Start Mailhog"
+	@echo "  test-dev        - Run integration tests in dev stack"
+	@echo "  test-watch      - Watch mode tests (ptw)"
