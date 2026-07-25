@@ -12,9 +12,16 @@ screenshots/
 .DS_Store
 *.swp
 evidence/
-sogo6-ui/
-sogo6-server/
 secrets/
+
+# VS Code - allow shared dev config
+!.vscode/
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Dev Container config
+!.devcontainer.json
 sogo6/nginx/certs/
 backups/
 __pycache__/

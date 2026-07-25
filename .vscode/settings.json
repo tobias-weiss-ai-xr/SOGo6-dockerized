@@ -1,0 +1,72 @@
+{
+  "version": "0.1.0",
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "python3",
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "python.linting.ruffArgs": ["--config=pyproject.toml"],
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "python.formatting.provider": "none",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticSeverityOverrides": {
+      "reportMissingImports": "warning",
+      "reportMissingTypeStubs": "warning"
+    },
+    "[python]": {
+      "editor.defaultFormatter": null,
+      "editor.formatOnSave": false,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    },
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": true
+    },
+    "editor.formatOnSave": true,
+    "editor.rulers": [88, 120],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".pytest_cache": true,
+      ".mypy_cache": true
+    },
+    "git.ignoreMissing": true,
+    "workbench.iconTheme": "default",
+    "workbench.colorTheme": "Default Dark+",
+    "window.title": "${dirty}${activeEditorShort}",
+    "explorer.compactFolders": false,
+    "search.exclude": {
+      "node_modules": true,
+      ".git": true,
+      "**/__pycache__": true,
+      ".venv": true,
+      "venv": true
+    },
+    "extensions.ignoreRecommendations": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests/", "-v", "--tb=short"],
+    "containerConfigFile": ".devcontainer.json"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.debugpy",
+      "charliermarsh.ruff",
+      "ms-azuretools.vscode-docker",
+      "redhat.vscode-yaml",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "prometheus.prometheus-syntax"
+    ]
+  }
+}

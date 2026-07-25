@@ -318,45 +318,47 @@ services:
         limits:
           memory: 256M
 
-  sogo6-ldapadmin:
-    image: osixia/openldap:1.5.0
-    container_name: sogo6-ldapadmin-dev
-    environment:
-      LDAP_ADMIN_PASSWORD: admin
-    ports:
-      - "8081:80"
-    networks:
-      - sogo6-net
-    depends_on:
-      - sogo6-ldap
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
+   sogo6-ldapadmin:
+     image: osixia/openldap:1.5.0
+     container_name: sogo6-ldapadmin-dev
+     environment:
+       LDAP_ADMIN_PASSWORD: admin
+     ports:
+       - "8081:80"
+     networks:
+       - sogo6-net
+     depends_on:
+       sogo6-ldap:
+         condition: service_healthy
+     deploy:
+       resources:
+         limits:
+           memory: 128M
+     profiles:
+       - ldap-tools
 
-  sogo6-ldapui:
-    image: pulsetri/react-ldap-admin:latest
-    container_name: sogo6-ldapui-dev
-    environment:
-      LDAP_HOST: sogo6-ldap
-      LDAP_PORT: 389
-      LDAP_BASE_DN: dc=example,dc=org
-      LDAP_BIND_DN: cn=admin,dc=example,dc=org
-      LDAP_BIND_PASSWORD: admin
-    ports:
-      - "8082:3000"
-    networks:
-      - sogo6-net
-    depends_on:
-      - sogo6-ldap
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
+   sogo6-ldapui:
+     image: pulsetri/react-ldap-admin:latest
+     container_name: sogo6-ldapui-dev
+     environment:
+       LDAP_HOST: sogo6-ldap
+       LDAP_PORT: 389
+       LDAP_BASE_DN: dc=example,dc=org
+       LDAP_BIND_DN: cn=admin,dc=example,dc=org
+       LDAP_BIND_PASSWORD: admin
+     ports:
+       - "8082:3000"
+     networks:
+       - sogo6-net
+     depends_on:
+       sogo6-ldap:
+         condition: service_healthy
+     deploy:
+       resources:
+         limits:
+           memory: 128M
+     profiles:
+       - ldap-tools
 
   sogo6-mailhog:
     image: mailhog/mailhog:latest
@@ -432,7 +434,8 @@ services:
     networks:
       - sogo6-net
     depends_on:
-      - sogo6-ldap
+      sogo6-ldap:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -451,7 +454,8 @@ services:
     networks:
       - sogo6-net
     depends_on:
-      - sogo6-ldap
+      sogo6-ldap:
+        condition: service_healthy
     deploy:
       resources:
         limits:
