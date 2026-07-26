@@ -39,6 +39,11 @@ class InterfaceAuthUser:
         self._module_calendar: ModuleCalendar = ModuleCalendar(process)
         self._module_contact: ModuleContact = ModuleContact(process)
 
+        # Brute-force protection settings (from the default domain)
+        self._auth_settings = default_auth
+        # Login rate-limiter — initialised lazily when first needed
+        self._rate_limiter = None
+
 
     def get_login_mech(self, user_uid:str, redirect:str) -> tuple[dict, int]:
         """
@@ -57,10 +62,19 @@ class InterfaceAuthUser:
             return create_api_base_response(str(e), e.error)
         return create_api_base_response(ret)
 
+    def _get_rate_limiter(self):
+        """Lazy-initialise and return the login rate-limiter."""
+        if self._rate_limiter is None:
+            from app.utils.api.login_rate_limiter import LoginRateLimiter
+            from app.service import sogo_cache
+
+            redis_client = sogo_cache()
+            self._rate_limiter = LoginRateLimiter(redis_client)
+        return self._rate_limiter
+
     def _check_login(self, uid:str, password:str) -> tuple[bool, User, ModuleUserSource]:
         """
         Check credentials uid/password/token of a user
-        #TODO get login auth with AuthSettingsObj
 
         :param uid: uid of the user
         :type username: str
@@ -69,12 +83,36 @@ class InterfaceAuthUser:
         :return: True if success, instante of User, instande of Appropriate ModuleUserSource
         :rtype: tuple[bool, User, ModuleUserSource]
         """
+        # Brute-force check (domain-level setting)
+        max_attempt = self._auth_settings.SOGO_D_LOGIN_CHECK_MAX_ATTEMPT
+        block_time = self._auth_settings.SOGO_D_LOGIN_CHECK_BLOCK_TIME
+        time_span = self._auth_settings.SOGO_D_LOGIN_CHECK_TIME_SPAN
+
+        if max_attempt > 0:
+            limiter = self._get_rate_limiter()
+            if limiter.is_blocked(uid, max_attempt, block_time):
+                logger_api.warning("Login blocked (brute-force) for uid=%s", uid)
+                return False, None, None  # Caller will map to ERROR_LOGIN_FAILED
+
         # Prepare the user object for authentication and get domain user sources
         user, domain_user_sources = self.module_auth.get_user_and_domain_user_sources(uid, password)
 
         # Check login using the user source module
         module_us = ModuleUserSource(domain_user_sources)
-        return module_us.check_login(user), user, module_us
+        success = module_us.check_login(user)
+
+        # Record failure or reset counter on success
+        if max_attempt > 0:
+            limiter = self._get_rate_limiter()
+            if success:
+                limiter.reset_failures(uid)
+            else:
+                count = limiter.record_failure(uid, time_span)
+                logger_api.info("Login failed for uid=%s (attempt %d/%d)", uid, count, max_attempt)
+                if count >= max_attempt:
+                    limiter.block(uid, block_time)
+
+        return success, user, module_us
 
     def plain_login(self, data:dict) -> tuple[dict, int]:
         """
@@ -91,7 +129,7 @@ class InterfaceAuthUser:
 
         success, user, module_us = self._check_login(uid, password)
 
-        if not success:
+        if not success or user is None:
             return create_api_base_response(None, err.ERROR_LOGIN_FAILED)
 
         # Check if MFA / TOTP is enabled for this user
@@ -146,7 +184,7 @@ class InterfaceAuthUser:
         :rtype: bool
         """
         success, user_found, module_us = self._check_login(user.uid, user.password)
-        if success:
+        if success and user_found is not None:
             self.module_user_profile.get_user_profile(user_found)
             return True, user_found
         return False, UserAnonymous()

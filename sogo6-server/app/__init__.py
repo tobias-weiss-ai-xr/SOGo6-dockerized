@@ -65,10 +65,17 @@ def create_app(sogo_state: int) -> Flask:
     register_route(flask_api, cs.API_BASIC, sogo_state)
     register_route(admin_api, cs.API_ADMIN, sogo_state)
 
-    CORS(app, resources={r"/api/*": {"origins": "*",
+    allowed_origins = [
+        process_config.SOGO_P_PUBLIC_BASE_URL or "http://localhost:3000",
+    ]
+    # In development, also allow the Docker host
+    if process_config.SOGO_P_PUBLIC_BASE_URL:
+        allowed_origins.append(process_config.SOGO_P_PUBLIC_BASE_URL)
+
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins,
                                      "allow_headers": ["authorization", "content-type"],
-                                        "expose_headers": ["X-Pagination"]}})
-    #TODO: remove CORS policy when we have a proper frontend
+                                     "expose_headers": ["X-Pagination"],
+                                     "supports_credentials": True}})
 
     return app
 
@@ -307,6 +314,24 @@ def register_after_request(base_blueprint: Blueprint) -> None:
                     response.set_data(dumps(
                         create_api_base_response(body, err.ERROR_VALIDATION_ERROR)
                     ))
+
+        # Security headers
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+        # Content-Security-Policy: restrict script/style sources
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'",
+        )
+        # Referrer-Policy
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        # Permissions-Policy: disallow features by default
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=()",
+        )
+
         return response
 
 def register_route(flask_api: Api, name: str, sogo_state: int) -> None:

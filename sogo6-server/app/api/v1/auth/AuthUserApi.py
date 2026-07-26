@@ -8,6 +8,8 @@ from flask_smorest import Blueprint
 
 from app.config.settings.SystemSettings import SystemSettingsObj
 from app.interface.auth.InterfaceAuthUser import InterfaceAuthUser
+from app.utils.api.ApiBaseResponse import create_api_base_response
+from app.utils import errors as err
 from app.utils.logger.logger import logger_api
 
 from .schema import authUser as sch
@@ -62,6 +64,21 @@ class ApiAuthUserLogin(MethodView):
         """
         Action, Authenticate the user for plain mode
         """
+        # Per-IP rate limiting (20 requests per minute per IP)
+        from app.service import sogo_cache
+        from app.utils.api.login_rate_limiter import LoginRateLimiter
+
+        client_ip = request.remote_addr or "unknown"
+        limiter = LoginRateLimiter(sogo_cache())
+        ip_key = f"login:ip:{client_ip}"
+        r = limiter._r
+        count = r.incr(ip_key)
+        if count == 1:
+            r.expire(ip_key, 60)  # 1-minute window
+        if count > 20:  # Max 20 login attempts per minute per IP
+            logger_api.warning("Rate-limited login from IP=%s (count=%d)", client_ip, count)
+            return create_api_base_response(None, err.ERROR_LOGIN_FAILED)
+
         interface_api : InterfaceAuthUser = g.inter
         return interface_api.plain_login(new_data)
 
