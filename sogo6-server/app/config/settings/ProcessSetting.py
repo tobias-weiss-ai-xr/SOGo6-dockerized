@@ -201,6 +201,7 @@ class ProcessSetting(FlaskConfig):
     SOGO_P_TABLE_CONTACT_SHARES: str = "sogo6_contacts_shares"
     SOGO_P_TABLE_FILE_STORAGE:         str = "sogo6_file_storage"
     SOGO_P_TABLE_MFA_TOTP:   str = "sogo6_mfa_totp"
+    SOGO_P_TABLE_MFA_WEBAUTHN: str = "sogo6_mfa_webauthn"
     SOGO_P_TABLE_PWD_RESET_TOKENS: str = "sogo6_password_reset_tokens"
 
     # --- Admin Authentication ---

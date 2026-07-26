@@ -646,6 +646,54 @@ ALL_MFA_TOTP_COL = [COL_ID,
 TABLE_MFA_TOTP = Table(name=process_config.SOGO_P_TABLE_MFA_TOTP, columns=ALL_MFA_TOTP_COL,
                        primary_keys=(COL_ID.name,),)
 
+############################
+# Table sogo6_mfa_webauthn #
+############################
+"""
+WebAuthn credential storage for passkey / security key authentication.
+
+Each row represents a single credential (public key credential source) registered
+by a user. A user may have multiple credentials (e.g. a YubiKey + iCloud Passkey).
+
+Columns:
+- id: primary key
+- user_uid: user identifier (email) — FK to user profile
+- credential_id: base64url-encoded Credential ID (unique)
+- public_key_cbor: COSE_Key-encoded public key bytes (base64)
+- sign_count: current signature counter for replay detection
+- device_name: human-readable label set by the user (e.g. "My YubiKey 5")
+- transports: JSON array of authenticator transports (usb, nfc, ble, internal)
+- enabled: whether this credential is active
+- created_at: timestamp when registered
+- last_used_at: timestamp of last successful assertion
+"""
+COL_WA_USER_UID        = Column(name="user_uid",        data_type="text",     extra_args={"max_len": 512})
+COL_WA_CREDENTIAL_ID   = Column(name="credential_id",   data_type="text",     is_unique=True, extra_args={"max_len": 512})
+COL_WA_PUBLIC_KEY      = Column(name="public_key",      data_type="text")
+COL_WA_SIGN_COUNT      = Column(name="sign_count",      data_type="int",      is_nullable=False)
+COL_WA_DEVICE_NAME     = Column(name="device_name",     data_type="text",     extra_args={"max_len": 128})
+COL_WA_TRANSPORTS      = Column(name="transports",      data_type="dict",     is_nullable=True)
+COL_WA_ENABLED         = Column(name="enabled",         data_type="bool",     is_nullable=False)
+COL_WA_CREATED_AT      = Column(name="created_at",      data_type="datetime", is_nullable=True)
+COL_WA_LAST_USED_AT    = Column(name="last_used_at",    data_type="datetime", is_nullable=True)
+
+ALL_MFA_WEBAUTHN_COL = [COL_ID,
+                        COL_WA_USER_UID,
+                        COL_WA_CREDENTIAL_ID,
+                        COL_WA_PUBLIC_KEY,
+                        COL_WA_SIGN_COUNT,
+                        COL_WA_DEVICE_NAME,
+                        COL_WA_TRANSPORTS,
+                        COL_WA_ENABLED,
+                        COL_WA_CREATED_AT,
+                        COL_WA_LAST_USED_AT]
+
+IDX_WA_USER_UID = Index(name="idx_webauthn_user_uid", columns=(COL_WA_USER_UID.name,))
+
+TABLE_MFA_WEBAUTHN = Table(name=process_config.SOGO_P_TABLE_MFA_WEBAUTHN, columns=ALL_MFA_WEBAUTHN_COL,
+                           primary_keys=(COL_ID.name,),
+                           indexes=[IDX_WA_USER_UID])
+
 # ── Password Reset Tokens ───────────────────────────────────────────────────────
 
 COL_PWD_RESET_TOKEN   = Column(name="token_hash", data_type="str", extra_args={"max_len": 128}, is_unique=True)
@@ -680,4 +728,5 @@ ALL_TABLES = [TABLE_SETTINGS,
               TABLE_CALENDAR_SHARE,
               TABLE_CONTACT_SHARE,
               TABLE_MFA_TOTP,
+              TABLE_MFA_WEBAUTHN,
               TABLE_PWD_RESET_TOKENS]

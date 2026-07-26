@@ -305,6 +305,14 @@ ERROR_MFA_TOTP_SETUP_REQUIRED = E("S001234", "TOTP Setup Required Before Enablin
 ERROR_MFA_TOTP_NOT_ENABLED    = E("S001235", "TOTP Is Not Enabled For This Account", HTTPStatus.PRECONDITION_FAILED)
 ERROR_MFA_TOTP_VOUCHER_INVALID = E("S001236", "MFA Voucher Token Is Invalid Or Expired", HTTPStatus.UNAUTHORIZED)
 
+# ── WebAuthn / Passkeys (S00124x) ──────────────────────────────────────────────
+ERROR_WEBAUTHN_NOT_CONFIGURED      = E("S001240", "WebAuthn Is Not Configured For This Account", HTTPStatus.PRECONDITION_FAILED)
+ERROR_WEBAUTHN_ALREADY_ENABLED     = E("S001241", "WebAuthn Credential Already Exists", HTTPStatus.CONFLICT)
+ERROR_WEBAUTHN_CREDENTIAL_NOT_FOUND = E("S001242", "WebAuthn Credential Not Found", HTTPStatus.NOT_FOUND)
+ERROR_WEBAUTHN_REGISTRATION_FAILED = E("S001243", "WebAuthn Registration Verification Failed", HTTPStatus.UNAUTHORIZED)
+ERROR_WEBAUTHN_AUTHENTICATION_FAILED = E("S001244", "WebAuthn Authentication Verification Failed", HTTPStatus.UNAUTHORIZED)
+ERROR_WEBAUTHN_CHALLENGE_EXPIRED   = E("S001245", "WebAuthn Challenge Has Expired", HTTPStatus.UNAUTHORIZED)
+
 #Password Recovery
 ERROR_PWD_RESET_DISABLED          = E("S001310", "Password Recovery Is Not Enabled For This Domain", HTTPStatus.FORBIDDEN)
 ERROR_PWD_RESET_USER_NOT_FOUND    = E("S001311", "User Not Found For Password Recovery", HTTPStatus.NOT_FOUND)

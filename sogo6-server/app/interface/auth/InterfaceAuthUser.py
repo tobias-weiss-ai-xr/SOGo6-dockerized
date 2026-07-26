@@ -34,6 +34,7 @@ class InterfaceAuthUser:
         for source_uid, source_settings in default_us_source_raw.items():
             default_us_source[source_uid] = UserSourceSettingsObj(source_settings)
 
+        self._process = process
         self.module_auth = ModuleAuth(process, system_settings, default_auth, default_us_source)
         self.module_user_profile = ModuleUserProfile(process, default_domain)
         self._module_calendar: ModuleCalendar = ModuleCalendar(process)
@@ -132,30 +133,49 @@ class InterfaceAuthUser:
         if not success or user is None:
             return create_api_base_response(None, err.ERROR_LOGIN_FAILED)
 
-        # Check if MFA / TOTP is enabled for this user
+        # ── MFA checks ───────────────────────────────────────────────────
+        mfa_methods_configured: list[str] = []
+
         try:
             from app.module.auth.ModuleTOTP import ModuleTOTP
-
             totp = ModuleTOTP()
-            mfa_enabled = totp.is_enabled(uid)
-        except Exception as exc:  # pylint: disable=broad-except
+            if totp.is_enabled(uid):
+                mfa_methods_configured.append("totp")
+        except Exception as exc:
             logger_api.warning("Failed to check TOTP status for %s: %s", uid, exc)
-            mfa_enabled = False
 
-        if mfa_enabled:
+        try:
+            from app.module.auth.ModuleWebAuthn import ModuleWebAuthn
+            webauthn = ModuleWebAuthn()
+            if webauthn.has_enabled_credentials(uid):
+                mfa_methods_configured.append("webauthn")
+        except Exception as exc:
+            logger_api.warning("Failed to check WebAuthn status for %s: %s", uid, exc)
+
+        if "totp" in mfa_methods_configured:
             if mfa_code:
-                # Verify the TOTP code and issue a full JWT
                 secret = totp.get_secret(uid)
                 if not secret or not totp.verify_code(secret, mfa_code):
                     return create_api_base_response(None, err.ERROR_MFA_TOTP_INVALID_CODE)
-                # Code is valid — proceed to generate the full JWT
-                logger_api.info("MFA challenge succeeded for user=%s", uid)
+                logger_api.info("MFA (TOTP) challenge succeeded for user=%s", uid)
             else:
-                # MFA is enabled but no code provided — tell the frontend
-                logger_api.info("Login with MFA required for user=%s", uid)
-                return create_api_base_response({
-                    "mfa_required": True,
-                })
+                logger_api.info("Login with MFA (TOTP) required for user=%s", uid)
+                return create_api_base_response({"mfa_required": True, "mfa_method": "totp"})
+
+        if "webauthn" in mfa_methods_configured:
+            if "webauthn_credential" in data:
+                try:
+                    from app.interface.auth.InterfaceWebAuthn import InterfaceWebAuthn
+                    inter = InterfaceWebAuthn(self._process)
+                    result = inter.authentication_complete(credential=data["webauthn_credential"])
+                    if result.get("user_uid") != uid:
+                        return create_api_base_response(None, err.ERROR_WEBAUTHN_AUTHENTICATION_FAILED)
+                    logger_api.info("MFA (WebAuthn) challenge succeeded for user=%s", uid)
+                except RequestException as exc:
+                    return create_api_base_response(None, exc.error)
+            else:
+                logger_api.info("Login with MFA (WebAuthn) required for user=%s", uid)
+                return create_api_base_response({"mfa_required": True, "mfa_method": "webauthn"})
 
         # Generate the voucher for the authenticated user
         ret = self.module_auth.generate_voucher_from_user(user)
