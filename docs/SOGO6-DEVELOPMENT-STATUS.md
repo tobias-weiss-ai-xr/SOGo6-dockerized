@@ -192,14 +192,11 @@ These are all `#TODO` / `# FIXME` comments in the Python backend (`app/`) that f
 | **Agent** | 1 | Thread blocking |
 | **Total** | ~26 | All design-level, none blocking |
 
-### 🟡 Frontend cosmetic items
+### 🟢 All console.log now guarded
 
-| Item | Location | Impact |
-|------|----------|--------|
-| **3 `console.log` in env-service.ts** | `lib/env-service.ts` L128-151 | Inside `isDevelopment` guard, only fires in dev. Logs API health check status. |
-| **1 `console.log` in SSE service** | `lib/redux/sse/sse-service.ts:253` | Dev-level reconnection logging. |
-| **1 `console.log` in SSE API** | `lib/redux/sse/sse-api.ts:125` | Shows connection config in dev. |
-| **74 fakeApi route files** | `src/app/fakeApi/` (12 tracked) | Mock API handlers for frontend development without backend. All dev-only. |
+- env-service.ts: 10 `console.info`/`console.log` — all inside `isDevelopment` or `NODE_ENV === 'development'` guards
+- sse-api.ts, sse-service.ts, api-slice.ts: All `console.log` — guarded with `process.env.NODE_ENV === 'development'`
+- User-facing form error handlers: guarded with `process.env.NODE_ENV === 'development'`
 
 ### 🟢 Deprecated API surface
 
