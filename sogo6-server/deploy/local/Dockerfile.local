@@ -34,7 +34,7 @@ RUN poetry config virtualenvs.create false && \
     echo "Poetry install failed - dependencies may need manual setup"
 
 # Install dev/debug tools
-RUN pip install --no-cache-dir debugpy watchdog flask-debugtoolbar || true
+RUN pip install --no-cache-dir debugpy watchdog flask-debugtoolbar prometheus-client flask-compress || true
 
 # Copy source code (will be mounted by compose in dev)
 COPY . ./

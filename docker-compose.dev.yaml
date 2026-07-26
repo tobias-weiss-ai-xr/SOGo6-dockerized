@@ -99,7 +99,7 @@ services:
         reservations:
           memory: 384M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/user/v1/system"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/user/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 3

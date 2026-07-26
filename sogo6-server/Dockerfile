@@ -58,6 +58,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Install additional runtime dependencies not covered by poetry
+RUN pip install --no-cache-dir prometheus-client
+
 # Copy application code
 COPY --from=builder /build/app /app/app
 COPY --from=builder /build/migrations /app/migrations
@@ -72,9 +75,10 @@ USER sogo
 
 EXPOSE 5000
 
-# Health check
+# Health check — uses the enhanced /health endpoint which checks
+# all service dependencies (PostgreSQL, LDAP, Redis, Stalwart).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/api/user/v1/system || exit 1
+    CMD curl -f http://localhost:5000/api/user/v1/health || exit 1
 
 # Run with gunicorn in production
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", \
