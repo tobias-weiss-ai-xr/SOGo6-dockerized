@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -31,8 +31,36 @@ jobs:
       - name: Run shellcheck
         run: shellcheck tests/*.sh sogo6/scripts/*.sh
 
+  ui-build:
+    name: UI Build & Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: sogo6-ui/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd sogo6-ui
+          npm ci || npm install
+
+      - name: Run UI unit tests
+        run: |
+          cd sogo6-ui
+          npx jest --passWithNoTests --maxWorkers=2
+
+      - name: Build UI
+        run: |
+          cd sogo6-ui
+          npm run build
+
   test:
-    name: Full stack test
+    name: Full stack E2E test
     runs-on: ubuntu-24.04
     needs: [lint]
     steps:
@@ -85,6 +113,9 @@ jobs:
 
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
+
+      - name: Run Admin API CRUD E2E tests
+        run: bash tests/admin-api-test.sh
 
       - name: Run Python integration tests
         run: |

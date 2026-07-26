@@ -127,6 +127,7 @@ run_test "Nginx Proxy Tests" "$SCRIPT_DIR/nginx-test.sh"
 run_test "JMAP Email Tests" "$SCRIPT_DIR/jmap-email-test.sh" 120
 run_test "Concurrent Connection Tests" "$SCRIPT_DIR/concurrent-test.sh" 120
 run_test "Integration Flow Tests" "$SCRIPT_DIR/integration-test.sh" 180
+run_test "Admin API CRUD Tests" "$SCRIPT_DIR/admin-api-test.sh" 180
 run_test "Security Tests" "$SCRIPT_DIR/security-test.sh" 120
 run_test "Configuration & Script Validation Tests" "$SCRIPT_DIR/script-test.sh"
 run_python_tests
