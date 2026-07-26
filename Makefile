@@ -145,6 +145,18 @@ test-dev:
 test-watch:
 	docker compose -f docker-compose.dev.yaml exec sogo6-server ptw --snapshot-update --on-pass "echo 'Tests passed!'"
 
+load-test:
+	@echo "Running load/performance tests..."
+	@bash tests/load/run.sh
+
+load-test-quick:
+	@echo "Running quick sync benchmark..."
+	@bash tests/load/run.sh --sync-only
+
+load-test-k6:
+	@echo "Running k6 HTTP API load tests..."
+	@bash tests/load/run.sh --k6-only
+
 help:
 	@echo "Available targets:"
 	@echo "  === Production Stack ==="
