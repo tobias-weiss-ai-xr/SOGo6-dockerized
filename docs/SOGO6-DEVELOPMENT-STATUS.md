@@ -196,7 +196,6 @@ These are all `#TODO` / `# FIXME` comments in the Python backend (`app/`) that f
 
 | Item | Location | Impact |
 |------|----------|--------|
-| **5 `#TODO` mapping comments** | `user-preferences-types.ts` L46-51 | Annotations documenting backend field names. Cosmetic only. |
 | **3 `console.log` in env-service.ts** | `lib/env-service.ts` L128-151 | Inside `isDevelopment` guard, only fires in dev. Logs API health check status. |
 | **1 `console.log` in SSE service** | `lib/redux/sse/sse-service.ts:253` | Dev-level reconnection logging. |
 | **1 `console.log` in SSE API** | `lib/redux/sse/sse-api.ts:125` | Shows connection config in dev. |
@@ -227,7 +226,15 @@ Not all files in `sogo6-ui/` are tracked by git. The `.gitignore` excludes `sogo
 | fakeApi routes | ✅ 12/74 files |
 | Admin page test files | ✅ 7 files (users, sessions, system, theme, rules, custom_domains, layout) |
 | Admin page source | ✅ `custom_domains/page.tsx`, `rules/page.tsx` |
+| User preferences types | ✅ `user-preferences-types.ts` |
 | Other UI components | ❌ Gitignored (part of upstream SOGo6-UI) |
+
+### Tracked backend files (force-added)
+
+| Category | Tracked |
+|----------|---------|
+| SMTP client | ✅ `ClientSmtp.py` |
+| SMTP tests | ✅ `test_ClientSmtp.py` (32 tests) |
 
 ---
 
@@ -235,7 +242,7 @@ Not all files in `sogo6-ui/` are tracked by git. The `.gitignore` excludes `sogo
 
 | Suite | Files | Pass | Fail | Coverage |
 |-------|-------|------|------|----------|
-| **Backend Python** | 134 test files | **1691** | 1* | Module, interface, API, E2E |
+| **Backend Python** | 135 test files | **1723** | 1* | Module, interface, API, E2E, SMTP TCP (32) |
 | **UI Jest** | 589 test files | **69** | 6* | Admin pages, user settings, a11y |
 | **Admin API (bash)** | 1 suite | **29** | 0 | All admin endpoints |
 | **Playwright E2E** | 4 specs | **23** | 0 | Auth, admin, nav, settings |
