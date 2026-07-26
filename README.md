@@ -10,7 +10,7 @@
 
 Docker Compose environment for evaluating [SOGo 6](https://www.sogo.nu/) — the next-generation groupware suite (Next.js + Python/Flask) with a full mail backend (Stalwart) and LDAP authentication (OpenLDAP).
 
-- **Blog post**: [SOGo 6 Evaluation: A Technical Deep Dive](https://graphwiz.ai/blog/sogo6-evaluation)
+- **Blog post**: [SOGo 6 Evaluation: A Technical Deep Dive](https://tobias-weiss.org/content/devops/sogo6-evaluation-technical-deep-dive) ([DE](https://tobias-weiss.org/content/devops/sogo6-evaluierung-technische-analyse))
 - **Related**: [docker-sogo](https://github.com/tobias-weiss-ai-xr/docker-sogo) — production-ready SOGo 5 Docker image & Helm chart
 
 ## Architecture
