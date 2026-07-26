@@ -20,11 +20,8 @@ COPY . ./
 # Expose dev server port and WebSocket port
 EXPOSE 3000 24678
 
-# Build then serve (more memory-efficient than next dev for this project)
-# Uses standalone server because next.config.mjs has output: 'standalone'
+# Use next dev for reliable message loading and hot reload
 CMD ["sh", "-c", "if [ -f next.config.mjs ] || [ -f next.config.js ]; then \
-  echo '=== Building for production ===' && \
-  npm run build 2>&1 && \
-  echo '=== Starting standalone server ===' && \
-  node .next/standalone/server.js; \
+  echo '=== Starting dev server (next dev) ===' && \
+  npx next dev --port 3000 --hostname 0.0.0.0; \
   else echo 'UI source missing - run make setup first'; fi"]
