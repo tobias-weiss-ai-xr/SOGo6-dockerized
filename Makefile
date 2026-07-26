@@ -157,6 +157,17 @@ load-test-k6:
 	@echo "Running k6 HTTP API load tests..."
 	@bash tests/load/run.sh --k6-only
 
+test-e2e:
+	@echo "Running Playwright E2E frontend tests..."
+	@cd tests/e2e && npx playwright test --config=playwright.config.ts
+
+test-e2e-report:
+	@echo "Opening Playwright HTML report..."
+	@cd tests/e2e && npx playwright show-report
+
+test-all: test test-e2e load-test
+	@echo "All test suites passed."
+
 help:
 	@echo "Available targets:"
 	@echo "  === Production Stack ==="
