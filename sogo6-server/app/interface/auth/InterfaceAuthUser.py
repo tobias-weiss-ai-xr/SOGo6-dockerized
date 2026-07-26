@@ -87,11 +87,37 @@ class InterfaceAuthUser:
         """
         uid = data["username"]
         password = data["password"]
+        mfa_code: str | None = data.get("mfa_code")
 
         success, user, module_us = self._check_login(uid, password)
 
         if not success:
             return create_api_base_response(None, err.ERROR_LOGIN_FAILED)
+
+        # Check if MFA / TOTP is enabled for this user
+        try:
+            from app.module.auth.ModuleTOTP import ModuleTOTP
+
+            totp = ModuleTOTP()
+            mfa_enabled = totp.is_enabled(uid)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger_api.warning("Failed to check TOTP status for %s: %s", uid, exc)
+            mfa_enabled = False
+
+        if mfa_enabled:
+            if mfa_code:
+                # Verify the TOTP code and issue a full JWT
+                secret = totp.get_secret(uid)
+                if not secret or not totp.verify_code(secret, mfa_code):
+                    return create_api_base_response(None, err.ERROR_MFA_TOTP_INVALID_CODE)
+                # Code is valid — proceed to generate the full JWT
+                logger_api.info("MFA challenge succeeded for user=%s", uid)
+            else:
+                # MFA is enabled but no code provided — tell the frontend
+                logger_api.info("Login with MFA required for user=%s", uid)
+                return create_api_base_response({
+                    "mfa_required": True,
+                })
 
         # Generate the voucher for the authenticated user
         ret = self.module_auth.generate_voucher_from_user(user)

@@ -295,3 +295,12 @@ ERROR_APP_PASSWORD_NOT_FOUND   = E("S001220", "App Password Not Found", HTTPStat
 ERROR_APP_PASSWORD_NOT_OWNED   = E("S001221", "App Password Does Not Belong To User", HTTPStatus.FORBIDDEN)
 ERROR_APP_PASSWORD_INVALID     = E("S001222", "App Password Token Is Invalid", HTTPStatus.UNAUTHORIZED)
 ERROR_APP_PASSWORD_LABEL_EMPTY = E("S001223", "App Password Label Cannot Be Empty", HTTPStatus.BAD_REQUEST)
+
+# ── MFA / TOTP (S00123x) ──────────────────────────────────────────────────────
+ERROR_MFA_TOTP_NOT_CONFIGURED = E("S001230", "TOTP Is Not Configured For This Account", HTTPStatus.PRECONDITION_FAILED)
+ERROR_MFA_TOTP_ALREADY_ENABLED = E("S001231", "TOTP Is Already Enabled For This Account", HTTPStatus.CONFLICT)
+ERROR_MFA_TOTP_ALREADY_DISABLED = E("S001232", "TOTP Is Already Disabled For This Account", HTTPStatus.CONFLICT)
+ERROR_MFA_TOTP_INVALID_CODE   = E("S001233", "TOTP Verification Code Is Invalid", HTTPStatus.UNAUTHORIZED)
+ERROR_MFA_TOTP_SETUP_REQUIRED = E("S001234", "TOTP Setup Required Before Enabling", HTTPStatus.PRECONDITION_FAILED)
+ERROR_MFA_TOTP_NOT_ENABLED    = E("S001235", "TOTP Is Not Enabled For This Account", HTTPStatus.PRECONDITION_FAILED)
+ERROR_MFA_TOTP_VOUCHER_INVALID = E("S001236", "MFA Voucher Token Is Invalid Or Expired", HTTPStatus.UNAUTHORIZED)
