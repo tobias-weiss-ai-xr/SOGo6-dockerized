@@ -163,20 +163,18 @@ graph TD
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Free/Busy UI** | Backend done, no frontend | Calendar free/busy engine works, needs UI |
-| **Collected Addresses UI** | Backend done, no frontend | Auto-collected addresses stored, needs settings page |
-| **Contact Lists UI** | Backend done, UI needs redesign | Backend CRUD works, list creation dialog needed |
+| **Free/Busy UI** | ✅ Complete | Frontend timeline-freebusy component is in the event form |
+| **Collected Addresses UI** | ✅ Complete | Toggle + address book name field in mail general settings |
+| **Contact Lists UI** | ✅ Complete | Distribution list dialog works from contact selection |
 | **Mail SMTP TLS variants** | Code exists, untested | Explicit/implicit TLS, auth PLAIN/XOAUTH2 untested |
-| **User Settings pages** | ~80% done | Calendar categories/general, mail categories/labels/general, address books — all have forms + error states, but some use hardcoded data instead of live API |
-| **Admin Panel polish** | ~95% done | Some sections use `alert()` → replaced with toasts, one translation comment remains |
-| **fakeApi console.log** | Cosmetic | 13 mock API handlers have debug console.log — dev-only, not production |
+| **User Settings pages** | ✅ Complete | All forms wired to live API, no hardcoded stubs remaining |
+| **Admin Panel polish** | ✅ Complete | `alert()` → toasts, TODO comments cleaned up |
+| **fakeApi console.log** | ✅ Complete | Removed from all 13 mock handlers |
+| **Form debug logs** | ✅ Complete | `console.log` → guarded `console.warn` in form error handlers |
 
 ### 🟢 Quick Wins (if desired)
 
-1. **Free/Busy frontend** — The backend `FreeBusyEngine.py` returns free/busy data; needs a simple UI
-2. **Contact collected addresses settings page** — The backend stores auto-collected addresses; needs a settings toggle
-3. **SMTP TLS integration test** — Write a test for explicit/implicit TLS SMTP connections
-4. **fakeApi console.log cleanup** — Remove debug logs from mock routes
+1. **SMTP TLS integration test** — Write a test for explicit/implicit TLS SMTP connections
 
 ---
 
