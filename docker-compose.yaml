@@ -4,7 +4,7 @@ services:
     container_name: sogo6-ui
     build:
       context: ./sogo6-ui
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     environment:
       REACT_APP_API_BASE_URL: http://sogo6-server:5000/api/user/v1
       NEXT_PUBLIC_ADMIN_DOMAINS: admin.localhost
@@ -36,7 +36,7 @@ services:
     container_name: sogo6-server
     build:
       context: ./sogo6-server
-      dockerfile: deploy/local/Dockerfile.local
+      dockerfile: Dockerfile
     environment:
       FLASK_ENV: development
       FLASK_APP: app

@@ -8,17 +8,23 @@ WORKDIR /app
 # Install git for potential npm installs
 RUN apk add --no-cache git
 
-# Copy package files first for better caching
-COPY package*.json . 2>/dev/null || echo "No package files found"
+# Copy package files (conditional - skip if missing)
+COPY package.json package-lock.json* ./
 
 # Install dependencies if package.json exists
-RUN if [ -f package.json ]; then npm ci; else echo "No package.json - skipping npm ci"; fi
+RUN if [ -f package.json ]; then npm ci || npm install; else echo "No package.json - skipping npm install"; fi
 
 # Copy source code (will be mounted by compose in dev)
-COPY . . 2>/dev/null || echo "No source code to copy"
+COPY . ./
 
 # Expose dev server port and WebSocket port
 EXPOSE 3000 24678
 
-# Start dev server with hot reload (or next dev if next.config exists)
-CMD if [ -f next.config.js ]; then npm run dev; else if [ -f .next ]; then npm run start; else npm run dev || echo "UI source missing - run make setup first"; fi; fi
+# Build then serve (more memory-efficient than next dev for this project)
+# Uses standalone server because next.config.mjs has output: 'standalone'
+CMD ["sh", "-c", "if [ -f next.config.mjs ] || [ -f next.config.js ]; then \
+  echo '=== Building for production ===' && \
+  npm run build 2>&1 && \
+  echo '=== Starting standalone server ===' && \
+  node .next/standalone/server.js; \
+  else echo 'UI source missing - run make setup first'; fi"]

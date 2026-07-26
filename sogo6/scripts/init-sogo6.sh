@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # Auto-detect server URL
-if docker ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-server; then
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE 'sogo6-server(-dev)?'; then
     DEFAULT_SERVER="http://localhost:5001"
 else
     DEFAULT_SERVER="http://sogo6-server:5000"
@@ -149,7 +149,8 @@ wait_for_dependencies() {
 
     log_info "  Waiting for PostgreSQL..."
     for i in {1..30}; do
-        if docker exec sogo6-postgres pg_isready -U sogo 2>/dev/null; then
+        local pg_container=$(docker ps --format '{{.Names}}' | grep -E '^sogo6-postgres' | head -1)
+    if [ -n "$pg_container" ] && docker exec "$pg_container" pg_isready -U sogo 2>/dev/null; then
             log_success "PostgreSQL is ready"
             break
         fi
@@ -162,7 +163,8 @@ wait_for_dependencies() {
 
     log_info "  Waiting for LDAP..."
     for i in {1..30}; do
-        if docker exec sogo6-ldap ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null | grep -q "dc=example"; then
+        local ldap_container=$(docker ps --format '{{.Names}}' | grep -E '^sogo6-ldap' | head -1)
+    if [ -n "$ldap_container" ] && docker exec "$ldap_container" ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null | grep -q "dc=example"; then
             log_success "LDAP is ready"
             break
         fi
@@ -176,7 +178,7 @@ wait_for_dependencies() {
     log_info "  Waiting for Stalwart..."
     for i in {1..30}; do
         if timeout 2 bash -c 'echo > /dev/tcp/localhost/20993' 2>/dev/null || \
-           docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep 'sogo6-stalwart.*healthy' | grep -q .; then
+           docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep -E 'sogo6-stalwart.*healthy' | grep -q .; then
             log_success "Stalwart is ready"
             break
         fi
@@ -262,6 +264,34 @@ admin_login() {
 configure_system_settings() {
     local jwt_token="$1"
 
+    # Run DB migration: add settings_theme column if missing
+    log_info "Running DB migrations..."
+    docker compose exec -T sogo6-postgres psql -U "${SOGO_PG_USER}" -d "${SOGO_PG_DATABASE}" -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='${SOGO_P_TABLE_SETTINGS}' AND column_name='settings_theme'
+        ) THEN
+          ALTER TABLE ${SOGO_P_TABLE_SETTINGS} ADD COLUMN settings_theme JSONB DEFAULT '{}'::jsonb;
+        END IF;
+      END
+      \$\$;
+    " 2>&1 | tee -a "${LOG_FILE}"
+    
+    # Run DB migration: add rule_description column if missing
+    docker compose exec -T sogo6-postgres psql -U "${SOGO_PG_USER}" -d "${SOGO_PG_DATABASE}" -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='${SOGO_P_TABLE_RULES}' AND column_name='rule_description'
+        ) THEN
+          ALTER TABLE ${SOGO_P_TABLE_RULES} ADD COLUMN rule_description TEXT DEFAULT '';
+        END IF;
+      END
+      \$\$;
+    " 2>&1 | tee -a "${LOG_FILE}"
     log_info "Configuring system settings..."
 
     local system_data='{

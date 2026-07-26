@@ -1,43 +1,47 @@
 # Development Dockerfile for SOGo 6 Server
-# Multi-stage build with development target
+# Single stage for development (source will be mounted by compose)
 
-FROM python:3.11-slim AS base
+FROM python:3.14-slim AS development
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including LDAP and PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     libpq-dev \
+    libldap2-dev \
+    libsasl2-dev \
     git \
     && rm -rf /var/lib/apt/lists/*
-
-# Development stage (default for dev)
-FROM base AS development
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     FLASK_ENV=development \
-    FLASK_DEBUG=1
+    FLASK_DEBUG=1 \
+    PIP_NO_CACHE_DIR=off
 
-# Copy requirements first for better caching
-COPY requirements.txt requirements-dev.txt ./
+# Install Poetry
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir poetry
 
-# Install dev dependencies
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt 2>/dev/null || \
-    pip install --no-cache-dir -r requirements.txt 2>/dev/null || \
-    echo "No requirements files found - skipping pip install"
+# Copy dependency files first for better caching
+COPY pyproject.toml poetry.lock* ./
 
-# Install debugpy for remote debugging (always available)
-RUN pip install debugpy watchdog flask-debugtoolbar 2>/dev/null || true
+# Install project dependencies via Poetry
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-cache --no-ansi --no-interaction --no-root || \
+    echo "Poetry install failed - dependencies may need manual setup"
 
-# Copy source code (will be mounted by compose, but copy for standalone builds)
-COPY . . 2>/dev/null || echo "No source code to copy"
+# Install dev/debug tools
+RUN pip install --no-cache-dir debugpy watchdog flask-debugtoolbar || true
+
+# Copy source code (will be mounted by compose in dev)
+COPY . ./
 
 # Expose app port and debug port
 EXPOSE 5000 5678
 
-# Run with debug and auto-reload
-CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "flask", "run", \
-     "--host=0.0.0.0", "--port=5000", "--reload", "--with-threads"]
+# Run with debug and auto-reload using app/run.py
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
+     "app/run.py", "--host=0.0.0.0", "--port=5000", "--debug"]

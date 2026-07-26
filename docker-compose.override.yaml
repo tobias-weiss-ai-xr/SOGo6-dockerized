@@ -17,7 +17,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2G
           cpus: "2.0"
 
   sogo6-server:

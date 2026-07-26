@@ -24,6 +24,16 @@ secrets/
 !.devcontainer.json
 sogo6/nginx/certs/
 backups/
+
+# Sub-repo source code (cloned from external repos)
+# Only keep tracked dev config files
+sogo6-ui/
+!sogo6-ui/Dockerfile
+!sogo6-ui/Dockerfile.prod
+sogo6-server/
+!sogo6-server/deploy/local/Dockerfile.local
+!sogo6-server/Dockerfile
+!sogo6-server/requirements-dev.txt
 __pycache__/
 .pytest_cache/
 *.pyc
