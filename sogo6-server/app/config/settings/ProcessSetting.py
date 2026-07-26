@@ -40,7 +40,22 @@ class FlaskConfig(BaseSettings):
     BASIC_OPENAPI_JSON_PATH: str       = "openapi-basic.json"
     BASIC_OPENAPI_SWAGGER_UI_PATH: str = "/swagger-basic"
     BASIC_OPENAPI_SWAGGER_UI_URL: str  = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    BASIC_API_SPEC_OPTIONS: dict = {'security': [{"bearerAuth": []}], 'components': {
+    BASIC_API_SPEC_OPTIONS: dict = {
+        'security': [{"bearerAuth": []}],
+        'info': {
+            'description': 'SOGo 6 groupware REST API — mail, calendar, contacts, and user management. '
+                           'Authenticate via the `/auth/login` endpoint or an app password, then '
+                           'click the **Authorize** button and paste your `Bearer <token>`.',
+            'contact': {
+                'name': 'SOGo Community Fork',
+                'url': 'https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized',
+            },
+            'license': {
+                'name': 'MIT',
+                'url': 'https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized/blob/dev/LICENSE',
+            },
+        },
+        'components': {
             "securitySchemes":
                 {
                     "bearerAuth": {
@@ -49,7 +64,28 @@ class FlaskConfig(BaseSettings):
                         "bearerFormat": "JWT"
                     }
                 }
-        }}
+        },
+        'tags': [
+            {'name': 'Auth', 'description': 'User authentication, MFA, password reset'},
+            {'name': 'MFA', 'description': 'Multi-factor authentication setup and management'},
+            {'name': 'Password Reset', 'description': 'Password recovery workflow'},
+            {'name': 'Profile', 'description': 'User profile and password change'},
+            {'name': 'Preferences', 'description': 'User preferences (locale, notification settings)'},
+            {'name': 'Customization', 'description': 'Theme settings and UI customization'},
+            {'name': 'App Passwords', 'description': 'Application-specific passwords for desktop/mobile clients'},
+            {'name': 'Mail', 'description': 'Read, manage, and perform actions on emails'},
+            {'name': 'Mail Send', 'description': 'Send emails, manage drafts and attachments'},
+            {'name': 'Mail Folder', 'description': 'Mail folder management (create, rename, delete, subscribe)'},
+            {'name': 'Mail Account', 'description': 'Mail account and mailbox settings'},
+            {'name': 'Mail Search', 'description': 'Search emails across folders'},
+            {'name': 'Mail Filter', 'description': 'Sieve filter rules, vacation, forward, notification'},
+            {'name': 'Calendar', 'description': 'Calendar CRUD, events, tasks, reminders, sharing'},
+            {'name': 'Contact', 'description': 'Address book CRUD, contacts, distribution lists, sharing'},
+            {'name': 'Job', 'description': 'Asynchronous job status and cancellation'},
+            {'name': 'System', 'description': 'System information and API version'},
+            {'name': 'Health', 'description': 'Health check endpoint for monitoring'},
+        ],
+    }
 
 
     #Flask smorest config for admin api
@@ -60,7 +96,22 @@ class FlaskConfig(BaseSettings):
     ADMIN_OPENAPI_JSON_PATH: str       = "openapi-admin.json"
     ADMIN_OPENAPI_SWAGGER_UI_PATH: str = "/swagger-admin"
     ADMIN_OPENAPI_SWAGGER_UI_URL: str  = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    ADMIN_API_SPEC_OPTIONS: dict = {'security': [{"bearerAuth": []}], 'components': {
+    ADMIN_API_SPEC_OPTIONS: dict = {
+        'security': [{"bearerAuth": []}],
+        'info': {
+            'description': 'SOGo 6 admin REST API — user management, domain configuration, system settings. '
+                           'Authenticate via the `/auth/login` endpoint, then click the **Authorize** button '
+                           'and paste your `Bearer <token>`.',
+            'contact': {
+                'name': 'SOGo Community Fork',
+                'url': 'https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized',
+            },
+            'license': {
+                'name': 'MIT',
+                'url': 'https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized/blob/dev/LICENSE',
+            },
+        },
+        'components': {
             "securitySchemes":
                 {
                     "bearerAuth": {
@@ -69,7 +120,13 @@ class FlaskConfig(BaseSettings):
                         "bearerFormat": "JWT"
                     }
                 }
-        }}
+        },
+        'tags': [
+            {'name': 'AdminAuth', 'description': 'Admin authentication'},
+            {'name': 'Config', 'description': 'System and domain configuration'},
+            {'name': 'Admin Users', 'description': 'User management (list, create, update, delete)'},
+        ],
+    }
 
 
 

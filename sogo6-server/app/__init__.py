@@ -26,6 +26,8 @@ from app.utils.logger.json_logger import enable_json_logging
 from app.utils.api.prometheus import init_prometheus
 from app.utils.exceptions import AggravatedException
 
+from pathlib import Path
+
 #Apis
 from app.api import all_apis
 from app.interface.auth.InterfaceAuthUser import InterfaceAuthUser
@@ -57,6 +59,15 @@ def create_app(sogo_state: int) -> Flask:
     if not app.config.get("DO_SWAGGER"):
         app.config.pop("BASIC_OPENAPI_URL_PREFIX")
         app.config.pop("ADMIN_OPENAPI_URL_PREFIX")
+    else:
+        # Load custom Swagger UI template
+        template_path = Path(__file__).resolve().parent / "templates" / "swagger-ui.html"
+        if template_path.exists():
+            swagger_template = template_path.read_text(encoding="utf-8")
+            app.config["BASIC_OPENAPI_SWAGGER_UI_TEMPLATE"] = swagger_template
+            app.config["ADMIN_OPENAPI_SWAGGER_UI_TEMPLATE"] = swagger_template
+        else:
+            logger.warning("Custom Swagger UI template not found at %s", template_path)
 
 
     flask_api = Api(app, config_prefix="BASIC_") # type: ignore [call-arg]
@@ -322,7 +333,12 @@ def register_after_request(base_blueprint: Blueprint) -> None:
         # Content-Security-Policy: restrict script/style sources
         response.headers.setdefault(
             "Content-Security-Policy",
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'",
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data:; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self' https://cdn.jsdelivr.net",
         )
         # Referrer-Policy
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")

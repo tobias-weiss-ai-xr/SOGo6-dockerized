@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ swagger_ui_url }}/swagger-ui.css">
+  <style>
+    html { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; }
+    body { margin: 0; background: #fafafa; font-family: sans-serif; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #1a1a2e; color: #fff; }
+    .topbar h1 { margin: 0; font-size: 18px; font-weight: 600; }
+    .topbar .subtitle { font-size: 13px; opacity: 0.7; margin-left: 12px; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .topbar-actions button { padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; background: transparent; color: #fff; cursor: pointer; font-size: 13px; }
+    .topbar-actions button:hover { background: rgba(255,255,255,0.1); }
+    .topbar-actions button.primary { background: #4a9eff; border-color: #4a9eff; }
+    .topbar-actions button.primary:hover { background: #3a8eef; }
+    .login-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+    .login-modal-overlay.active { display: flex; }
+    .login-modal { background: #fff; border-radius: 8px; padding: 24px; width: 400px; max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+    .login-modal h2 { margin: 0 0 4px; font-size: 18px; }
+    .login-modal .desc { color: #666; font-size: 13px; margin-bottom: 16px; }
+    .login-modal label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #333; }
+    .login-modal input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; margin-bottom: 12px; }
+    .login-modal input:focus { outline: none; border-color: #4a9eff; box-shadow: 0 0 0 2px rgba(74,158,255,0.2); }
+    .login-modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+    .login-modal .btn-row button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 14px; }
+    .login-modal .btn-row button.primary { background: #4a9eff; border-color: #4a9eff; color: #fff; }
+    .login-modal .btn-row button.primary:hover { background: #3a8eef; }
+    .login-modal .error { color: #d32f2f; font-size: 13px; margin-top: 8px; display: none; }
+    .login-modal .error.visible { display: block; }
+    .login-modal .success { color: #2e7d32; font-size: 13px; margin-top: 8px; display: none; }
+    .login-modal .success.visible { display: block; }
+    .login-modal select { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; margin-bottom: 12px; background: #fff; }
+    #swagger-ui { max-width: 1460px; margin: 0 auto; padding: 0 20px; }
+    .info-section { max-width: 1460px; margin: 12px auto 0; padding: 0 20px; }
+    .info-section .rate-limit-banner { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 6px; padding: 10px 16px; font-size: 13px; color: #e65100; margin-bottom: 12px; }
+    .swagger-ui .info { margin: 20px 0; }
+    .swagger-ui .info .title { font-size: 28px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>{{ title }}</h1>
+    <span class="subtitle">SOGo 6 API Playground</span>
+  </div>
+  <div class="topbar-actions">
+    <button onclick="showLoginModal()" class="primary">Get Auth Token</button>
+    <button onclick="clearAuth()">Clear Token</button>
+  </div>
+</div>
+
+<div class="info-section">
+  <div class="rate-limit-banner">
+    <strong>Rate Limiting:</strong> User API: 20 requests/minute per IP.
+    Admin API: 30 requests/minute per IP.
+    Exceeding these limits returns HTTP 429. Include your auth token to get higher limits.
+  </div>
+</div>
+
+<div id="swagger-ui"></div>
+
+<div class="login-modal-overlay" id="loginModal">
+  <div class="login-modal">
+    <h2>Get API Token</h2>
+    <p class="desc">Enter your credentials to obtain a bearer token. The token will be automatically populated in the Authorize dialog.</p>
+    <label for="loginType">Login Type</label>
+    <select id="loginType">
+      <option value="user">User (mailbox)</option>
+      <option value="admin">Admin</option>
+    </select>
+    <label for="loginUsername">Username</label>
+    <input type="text" id="loginUsername" placeholder="user@example.org" autocomplete="username">
+    <label for="loginPassword">Password</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    <label for="loginMfa">MFA Code <span style="font-weight:400;color:#999;">(optional)</span></label>
+    <input type="text" id="loginMfa" placeholder="123456">
+    <div class="error" id="loginError"></div>
+    <div class="success" id="loginSuccess">Token obtained! Click Authorize below to use it.</div>
+    <div class="btn-row">
+      <button onclick="hideLoginModal()">Cancel</button>
+      <button class="primary" onclick="doLogin()">Get Token</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ swagger_ui_url }}/swagger-ui-bundle.js"></script>
+<script src="{{ swagger_ui_url }}/swagger-ui-standalone-preset.js"></script>
+<script>
+// --- Swagger UI Initialization ---
+const ui = SwaggerUIBundle({
+  url: "{{ openapi_url }}",
+  dom_id: '#swagger-ui',
+  deepLinking: true,
+  presets: [
+    SwaggerUIBundle.presets.apis,
+    SwaggerUIStandalonePreset
+  ],
+  plugins: [
+    SwaggerUIBundle.plugins.DownloadUrl
+  ],
+  layout: "StandaloneLayout",
+  defaultModelsExpandDepth: 1,
+  defaultModelExpandDepth: 1,
+  docExpansion: "list",
+  filter: true,
+  showExtensions: true,
+  showCommonExtensions: true,
+  tryItOutEnabled: false,
+  requestInterceptor: function (req) {
+    // Ensure bearer token is sent if available from Swagger UI auth
+    return req;
+  },
+  onComplete: function () {
+    // Check if already authorized
+  }
+});
+
+// --- Login Modal ---
+function showLoginModal() {
+  document.getElementById('loginModal').classList.add('active');
+  document.getElementById('loginUsername').focus();
+  document.getElementById('loginError').classList.remove('visible');
+  document.getElementById('loginSuccess').classList.remove('visible');
+}
+
+function hideLoginModal() {
+  document.getElementById('loginModal').classList.remove('active');
+}
+
+function getLoginEndpoint() {
+  const type = document.getElementById('loginType').value;
+  if (type === 'admin') {
+    return '/api/admin/v1/auth/login';
+  }
+  return '/api/user/v1/auth/login';
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const mfaCode = document.getElementById('loginMfa').value.trim();
+  const errorEl = document.getElementById('loginError');
+  const successEl = document.getElementById('loginSuccess');
+
+  errorEl.classList.remove('visible');
+  successEl.classList.remove('visible');
+
+  if (!username || !password) {
+    errorEl.textContent = 'Username and password are required.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const body = { username: username, password: password };
+  if (mfaCode) {
+    body.mfa_code = mfaCode;
+  }
+
+  try {
+    const response = await fetch(getLoginEndpoint(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.data || !result.data.token) {
+      errorEl.textContent = result.error_msg || 'Login failed. Check your credentials.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    // Auto-fill the Authorize dialog
+    const token = result.data.token;
+    ui.authActions.authorize({
+      bearerAuth: {
+        name: 'bearerAuth',
+        schema: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        },
+        value: token
+      }
+    });
+
+    successEl.classList.add('visible');
+    setTimeout(hideLoginModal, 2000);
+  } catch (err) {
+    errorEl.textContent = 'Network error: ' + err.message;
+    errorEl.classList.add('visible');
+  }
+}
+
+function clearAuth() {
+  ui.authActions.logout();
+}
+
+// Close modal on overlay click
+document.getElementById('loginModal').addEventListener('click', function(e) {
+  if (e.target === this) hideLoginModal();
+});
+
+// Enter key to login
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('active')) {
+    doLogin();
+  }
+  if (e.key === 'Escape') {
+    hideLoginModal();
+  }
+});
+</script>
+</body>
+</html>
