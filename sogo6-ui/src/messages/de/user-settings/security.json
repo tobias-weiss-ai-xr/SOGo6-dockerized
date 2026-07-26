@@ -20,6 +20,56 @@
                     "string": "Geben Sie den von Ihrer Authentifikator-App generierten Bestätigungscode ein."
                 }
             }
+        },
+        "webauthn": {
+            "title": {
+                "string": "Passkeys (WebAuthn)",
+                "context": "Title for the WebAuthn settings section"
+            },
+            "description": {
+                "string": "Passkeys ermöglichen die Anmeldung ohne Passwort mittels biometrischem Sensor (Fingerabdruck, Face ID) oder einem Hardware-Sicherheitsschlüssel. Der Passkey wird sicher auf diesem Gerät gespeichert.",
+                "context": "Description for the WebAuthn settings section"
+            },
+            "registered_credentials": {
+                "string": "Registrierte Passkeys",
+                "context": "Label for the list of registered passkeys"
+            },
+            "registered_at": {
+                "string": "Registriert",
+                "context": "Label for the registration date of a passkey"
+            },
+            "no_credentials": {
+                "string": "Noch keine Passkeys registriert.",
+                "context": "Message when no passkeys are registered"
+            },
+            "register": {
+                "string": "Neuen Passkey registrieren",
+                "context": "Button to register a new passkey",
+                "title": {
+                    "string": "Neuen Passkey registrieren",
+                    "context": "Title for the passkey registration dialog"
+                },
+                "description": {
+                    "string": "Ihr Browser oder Gerät führt Sie durch die Einrichtung eines Passkeys mittels Biometrie, PIN oder externem Sicherheitsschlüssel.",
+                    "context": "Description for the passkey registration dialog"
+                },
+                "button": {
+                    "string": "Registrieren",
+                    "context": "Button to start passkey registration"
+                },
+                "waiting": {
+                    "string": "Warte auf Geräteinteraktion — folgen Sie den Anweisungen auf Ihrem Gerät.",
+                    "context": "Status during passkey registration"
+                },
+                "success": {
+                    "string": "Passkey erfolgreich registriert!",
+                    "context": "Status when passkey registration succeeds"
+                }
+            },
+            "device_name": {
+                "string": "Gerätename (optional)",
+                "context": "Label for the device name input field"
+            }
         }
     }
 }

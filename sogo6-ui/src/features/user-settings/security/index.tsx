@@ -11,6 +11,7 @@ import {
 } from '@/features/user-settings/store/user-preferences-api'
 import PasswordForm from './components/password-form'
 import TotpSettingsForm from './components/totp-form'
+import { WebauthnSettingsForm } from './components/webauthn-form'
 
 const TotpSettings: React.FC = () => {
   const t = useTranslations('US_SECURITY')
@@ -28,6 +29,7 @@ const TotpSettings: React.FC = () => {
         <div className="grid grid-cols-1 gap-4">
           <PasswordForm />
           <TotpSettingsForm data={data?.data} update={updateSecurity} />
+          <WebauthnSettingsForm />
         </div>
       )}
     </div>
