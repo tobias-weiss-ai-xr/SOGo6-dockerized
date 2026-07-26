@@ -37,6 +37,9 @@ COPY --from=builder /build/.next/standalone /app
 COPY --from=builder /build/.next/static /app/.next/static
 COPY --from=builder /build/public /app/public
 
+# Copy locale messages for runtime i18n (request.ts uses fs.readdirSync)
+COPY --from=builder /build/src/messages /app/src/messages
+
 # Copy package.json for version info
 COPY --from=builder /build/package.json /app/package.json
 
