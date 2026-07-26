@@ -1,0 +1,14 @@
+{
+    "CALENDAR": {
+        "pick": {
+            "range": {
+                "string": "Seleccione un rango de fechas...",
+                "context": "Default message displayed in the calendar when the user is asked to select a date range."
+            },
+            "single": {
+                "string": "Seleccione una fecha...",
+                "context": "Default message displayed in the calendar when the user is asked to select a single date."
+            }
+        }
+    }
+}

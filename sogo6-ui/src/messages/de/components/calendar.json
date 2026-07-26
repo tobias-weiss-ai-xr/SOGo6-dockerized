@@ -1,0 +1,14 @@
+{
+    "CALENDAR": {
+        "pick": {
+            "range": {
+                "string": "Datumsbereich auswählen...",
+                "context": "Default message displayed in the calendar when the user is asked to select a date range."
+            },
+            "single": {
+                "string": "Datum auswählen...",
+                "context": "Default message displayed in the calendar when the user is asked to select a single date."
+            }
+        }
+    }
+}

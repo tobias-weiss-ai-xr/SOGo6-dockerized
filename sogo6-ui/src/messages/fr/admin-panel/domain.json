@@ -1,0 +1,37 @@
+{
+    "ADMIN_PANNEL_DOMAIN": {
+        "title": {
+            "string": "Domaines personnalisés"
+        },
+        "filter_placeholder": {
+            "string": "Filtrer les domaines..."
+        },
+        "add_new_domain": {
+            "string": "Ajouter un nouveau domaine"
+        },
+        "select_all": {
+            "string": "Tout sélectionner"
+        },
+        "select_row": {
+            "string": "Sélectionner la ligne"
+        },
+        "domain": {
+            "string": "Domaine"
+        },
+        "open_menu": {
+            "string": "Ouvrir le menu"
+        },
+        "actions": {
+            "string": "Actions"
+        },
+        "copy_domain": {
+            "string": "Copier le nom du domaine"
+        },
+        "edit": {
+            "string": "Modifier"
+        },
+        "delete": {
+            "string": "Supprimer"
+        }
+    }
+}

@@ -1,0 +1,116 @@
+{
+    "US_MAIL_FORWARD": {
+        "title": {
+            "string": "E-Mail-Weiterleitung"
+        },
+        "page": {
+            "description": {
+                "string": "Eingehende Nachrichten automatisch an eine oder mehrere E-Mail-Adressen weiterleiten."
+            }
+        },
+        "labels": {
+            "transfer_incoming": {
+                "string": "Eingehende Nachrichten weiterleiten"
+            },
+            "email": {
+                "string": "E-Mail-Adresse"
+            },
+            "always_forward": {
+                "string": "Immer weiterleiten"
+            },
+            "keep_copy": {
+                "string": "Eine Kopie im Posteingang behalten"
+            }
+        },
+        "description": {
+            "transfer_incoming": {
+                "string": "Neue Nachrichten automatisch an eine andere E-Mail-Adresse weiterleiten"
+            },
+            "email": {
+                "string": "Weiterleiten an diese Adressen (maximal {max} Adressen). Mehrere Adressen durch Komma, Semikolon oder Enter/Tab getrennt eingeben."
+            }
+        },
+        "help": {
+            "email": {
+                "string": "Wir werden neue Nachrichten an diese Adressen weiterleiten"
+            }
+        },
+        "placeholders": {
+            "email": {
+                "string": "E-Mail-Adresse eingeben und Enter drücken"
+            }
+        },
+        "errors": {
+            "email": {
+                "invalid": {
+                    "string": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+                },
+                "duplicate": {
+                    "string": "This address is already in the list"
+                }
+            },
+            "emails": {
+                "list": {
+                    "string": "There was an error with one or more email addresses"
+                }
+            },
+            "max_reached": {
+                "string": "Maximum {max} addresses allowed"
+            },
+            "validation": {
+                "addresses_required": {
+                    "string": "At least one email address is required when forwarding is enabled."
+                }
+            }
+        },
+        "hints": {
+            "blur": {
+                "string": "Drücken Sie Enter, um diese Adresse hinzuzufügen"
+            }
+        },
+        "tooltip": {
+            "always_forward": {
+                "string": "Incoming mail is forwarded before applying your filters."
+            },
+            "keep_copy": {
+                "string": "Keep a copy of forwarded messages in your inbox. Useful if you want to maintain a local archive."
+            }
+        },
+        "errors_api": {
+            "title": {
+                "string": "Fehler"
+            },
+            "save_failed": {
+                "string": "Couldn't save your changes, try again"
+            },
+            "load_failed": {
+                "string": "Could not load forwarding settings. Please try again later."
+            },
+            "feature_disabled": {
+                "string": "Die E-Mail-Weiterleitung wurde von Ihrem Administrator deaktiviert."
+            }
+        },
+        "status": {
+            "enabled": {
+                "string": "Aktiviert"
+            },
+            "disabled": {
+                "string": "Deaktiviert"
+            }
+        },
+        "aria": {
+            "tags_count": {
+                "string": "{count} of {max} email addresses added"
+            },
+            "remove_email": {
+                "string": "Remove {email}"
+            },
+            "email_input_group": {
+                "string": "Email addresses for forwarding"
+            },
+            "toggle_forwarding": {
+                "string": "Toggle email forwarding"
+            }
+        }
+    }
+}

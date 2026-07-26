@@ -1,0 +1,76 @@
+{
+    "AP_SESSIONS": {
+        "title": {
+            "string": "Sessions actives"
+        },
+        "description": {
+            "string": "Consultez et gérez les sessions utilisateur actives"
+        },
+        "table": {
+            "uid": {
+                "string": "Utilisateur"
+            },
+            "domain": {
+                "string": "Domaine"
+            },
+            "last_activity": {
+                "string": "Dernière activité"
+            },
+            "actions": {
+                "string": "Actions"
+            },
+            "no_sessions": {
+                "string": "Aucune session active trouvée"
+            },
+            "loading": {
+                "string": "Chargement des sessions..."
+            }
+        },
+        "revoke": {
+            "button": {
+                "string": "Révoquer"
+            },
+            "confirm": {
+                "string": "Confirmez-vous la révocation de cette session ?"
+            },
+            "confirm_multiple": {
+                "string": "Are you sure you want to revoke the selected sessions?"
+            },
+            "revoke_selected": {
+                "string": "Revoke Selected"
+            },
+            "revoke_selected_one": {
+                "string": "Revoke Selected ({count})"
+            },
+            "success": {
+                "string": "Session révoquée avec succès"
+            },
+            "success_multiple": {
+                "string": "{count} sessions revoked successfully"
+            },
+            "error": {
+                "string": "Échec de la révocation"
+            }
+        },
+        "revoke_inactive": {
+            "button": {
+                "string": "Revoke Inactive"
+            },
+            "confirm": {
+                "string": "Confirmez-vous la révocation de toutes les sessions inactives ?"
+            },
+            "days": {
+                "string": "Days of inactivity"
+            },
+            "days_placeholder": {
+                "string": "e.g., 30"
+            },
+            "success": {
+                "string": "Sessions inactives révoquées avec succès"
+            }
+        },
+        "refresh": {
+            "string": "Refresh"
+        }
+    }
+}

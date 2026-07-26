@@ -1,0 +1,51 @@
+{
+    "FORM_COMMONS": {
+        "save": {
+            "default": {
+                "string": "Enregistrer",
+                "description": "Click to save the form data."
+            }
+        },
+        "delete": {
+            "default": {
+                "string": "Supprimer",
+                "description": "Click to delete the selected item."
+            }
+        },
+        "edit": {
+            "default": {
+                "string": "Modifier",
+                "description": "Click to edit the selected item."
+            }
+        },
+        "cancel": {
+            "default": {
+                "string": "Annuler",
+                "description": "Click to cancel the form submission."
+            }
+        },
+        "create": {
+            "default": {
+                "string": "Créer",
+                "description": "Click to create a new item."
+            }
+        },
+        "reset": {
+            "default": {
+                "string": "Réinitialiser",
+                "description": "Click to reset the form fields to their default values."
+            }
+        },
+        "enabled": {
+            "string": "Activé"
+        },
+        "emails": {
+            "placeholder": "Ajoutez une adresse et appuyez sur Entrée"
+        },
+        "validation": {
+            "required": "Ce champ est requis",
+            "identityAtLeastOneDefault": "Au moins une identité doit être définie par défaut",
+            "email": "Veuillez entrer une adresse e-mail valide"
+        }
+    }
+}

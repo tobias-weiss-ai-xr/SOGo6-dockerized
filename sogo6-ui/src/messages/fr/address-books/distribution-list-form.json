@@ -1,0 +1,83 @@
+{
+    "DISTRIBUTION_LIST_FORM": {
+        "new_list": {
+            "string": "Nouvelle liste de diffusion",
+            "context": "Title for the new distribution list dialog"
+        },
+        "edit_list": {
+            "string": "Modifier la liste de diffusion",
+            "context": "Title for the edit distribution list dialog"
+        },
+        "list_badge": {
+            "string": "Liste de diffusion",
+            "context": "Badge shown on distribution list detail view"
+        },
+        "member_count": {
+            "string": "{number, plural, one {# membre} other {# membres}}",
+            "context": "Member count on distribution list detail"
+        },
+        "members": {
+            "string": "Membres",
+            "context": "Label for members section"
+        },
+        "members_selected": {
+            "string": "{number, plural, one {# membre sélectionné} other {# membres sélectionnés}}",
+            "context": "Selected member count in form"
+        },
+        "members_required": {
+            "string": "Sélectionnez au moins un membre ou ajoutez une adresse e-mail",
+            "context": "Validation when no members are provided"
+        },
+        "manual_emails": {
+            "string": "Adresses e-mail supplémentaires",
+            "context": "Label for manual email inputs"
+        },
+        "no_members": {
+            "string": "Aucun membre dans cette liste",
+            "context": "Empty state for members section"
+        },
+        "write_message": {
+            "string": "Écrire un message",
+            "context": "Button to compose mail to all list members"
+        },
+        "add_email": {
+            "string": "Ajouter un e-mail",
+            "context": "Button to add manual email field"
+        },
+        "remove_email": {
+            "string": "Remove email",
+            "context": "Aria label for removing manual email field"
+        },
+        "create": {
+            "string": "Créer",
+            "context": "Submit button for new list"
+        },
+        "save": {
+            "string": "Enregistrer",
+            "context": "Submit button for edit list"
+        },
+        "cancel": {
+            "string": "Annuler",
+            "context": "Cancel button"
+        },
+        "fields": {
+            "name": {
+                "string": "List name"
+            },
+            "note": {
+                "string": "Description"
+            }
+        },
+        "delete_dialog": {
+            "title": {
+                "string": "Delete distribution list?"
+            },
+            "description": {
+                "string": "This distribution list will be permanently removed from your address book."
+            },
+            "confirm": {
+                "string": "Supprimer"
+            }
+        }
+    }
+}

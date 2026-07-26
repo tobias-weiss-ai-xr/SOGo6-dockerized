@@ -1,0 +1,116 @@
+{
+    "US_MAIL_FORWARD": {
+        "title": {
+            "string": "Transfert de courrier"
+        },
+        "page": {
+            "description": {
+                "string": "Transférez automatiquement les messages entrants."
+            }
+        },
+        "labels": {
+            "transfer_incoming": {
+                "string": "Transférer les messages entrants"
+            },
+            "email": {
+                "string": "Adresse e-mail"
+            },
+            "always_forward": {
+                "string": "Toujours transférer"
+            },
+            "keep_copy": {
+                "string": "Garder une copie"
+            }
+        },
+        "description": {
+            "transfer_incoming": {
+                "string": "Transférer automatiquement les nouveaux messages"
+            },
+            "email": {
+                "string": "Forward to these addresses (up to {max} addresses). Add multiple addresses separated by comma, semicolon, or press Enter/Tab."
+            }
+        },
+        "help": {
+            "email": {
+                "string": "Nous transférerons les nouveaux messages à ces adresses"
+            }
+        },
+        "placeholders": {
+            "email": {
+                "string": "Ajoutez une adresse et appuyez sur Entrée"
+            }
+        },
+        "errors": {
+            "email": {
+                "invalid": {
+                    "string": "Veuillez entrer une adresse e-mail valide"
+                },
+                "duplicate": {
+                    "string": "This address is already in the list"
+                }
+            },
+            "emails": {
+                "list": {
+                    "string": "There was an error with one or more email addresses"
+                }
+            },
+            "max_reached": {
+                "string": "Maximum {max} addresses allowed"
+            },
+            "validation": {
+                "addresses_required": {
+                    "string": "At least one email address is required when forwarding is enabled."
+                }
+            }
+        },
+        "hints": {
+            "blur": {
+                "string": "Appuyez sur Entrée pour ajouter"
+            }
+        },
+        "tooltip": {
+            "always_forward": {
+                "string": "Incoming mail is forwarded before applying your filters."
+            },
+            "keep_copy": {
+                "string": "Keep a copy of forwarded messages in your inbox. Useful if you want to maintain a local archive."
+            }
+        },
+        "errors_api": {
+            "title": {
+                "string": "Erreur"
+            },
+            "save_failed": {
+                "string": "Couldn't save your changes, try again"
+            },
+            "load_failed": {
+                "string": "Could not load forwarding settings. Please try again later."
+            },
+            "feature_disabled": {
+                "string": "Le transfert a été désactivé par votre administrateur."
+            }
+        },
+        "status": {
+            "enabled": {
+                "string": "Activé"
+            },
+            "disabled": {
+                "string": "Désactivé"
+            }
+        },
+        "aria": {
+            "tags_count": {
+                "string": "{count} of {max} email addresses added"
+            },
+            "remove_email": {
+                "string": "Remove {email}"
+            },
+            "email_input_group": {
+                "string": "Email addresses for forwarding"
+            },
+            "toggle_forwarding": {
+                "string": "Toggle email forwarding"
+            }
+        }
+    }
+}

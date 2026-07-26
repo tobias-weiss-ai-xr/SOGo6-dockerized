@@ -1,0 +1,31 @@
+{
+    "AP_SIDEBAR": {
+        "system": {
+            "string": "Sistema"
+        },
+        "theme": {
+            "string": "Tema"
+        },
+        "users": {
+            "string": "Usuarios"
+        },
+        "config": {
+            "string": "Configuración",
+            "rules": {
+                "string": "Reglas"
+            },
+            "domains": {
+                "string": "Dominios",
+                "default": {
+                    "string": "Predeterminado"
+                },
+                "custom": {
+                    "string": "Dominios personalizados"
+                }
+            }
+        }
+    },
+    "sessions": {
+        "string": "Sesiones"
+    }
+}

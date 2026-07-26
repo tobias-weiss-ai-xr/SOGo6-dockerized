@@ -1,0 +1,88 @@
+{
+    "HEADER": {
+        "theme": {
+            "title": {
+                "string": "Design",
+                "context": "Section title for the header dropdown"
+            },
+            "dark": {
+                "string": "Dunkel",
+                "context": "Dark theme switcher in the header"
+            },
+            "light": {
+                "string": "Hell",
+                "context": "Light theme switcher in the header"
+            },
+            "dyslexia": {
+                "string": "Legasthenie",
+                "context": "Dyslexia theme switcher in the header"
+            },
+            "tritanopia": {
+                "string": "Tritanopie",
+                "context": "Tritanopia theme switcher in the header"
+            },
+            "protanopia": {
+                "string": "Protanopie",
+                "context": "Protanopia theme switcher in the header"
+            },
+            "deuteranopia": {
+                "string": "Deuteranopie",
+                "context": "Deuteranopia theme switcher in the header"
+            },
+            "system": {
+                "string": "Auto",
+                "context": "Auto theme switcher in the header"
+            }
+        },
+        "admin": {
+            "panel": {
+                "string": "Administrator-Bereich",
+                "context": "Title of the admin panel in the header dropdown"
+            }
+        },
+        "account": {
+            "section": {
+                "string": "Konto",
+                "context": "Section title for the header dropdown"
+            },
+            "profile": {
+                "string": "Profil",
+                "context": "Link to the account profile in the header dropdown"
+            },
+            "security": {
+                "string": "Sicherheit",
+                "context": "Link to the account security in the header dropdown"
+            },
+            "defaultUser": {
+                "string": "Benutzer",
+                "context": "Default username fallback when profile is not yet loaded"
+            }
+        },
+        "logout": {
+            "string": "Abmelden",
+            "context": "Link to logout in the header dropdown"
+        },
+        "settings": {
+            "title": {
+                "string": "Einstellungen",
+                "context": "Section title for the header dropdown"
+            },
+            "general": {
+                "string": "Allgemein",
+                "context": "Link to the general settings in the header dropdown"
+            },
+            "calendar": {
+                "string": "Kalender",
+                "context": "Link to the calendar settings in the header dropdown"
+            },
+            "address_books": {
+                "string": "Adressbücher",
+                "context": "Link to the address books settings in the header dropdown"
+            },
+            "email": {
+                "string": "E-Mail",
+                "context": "Link to the emails settings in the header dropdown"
+            }
+        }
+    }
+}

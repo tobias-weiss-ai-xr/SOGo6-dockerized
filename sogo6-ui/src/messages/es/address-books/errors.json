@@ -1,0 +1,108 @@
+{
+    "ADDRESS_BOOKS_ERRORS": {
+        "list_member_invalid": {
+            "string": "Uno o más miembros no son contactos de esta libreta.",
+            "context": "Inline error when a distribution list member is invalid."
+        },
+        "addressbook_not_found": {
+            "string": "No se encontró la libreta.",
+            "context": "Error when an address book is missing."
+        },
+        "addressbook_duplicate": {
+            "string": "Ya existe una libreta con ese nombre.",
+            "context": "Toast when address book creation conflicts."
+        },
+        "contact_not_found": {
+            "string": "No se encontró el contacto.",
+            "context": "Error when a contact is missing."
+        },
+        "contact_duplicate": {
+            "string": "Ya existe un contacto con ese identificador.",
+            "context": "Toast when contact creation conflicts."
+        },
+        "contact_persist_failed": {
+            "string": "No se pudo guardar el contacto.",
+            "context": "Error when contact creation fails on the server."
+        },
+        "contact_update_failed": {
+            "string": "No se pudo actualizar el contacto.",
+            "context": "Error when contact update fails on the server."
+        },
+        "operation_not_supported": {
+            "string": "Operación no soportada para esta libreta.",
+            "context": "Error when mutating a non-local address book source."
+        },
+        "list_not_found": {
+            "string": "No se encontró la lista.",
+            "context": "Error when a distribution list is missing."
+        },
+        "list_duplicate": {
+            "string": "Ya existe una lista con ese nombre.",
+            "context": "Toast when list creation conflicts."
+        },
+        "list_persist_failed": {
+            "string": "No se pudo guardar la lista.",
+            "context": "Error when list creation fails on the server."
+        },
+        "list_update_failed": {
+            "string": "No se pudo actualizar la lista.",
+            "context": "Error when list update fails on the server."
+        },
+        "access_denied": {
+            "string": "No tiene permiso para modificar esta libreta.",
+            "context": "Toast when write access is denied."
+        },
+        "read_only": {
+            "string": "This address book is read-only.",
+            "context": "Toast when mutating a read-only address book."
+        },
+        "export_format_unsupported": {
+            "string": "The selected export format is not supported.",
+            "context": "Error when export format negotiation fails."
+        },
+        "import_no_file": {
+            "string": "No file was provided for import.",
+            "context": "Error when import request has no file."
+        },
+        "import_too_large": {
+            "string": "The import file exceeds the maximum allowed size (10 MB).",
+            "context": "Error when import payload is too large."
+        },
+        "import_parse_failed": {
+            "string": "The import file could not be parsed.",
+            "context": "Error when import document parsing fails."
+        },
+        "job_not_found": {
+            "string": "The background job could not be found.",
+            "context": "Error when polling an unknown job."
+        },
+        "job_forbidden": {
+            "string": "You do not have access to this background job.",
+            "context": "Error when job belongs to another user."
+        },
+        "job_not_ready": {
+            "string": "The export is not ready yet. Please wait and try again.",
+            "context": "Error when downloading a job result too early."
+        },
+        "job_no_result": {
+            "string": "This job has no downloadable result.",
+            "context": "Error when job result is unavailable."
+        },
+        "job_concurrent_limit": {
+            "string": "Too many background jobs are running. Please try again later.",
+            "context": "Error when concurrent job limit is reached."
+        },
+        "file_too_large": {
+            "string": "The photo exceeds the maximum allowed size (2 MB).",
+            "context": "Inline error when contact photo upload is too large."
+        },
+        "file_type_not_allowed": {
+            "string": "This file type is not allowed for contact photos.",
+            "context": "Inline error when contact photo type is not allowed."
+        },
+        "generic": {
+            "string": "The operation could not be completed. Please try again.",
+            "context": "Fallback error message for contact API errors."
+        }
+    }
+}

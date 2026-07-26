@@ -1,0 +1,130 @@
+{
+    "AP_USERS": {
+        "title": {
+            "string": "Gestion des utilisateurs"
+        },
+        "description": {
+            "string": "Créez, modifiez et supprimez des comptes dans l'annuaire LDAP"
+        },
+        "search": {
+            "placeholder": {
+                "string": "Rechercher par nom, e-mail ou UID..."
+            },
+            "clear": {
+                "string": "Effacer"
+            }
+        },
+        "table": {
+            "uid": {
+                "string": "UID"
+            },
+            "cn": {
+                "string": "Nom complet"
+            },
+            "mail": {
+                "string": "E-mail"
+            },
+            "sn": {
+                "string": "Nom de famille"
+            },
+            "givenName": {
+                "string": "Prénom"
+            },
+            "uidNumber": {
+                "string": "Numéro UID"
+            },
+            "gidNumber": {
+                "string": "Numéro GID"
+            },
+            "homeDirectory": {
+                "string": "Répertoire personnel"
+            },
+            "actions": {
+                "string": "Actions"
+            },
+            "no_users": {
+                "string": "Aucun utilisateur trouvé"
+            },
+            "loading": {
+                "string": "Chargement des utilisateurs..."
+            }
+        },
+        "create": {
+            "button": {
+                "string": "Create User"
+            },
+            "title": {
+                "string": "Create New User"
+            },
+            "success": {
+                "string": "Utilisateur créé avec succès"
+            },
+            "error": {
+                "string": "Échec de la création de l'utilisateur"
+            }
+        },
+        "edit": {
+            "button": {
+                "string": "Modifier"
+            },
+            "title": {
+                "string": "Edit User"
+            },
+            "save": {
+                "string": "Save Changes"
+            },
+            "success": {
+                "string": "Utilisateur mis à jour avec succès"
+            },
+            "error": {
+                "string": "Échec de la mise à jour de l'utilisateur"
+            }
+        },
+        "delete": {
+            "button": {
+                "string": "Supprimer"
+            },
+            "confirm": {
+                "string": "Êtes-vous sûr de vouloir supprimer {uid} ?"
+            },
+            "success": {
+                "string": "Utilisateur supprimé avec succès"
+            },
+            "error": {
+                "string": "Échec de la suppression de l'utilisateur"
+            }
+        },
+        "form": {
+            "uid": {
+                "string": "User ID (email)"
+            },
+            "cn": {
+                "string": "Nom complet"
+            },
+            "sn": {
+                "string": "Nom de famille"
+            },
+            "givenName": {
+                "string": "Prénom"
+            },
+            "mail": {
+                "string": "Adresse e-mail"
+            },
+            "password": {
+                "string": "Mot de passe"
+            },
+            "uidNumber": {
+                "string": "UID Number (optional)"
+            },
+            "gidNumber": {
+                "string": "GID Number (optional)"
+            },
+            "homeDirectory": {
+                "string": "Home Directory (optional)"
+            },
+            "required": {
+                "string": "Requis"
+            }
+        }
+    }
+}

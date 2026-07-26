@@ -1,0 +1,133 @@
+{
+    "title": {
+        "string": "Paramètres du thème"
+    },
+    "description": {
+        "string": "Personnalisez l'apparence de l'interface SOGo"
+    },
+    "form_title": {
+        "string": "Thème personnalisé"
+    },
+    "form_description": {
+        "string": "Configurez les couleurs, le logo et le CSS personnalisé"
+    },
+    "fields": {
+        "primary": {
+            "label": {
+                "string": "Couleur primaire"
+            },
+            "description": {
+                "string": "Valeurs HSL (ex. 180 25% 40%)"
+            }
+        },
+        "primary_foreground": {
+            "label": {
+                "string": "Premier plan primaire"
+            },
+            "description": {
+                "string": "Couleur du texte sur fond primaire"
+            }
+        },
+        "background": {
+            "label": {
+                "string": "Arrière-plan"
+            },
+            "description": {
+                "string": "Valeurs HSL pour l'arrière-plan"
+            }
+        },
+        "foreground": {
+            "label": {
+                "string": "Foreground"
+            },
+            "description": {
+                "string": "Default text color"
+            }
+        },
+        "sidebar_background": {
+            "label": {
+                "string": "Sidebar Background"
+            },
+            "description": {
+                "string": "HSL values for the sidebar background"
+            }
+        },
+        "sidebar_foreground": {
+            "label": {
+                "string": "Sidebar Foreground"
+            },
+            "description": {
+                "string": "Text color in the sidebar"
+            }
+        },
+        "sidebar_primary": {
+            "label": {
+                "string": "Sidebar Primary"
+            },
+            "description": {
+                "string": "Primary accent color in the sidebar"
+            }
+        },
+        "sidebar_accent": {
+            "label": {
+                "string": "Sidebar Accent"
+            },
+            "description": {
+                "string": "Accent color in the sidebar"
+            }
+        },
+        "header_background": {
+            "label": {
+                "string": "Header Background"
+            },
+            "description": {
+                "string": "HSL values for the top header bar"
+            }
+        },
+        "header_foreground": {
+            "label": {
+                "string": "Header Foreground"
+            },
+            "description": {
+                "string": "Text color in the header"
+            }
+        },
+        "logo_url": {
+            "label": {
+                "string": "URL du logo"
+            },
+            "description": {
+                "string": "URL of the custom logo image (optional)"
+            }
+        },
+        "custom_css": {
+            "label": {
+                "string": "CSS personnalisé"
+            },
+            "description": {
+                "string": "Additional CSS rules to inject (optional)"
+            }
+        }
+    },
+    "save": {
+        "string": "Save Changes"
+    },
+    "saving": {
+        "string": "Enregistrement…"
+    },
+    "saved": {
+        "string": "Theme settings saved successfully"
+    },
+    "save_error": {
+        "string": "Échec de l'enregistrement : {message}"
+    },
+    "unsaved_changes": {
+        "string": "Vous avez des modifications non enregistrées"
+    },
+    "load_error": {
+        "string": "Failed to load theme settings"
+    },
+    "retry": {
+        "string": "Réessayer"
+    }
+}

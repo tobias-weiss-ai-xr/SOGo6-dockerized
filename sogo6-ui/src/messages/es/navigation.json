@@ -1,0 +1,59 @@
+{
+    "NAVIGATION": {
+        "address_book": {
+            "string": "Libreta de direcciones"
+        },
+        "calendar": {
+            "string": "Calendario"
+        },
+        "tasks": {
+            "string": "Tareas"
+        },
+        "notes": {
+            "string": "Notas"
+        },
+        "fast_access": {
+            "calendar": {
+                "title": "Calendario",
+                "view_all": "Ver todo",
+                "today": "Hoy",
+                "no_events": "Sin eventos hoy",
+                "all_day": "Todo el día",
+                "loading": "Cargando eventos…",
+                "error": "No se pudieron cargar los eventos"
+            },
+            "tasks": {
+                "title": "Tareas",
+                "view_all": "View all tasks",
+                "search_placeholder": "Buscar tareas",
+                "overdue": "Vencidas",
+                "today": "Hoy",
+                "upcoming": "Próximas",
+                "no_due_date": "Sin fecha de vencimiento",
+                "empty": "Está al día",
+                "no_results": "Sin coincidencias",
+                "loading": "Cargando tareas…",
+                "error": "No se pudieron cargar las tareas"
+            },
+            "address_book": {
+                "title": "Contactos",
+                "view_all": "Ver todo",
+                "search_placeholder": "Buscar contactos y listas",
+                "distribution_lists": "Listas de distribución",
+                "contacts": "Contactos",
+                "member_count": "{number} miembros",
+                "compose": "Escribir mensaje",
+                "loading": "Cargando contactos…",
+                "error": "No se pudieron cargar los contactos",
+                "empty": "Sin libreta disponible",
+                "no_entries": "Aún sin contactos o listas",
+                "no_results": "Sin coincidencias",
+                "search_min_length": "Introduzca al menos 2 caracteres."
+            },
+            "coming_soon": {
+                "title": "Función próxima",
+                "description": "This section is under development and will be available soon."
+            }
+        }
+    }
+}

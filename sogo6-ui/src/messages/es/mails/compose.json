@@ -1,0 +1,204 @@
+{
+    "COMPOSE": {
+        "from": {
+            "string": "De",
+            "context": "Label for the sender identity selector in the compose form"
+        },
+        "to": {
+            "string": "Para",
+            "context": "Label for the recipient field in the compose form"
+        },
+        "new_message": {
+            "string": "New message",
+            "context": "Button for composing a new message in sidebar"
+        },
+        "send": {
+            "string": "Enviar",
+            "context": "Send the composed message"
+        },
+        "sending": {
+            "string": "Enviando...",
+            "context": "Indicates that the message is currently being sent"
+        },
+        "no_recipient_alert": {
+            "title": {
+                "string": "No recipient",
+                "context": "Title of the alert shown when the user tries to send a message without any recipients"
+            },
+            "content": {
+                "string": "Please add at least one recipient before sending.",
+                "context": "Content of the alert shown when the user tries to send a message without any recipients"
+            },
+            "ok": {
+                "string": "OK",
+                "context": "Label for the OK button in the alert"
+            },
+            "context": "Alert shown when the user tries to send a message without any recipients"
+        },
+        "no_subject_alert": {
+            "title": {
+                "string": "No subject",
+                "context": "Title of the confirmation shown when the user tries to send a message without a subject"
+            },
+            "content": {
+                "string": "This message has no subject. Do you want to send it anyway?",
+                "context": "Content of the confirmation shown when the user tries to send a message without a subject"
+            },
+            "context": "Confirmation shown when the user tries to send a message without a subject"
+        },
+        "no_body_alert": {
+            "title": {
+                "string": "No content",
+                "context": "Title of the confirmation shown when the user tries to send a message without any content"
+            },
+            "content": {
+                "string": "This message has no content. Do you want to send it anyway?",
+                "context": "Content of the confirmation shown when the user tries to send a message without any content"
+            },
+            "context": "Confirmation shown when the user tries to send a message without any content"
+        },
+        "no_subject_body_alert": {
+            "title": {
+                "string": "No subject and no content",
+                "context": "Title of the confirmation shown when the user tries to send a message without a subject and without any content"
+            },
+            "content": {
+                "string": "This message has no subject and no content. Do you want to send it anyway?",
+                "context": "Content of the confirmation shown when the user tries to send a message without a subject and without any content"
+            },
+            "context": "Confirmation shown when the user tries to send a message without a subject and without any content"
+        },
+        "empty_content_alert": {
+            "send": {
+                "string": "Send anyway",
+                "context": "Label for the button confirming the send despite the missing subject and/or content"
+            },
+            "cancel": {
+                "string": "Cancelar",
+                "context": "Label for the button cancelling the send to let the user fix the missing subject and/or content"
+            }
+        },
+        "schedule_sending": {
+            "string": "Schedule sending",
+            "context": "Schedule the sending of the composed message"
+        },
+        "save_draft": {
+            "string": "Save draft",
+            "context": "Save the composed message as a draft"
+        },
+        "discard_draft": {
+            "string": "Discard draft",
+            "context": "Discard the current draft"
+        },
+        "cc": {
+            "string": "Cc",
+            "context": "Carbon copy recipient"
+        },
+        "bcc": {
+            "string": "Cco",
+            "context": "Blind carbon copy recipient"
+        },
+        "subject": {
+            "string": "Asunto",
+            "context": "Subject of the email"
+        },
+        "minimize": {
+            "string": "Minimizar",
+            "context": "Minimize the compose window"
+        },
+        "maximize": {
+            "string": "Maximizar",
+            "context": "Maximize the compose window"
+        },
+        "restore": {
+            "string": "Restore",
+            "context": "Restore the compose window to its previous size"
+        },
+        "close": {
+            "string": "Cerrar",
+            "context": "Close the compose window"
+        },
+        "open_in_new_page": {
+            "string": "Open in new page",
+            "context": "Open the compose window in a new page"
+        },
+        "jitsi": {
+            "string": "Insert Jitsi meeting link",
+            "context": "Button to insert a Jitsi video meeting link into the message body"
+        },
+        "max_recipients_reached": {
+            "string": "Maximum {max} recipients reached",
+            "context": "Error shown when the maximum number of recipients has been reached"
+        },
+        "max_windows_error": {
+            "string": "Maximum {max} compose windows allowed.",
+            "context": "Error shown when the user tries to open more than three floating compose windows"
+        },
+        "signature": {
+            "string": "Firma",
+            "context": "Label for the signature picker button in the compose header"
+        },
+        "no_signature": {
+            "string": "No signature",
+            "context": "Label for the option to have no signature in the signature picker"
+        },
+        "attachment": {
+            "string": "Insert attachment",
+            "context": "Button to insert an attachment into the message body",
+            "download": {
+                "string": "Download attachment",
+                "context": "Title for the download attachment button"
+            }
+        },
+        "return_receipt": {
+            "string": "Return receipt",
+            "context": "Button to request a return receipt for the email"
+        },
+        "priority": {
+            "string": "Establecer prioridad",
+            "context": "Button to set the priority of the email"
+        },
+        "low": {
+            "string": "Baja",
+            "context": "Option to set the email priority to low"
+        },
+        "lowest": {
+            "string": "Lowest",
+            "context": "Option to set the email priority to lowest"
+        },
+        "normal": {
+            "string": "Normal",
+            "context": "Option to set the email priority to normal"
+        },
+        "high": {
+            "string": "Alta",
+            "context": "Option to set the email priority to high"
+        },
+        "highest": {
+            "string": "Highest",
+            "context": "Option to set the email priority to highest"
+        },
+        "attachment_error": {
+            "string": "Attachment upload failed",
+            "context": "Error message shown when an attachment fails to upload"
+        },
+        "drop_files": {
+            "string": "Drop files here",
+            "context": "Overlay message shown when the user drags files over the compose window"
+        },
+        "attachment_upload": {
+            "string": "Uploading attachment...",
+            "context": "Message shown while an attachment is being uploaded"
+        },
+        "recipient_search": {
+            "loading": {
+                "string": "Searching recipients…",
+                "context": "Loading state while searching contacts and users"
+            },
+            "add_direct": {
+                "string": "Add \"{email}\"",
+                "context": "Add a typed email address directly as recipient"
+            }
+        }
+    }
+}

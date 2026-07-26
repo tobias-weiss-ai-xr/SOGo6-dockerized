@@ -1,0 +1,79 @@
+{
+    "AP_SYSTEM": {
+        "title": {
+            "string": "Systemeinstellungen"
+        },
+        "description": {
+            "string": "Konfigurieren Sie das systemweite Verhalten der SOGo-Instanz."
+        },
+        "form_title": {
+            "string": "Konfiguration"
+        },
+        "form_description": {
+            "string": "Ändern Sie unten die globalen Systemeinstellungen."
+        },
+        "save": {
+            "string": "Speichern"
+        },
+        "saving": {
+            "string": "Speichern…"
+        },
+        "saved": {
+            "string": "Systemeinstellungen erfolgreich gespeichert."
+        },
+        "save_error": {
+            "string": "Speichern fehlgeschlagen: {message}"
+        },
+        "load_error": {
+            "string": "Systemeinstellungen konnten nicht geladen werden."
+        },
+        "retry": {
+            "string": "Wiederholen"
+        },
+        "unsaved_changes": {
+            "string": "You have unsaved changes."
+        },
+        "fields": {
+            "SOGO_S_DIRECT_LOGIN": {
+                "label": {
+                    "string": "Direct Login"
+                },
+                "description": {
+                    "string": "Allow users to log in without selecting a domain."
+                }
+            },
+            "SOGO_S_DOMAINLESS_LOGIN": {
+                "label": {
+                    "string": "Domainless Login"
+                },
+                "description": {
+                    "string": "Allow login with username only (no @domain)."
+                }
+            },
+            "SOGO_S_DO_DOMAIN": {
+                "label": {
+                    "string": "Enable Domains"
+                },
+                "description": {
+                    "string": "Enable multi-domain support for this instance."
+                }
+            },
+            "SOGO_S_REJECT_UNKNOWN_DOMAIN": {
+                "label": {
+                    "string": "Reject Unknown Domains"
+                },
+                "description": {
+                    "string": "Reject login attempts from domains not configured in SOGo."
+                }
+            },
+            "SOGO_S_SENDMAIL": {
+                "label": {
+                    "string": "Sendmail Path"
+                },
+                "description": {
+                    "string": "Absolute path to the sendmail binary used for outgoing mail."
+                }
+            }
+        }
+    }
+}

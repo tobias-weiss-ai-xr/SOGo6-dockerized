@@ -1,0 +1,76 @@
+{
+    "AP_SESSIONS": {
+        "title": {
+            "string": "Aktive Sitzungen"
+        },
+        "description": {
+            "string": "Aktive Benutzersitzungen anzeigen und verwalten"
+        },
+        "table": {
+            "uid": {
+                "string": "Benutzer"
+            },
+            "domain": {
+                "string": "Domain"
+            },
+            "last_activity": {
+                "string": "Letzte Aktivität"
+            },
+            "actions": {
+                "string": "Aktionen"
+            },
+            "no_sessions": {
+                "string": "Keine aktiven Sitzungen gefunden"
+            },
+            "loading": {
+                "string": "Lade Sitzungen..."
+            }
+        },
+        "revoke": {
+            "button": {
+                "string": "Widerrufen"
+            },
+            "confirm": {
+                "string": "Sind Sie sicher, dass Sie diese Sitzung widerrufen möchten?"
+            },
+            "confirm_multiple": {
+                "string": "Are you sure you want to revoke the selected sessions?"
+            },
+            "revoke_selected": {
+                "string": "Revoke Selected"
+            },
+            "revoke_selected_one": {
+                "string": "Revoke Selected ({count})"
+            },
+            "success": {
+                "string": "Sitzung erfolgreich widerrufen"
+            },
+            "success_multiple": {
+                "string": "{count} sessions revoked successfully"
+            },
+            "error": {
+                "string": "Sitzungswiderruf fehlgeschlagen"
+            }
+        },
+        "revoke_inactive": {
+            "button": {
+                "string": "Revoke Inactive"
+            },
+            "confirm": {
+                "string": "Sind Sie sicher, dass Sie alle inaktiven Sitzungen widerrufen möchten?"
+            },
+            "days": {
+                "string": "Days of inactivity"
+            },
+            "days_placeholder": {
+                "string": "e.g., 30"
+            },
+            "success": {
+                "string": "Inaktive Sitzungen erfolgreich widerrufen"
+            }
+        },
+        "refresh": {
+            "string": "Refresh"
+        }
+    }
+}

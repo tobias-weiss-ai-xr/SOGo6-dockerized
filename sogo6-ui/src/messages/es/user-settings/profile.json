@@ -1,0 +1,53 @@
+{
+    "FORM_PROFILE": {
+        "title": "Perfil",
+        "description": "Manage your profile information and settings.",
+        "sections": {
+            "basicInfo": "Información básica",
+            "identities": "Identidades"
+        },
+        "firstname": {
+            "string": "Nombre",
+            "description": "Label for the first name input field."
+        },
+        "lastname": {
+            "string": "Apellido",
+            "description": "Label for the last name input field."
+        },
+        "basicInfo": {
+            "title": "Información básica",
+            "uid": "ID de usuario",
+            "email": "Correo",
+            "fullName": "Nombre",
+            "aliases": "Alias de correo"
+        },
+        "extraInfo": {
+            "title": "Extra Information",
+            "company": "Company",
+            "team": "Team"
+        },
+        "profilePictureSource": {
+            "title": "Profile Picture",
+            "description": "Choose how your profile picture is displayed. You can upload a custom image, use your Gravatar, Libravatar or use the default avatar.",
+            "useDefault": "Predeterminado",
+            "useGravatar": "Gravatar",
+            "useLibravatar": "Libravatar",
+            "useCustom": "Personalizado"
+        },
+        "identities": {},
+        "api": {
+            "title": {
+                "string": "Error"
+            },
+            "loading": {
+                "string": "Cargando"
+            },
+            "load_failed": {
+                "string": "Failed to load profile. Please try again later."
+            },
+            "update_failed": {
+                "string": "Failed to update profile. Please try again."
+            }
+        }
+    }
+}

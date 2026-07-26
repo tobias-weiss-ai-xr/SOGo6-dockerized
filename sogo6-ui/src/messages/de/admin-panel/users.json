@@ -1,0 +1,130 @@
+{
+    "AP_USERS": {
+        "title": {
+            "string": "Benutzerverwaltung"
+        },
+        "description": {
+            "string": "Benutzerkonten im LDAP-Verzeichnis erstellen, bearbeiten und löschen"
+        },
+        "search": {
+            "placeholder": {
+                "string": "Suche nach Name, E-Mail oder UID..."
+            },
+            "clear": {
+                "string": "Löschen"
+            }
+        },
+        "table": {
+            "uid": {
+                "string": "UID"
+            },
+            "cn": {
+                "string": "Vollständiger Name"
+            },
+            "mail": {
+                "string": "E-Mail"
+            },
+            "sn": {
+                "string": "Nachname"
+            },
+            "givenName": {
+                "string": "Vorname"
+            },
+            "uidNumber": {
+                "string": "UID-Nummer"
+            },
+            "gidNumber": {
+                "string": "GID-Nummer"
+            },
+            "homeDirectory": {
+                "string": "Home-Verzeichnis"
+            },
+            "actions": {
+                "string": "Aktionen"
+            },
+            "no_users": {
+                "string": "Keine Benutzer gefunden"
+            },
+            "loading": {
+                "string": "Lade Benutzer..."
+            }
+        },
+        "create": {
+            "button": {
+                "string": "Create User"
+            },
+            "title": {
+                "string": "Create New User"
+            },
+            "success": {
+                "string": "Benutzer erfolgreich erstellt"
+            },
+            "error": {
+                "string": "Benutzererstellung fehlgeschlagen"
+            }
+        },
+        "edit": {
+            "button": {
+                "string": "Bearbeiten"
+            },
+            "title": {
+                "string": "Edit User"
+            },
+            "save": {
+                "string": "Save Changes"
+            },
+            "success": {
+                "string": "Benutzer erfolgreich aktualisiert"
+            },
+            "error": {
+                "string": "Benutzeraktualisierung fehlgeschlagen"
+            }
+        },
+        "delete": {
+            "button": {
+                "string": "Löschen"
+            },
+            "confirm": {
+                "string": "Sind Sie sicher, dass Sie Benutzer {uid} löschen möchten?"
+            },
+            "success": {
+                "string": "Benutzer erfolgreich gelöscht"
+            },
+            "error": {
+                "string": "Benutzerlöschung fehlgeschlagen"
+            }
+        },
+        "form": {
+            "uid": {
+                "string": "User ID (email)"
+            },
+            "cn": {
+                "string": "Vollständiger Name"
+            },
+            "sn": {
+                "string": "Nachname"
+            },
+            "givenName": {
+                "string": "Vorname"
+            },
+            "mail": {
+                "string": "E-Mail-Adresse"
+            },
+            "password": {
+                "string": "Passwort"
+            },
+            "uidNumber": {
+                "string": "UID Number (optional)"
+            },
+            "gidNumber": {
+                "string": "GID Number (optional)"
+            },
+            "homeDirectory": {
+                "string": "Home Directory (optional)"
+            },
+            "required": {
+                "string": "Erforderlich"
+            }
+        }
+    }
+}

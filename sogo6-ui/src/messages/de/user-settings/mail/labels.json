@@ -1,0 +1,14 @@
+{
+    "US_MAIL_LABELS": {
+        "title": {
+            "string": "E-Mail-Labels",
+            "context": "Title for the mail labels settings page"
+        },
+        "label": {
+            "string": "Label"
+        },
+        "imap_label": {
+            "string": "IMAP-Label"
+        }
+    }
+}

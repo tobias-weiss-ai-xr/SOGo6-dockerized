@@ -1,0 +1,116 @@
+{
+    "US_MAIL_FORWARD": {
+        "title": {
+            "string": "Reenvío de correo"
+        },
+        "page": {
+            "description": {
+                "string": "Reenvíe automáticamente los mensajes entrantes."
+            }
+        },
+        "labels": {
+            "transfer_incoming": {
+                "string": "Transferir mensajes entrantes"
+            },
+            "email": {
+                "string": "Dirección de correo"
+            },
+            "always_forward": {
+                "string": "Reenviar siempre"
+            },
+            "keep_copy": {
+                "string": "Guardar copia en la bandeja"
+            }
+        },
+        "description": {
+            "transfer_incoming": {
+                "string": "Reenviar automáticamente los nuevos mensajes"
+            },
+            "email": {
+                "string": "Forward to these addresses (up to {max} addresses). Add multiple addresses separated by comma, semicolon, or press Enter/Tab."
+            }
+        },
+        "help": {
+            "email": {
+                "string": "Reenviaremos los nuevos mensajes a estas direcciones"
+            }
+        },
+        "placeholders": {
+            "email": {
+                "string": "Añada dirección y pulse Enter"
+            }
+        },
+        "errors": {
+            "email": {
+                "invalid": {
+                    "string": "Introduzca una dirección de correo válida"
+                },
+                "duplicate": {
+                    "string": "This address is already in the list"
+                }
+            },
+            "emails": {
+                "list": {
+                    "string": "There was an error with one or more email addresses"
+                }
+            },
+            "max_reached": {
+                "string": "Maximum {max} addresses allowed"
+            },
+            "validation": {
+                "addresses_required": {
+                    "string": "At least one email address is required when forwarding is enabled."
+                }
+            }
+        },
+        "hints": {
+            "blur": {
+                "string": "Pulse Enter para añadir"
+            }
+        },
+        "tooltip": {
+            "always_forward": {
+                "string": "Incoming mail is forwarded before applying your filters."
+            },
+            "keep_copy": {
+                "string": "Keep a copy of forwarded messages in your inbox. Useful if you want to maintain a local archive."
+            }
+        },
+        "errors_api": {
+            "title": {
+                "string": "Error"
+            },
+            "save_failed": {
+                "string": "Couldn't save your changes, try again"
+            },
+            "load_failed": {
+                "string": "Could not load forwarding settings. Please try again later."
+            },
+            "feature_disabled": {
+                "string": "El reenvío ha sido desactivado por su administrador."
+            }
+        },
+        "status": {
+            "enabled": {
+                "string": "Activado"
+            },
+            "disabled": {
+                "string": "Desactivado"
+            }
+        },
+        "aria": {
+            "tags_count": {
+                "string": "{count} of {max} email addresses added"
+            },
+            "remove_email": {
+                "string": "Remove {email}"
+            },
+            "email_input_group": {
+                "string": "Email addresses for forwarding"
+            },
+            "toggle_forwarding": {
+                "string": "Toggle email forwarding"
+            }
+        }
+    }
+}

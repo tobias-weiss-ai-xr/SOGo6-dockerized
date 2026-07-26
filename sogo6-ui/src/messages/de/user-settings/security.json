@@ -1,0 +1,25 @@
+{
+    "US_SECURITY": {
+        "title": {
+            "string": "Sicherheit",
+            "context": "Title for the Security settings section in user settings"
+        },
+        "totp": {
+            "title": {
+                "string": "Zwei-Faktor-Authentifizierung (TOTP)",
+                "context": "Title for the Two-Factor Authentication settings"
+            },
+            "description": {
+                "string": "Die Zwei-Faktor-Authentifizierung bietet eine zusätzliche Sicherheitsebene für Ihr Konto. Nach der Aktivierung müssen Sie bei jeder Anmeldung einen eindeutigen Code eingeben, der von einer Authentifikator-App auf Ihrem Telefon generiert wird."
+            },
+            "verification_code": {
+                "title": {
+                    "string": "Bestätigungscode"
+                },
+                "description": {
+                    "string": "Geben Sie den von Ihrer Authentifikator-App generierten Bestätigungscode ein."
+                }
+            }
+        }
+    }
+}

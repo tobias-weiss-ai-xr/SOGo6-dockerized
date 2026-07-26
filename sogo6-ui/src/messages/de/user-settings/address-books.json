@@ -1,0 +1,37 @@
+{
+    "US_ADDRESS_BOOKS": {
+        "create": {
+            "string": "Kontaktkategorie hinzufügen",
+            "context": "Button text to add a new address book category"
+        },
+        "title": {
+            "string": "Adressbücher",
+            "context": "Title for the address books settings page"
+        },
+        "accessibility": {
+            "icon": {
+                "delete": {
+                    "string": "{name} löschen",
+                    "context": "Accessibility message for the delete icon"
+                }
+            }
+        },
+        "notification": {
+            "title": "Benachrichtigungen",
+            "string": "E-Mail-Benachrichtigung senden, wenn ein Adressbuch erstellt wird",
+            "context": "Label for the notification setting"
+        },
+        "categories": {
+            "title": "Kategorien",
+            "Work": "Arbeit",
+            "Family": "Familie",
+            "Friends": "Freunde"
+        },
+        "color": {
+            "title": "Farbe"
+        },
+        "validation": {
+            "category-name-required": "Kategoriename ist erforderlich"
+        }
+    }
+}

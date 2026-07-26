@@ -1,0 +1,59 @@
+{
+    "NAVIGATION": {
+        "address_book": {
+            "string": "Carnet d'adresses"
+        },
+        "calendar": {
+            "string": "Agenda"
+        },
+        "tasks": {
+            "string": "Tâches"
+        },
+        "notes": {
+            "string": "Notes"
+        },
+        "fast_access": {
+            "calendar": {
+                "title": "Agenda",
+                "view_all": "Voir tout",
+                "today": "Aujourd'hui",
+                "no_events": "Aucun événement aujourd'hui",
+                "all_day": "Toute la journée",
+                "loading": "Chargement des événements…",
+                "error": "Impossible de charger les événements"
+            },
+            "tasks": {
+                "title": "Tâches",
+                "view_all": "View all tasks",
+                "search_placeholder": "Rechercher des tâches",
+                "overdue": "En retard",
+                "today": "Aujourd'hui",
+                "upcoming": "À venir",
+                "no_due_date": "Pas de date d'échéance",
+                "empty": "Tout est à jour",
+                "no_results": "Aucun résultat",
+                "loading": "Chargement des tâches…",
+                "error": "Impossible de charger les tâches"
+            },
+            "address_book": {
+                "title": "Contacts",
+                "view_all": "Voir tout",
+                "search_placeholder": "Rechercher contacts et listes",
+                "distribution_lists": "Listes de diffusion",
+                "contacts": "Contacts",
+                "member_count": "{number} membres",
+                "compose": "Écrire un message",
+                "loading": "Chargement des contacts…",
+                "error": "Impossible de charger les contacts",
+                "empty": "Aucun carnet d'adresses disponible",
+                "no_entries": "Aucun contact ou liste pour le moment",
+                "no_results": "Aucun résultat",
+                "search_min_length": "Saisissez au moins 2 caractères pour rechercher."
+            },
+            "coming_soon": {
+                "title": "Fonctionnalité à venir",
+                "description": "This section is under development and will be available soon."
+            }
+        }
+    }
+}

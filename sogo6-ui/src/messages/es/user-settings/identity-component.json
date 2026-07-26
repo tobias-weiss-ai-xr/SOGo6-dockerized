@@ -1,0 +1,37 @@
+{
+    "IDENTITY_COMPONENT": {
+        "labels": {
+            "name": "Nombre de identidad",
+            "email": "Dirección de correo",
+            "replyTo": "Responder a",
+            "newIdentity": "Nueva identidad",
+            "default": "Predeterminado",
+            "removeIdentity": "Eliminar identidad",
+            "atLeastOneIdentity": "Se requiere al menos una identidad",
+            "useDefaultIdentity": {
+                "string": "Usar como identidad predeterminada"
+            },
+            "setAsDefault": "Establecer como predeterminada",
+            "defaultDescription": "Esta identidad se usará por defecto",
+            "mainIdentityEmail": "This is your main email address and cannot be changed",
+            "nameNotEditable": "Name editing is disabled by administrator",
+            "replyToNotEditable": "Reply-To editing is disabled by administrator",
+            "signatures": "Signatures",
+            "signaturesDescription": "Create and manage email signatures for this identity",
+            "signaturePlaceholder": "Enter signature name",
+            "addIdentity": "Add an identity",
+            "allowsCustom": "You can add and manage additional identities"
+        },
+        "description": {
+            "useDefaultIdentity": {
+                "string": "This identity will be selected by default when composing new messages"
+            }
+        },
+        "accessibility": {
+            "toggleCollapse": "Toggle identity details",
+            "expandIdentity": "Expandir",
+            "collapseIdentity": "Colapsar",
+            "removeIcon": "Remove identity button"
+        }
+    }
+}

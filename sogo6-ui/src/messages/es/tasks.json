@@ -1,0 +1,233 @@
+{
+    "TASKS": {
+        "page_title": {
+            "string": "Tareas"
+        },
+        "new_task": {
+            "string": "Nueva tarea"
+        },
+        "search_placeholder": {
+            "string": "Buscar tareas…"
+        },
+        "show_completed": {
+            "string": "Mostrar completadas"
+        },
+        "all_calendars": {
+            "string": "Todos los calendarios"
+        },
+        "empty_title": {
+            "string": "Aún sin tareas"
+        },
+        "empty_description": {
+            "string": "Cree su primera tarea para organizarse."
+        },
+        "overdue": {
+            "string": "Vencidas"
+        },
+        "filters": {
+            "all": {
+                "string": "All"
+            },
+            "needs_action": {
+                "string": "Pendiente"
+            },
+            "in_process": {
+                "string": "En progreso"
+            },
+            "completed": {
+                "string": "Completado"
+            },
+            "cancelled": {
+                "string": "Cancelled"
+            },
+            "overdue": {
+                "string": "Vencidas"
+            }
+        },
+        "priority": {
+            "none": {
+                "string": "No priority"
+            },
+            "high": {
+                "string": "Alta"
+            },
+            "medium": {
+                "string": "Medium"
+            },
+            "low": {
+                "string": "Baja"
+            }
+        },
+        "status": {
+            "needs_action": {
+                "string": "Pendiente"
+            },
+            "in_process": {
+                "string": "En progreso"
+            },
+            "completed": {
+                "string": "Completado"
+            },
+            "cancelled": {
+                "string": "Cancelled"
+            }
+        },
+        "form": {
+            "create_title": {
+                "string": "Nueva tarea"
+            },
+            "edit_title": {
+                "string": "Editar tarea"
+            },
+            "title": {
+                "string": "Título"
+            },
+            "description": {
+                "string": "Descripción"
+            },
+            "due": {
+                "string": "Fecha de vencimiento"
+            },
+            "date_start": {
+                "string": "Fecha de inicio"
+            },
+            "status": {
+                "string": "Estado"
+            },
+            "priority": {
+                "string": "Prioridad"
+            },
+            "percent_complete": {
+                "string": "Progress"
+            },
+            "calendar": {
+                "string": "Calendario"
+            },
+            "categories": {
+                "string": "Categorías"
+            },
+            "visibility": {
+                "string": "Visibilidad"
+            },
+            "save": {
+                "string": "Guardar"
+            },
+            "cancel": {
+                "string": "Cancelar"
+            },
+            "calendar_required": {
+                "string": "Select a calendar"
+            },
+            "errors": {
+                "date_order": {
+                    "string": "Due date must be on or after the start date."
+                }
+            }
+        },
+        "actions": {
+            "edit": {
+                "string": "Editar"
+            },
+            "delete": {
+                "string": "Eliminar"
+            }
+        },
+        "delete_dialog": {
+            "title": {
+                "string": "Delete task?"
+            },
+            "description": {
+                "string": "Esta acción no se puede deshacer."
+            },
+            "confirm": {
+                "string": "Eliminar"
+            },
+            "cancel": {
+                "string": "Cancelar"
+            }
+        },
+        "selection": {
+            "enter": {
+                "string": "Select tasks"
+            },
+            "cancel": {
+                "string": "Cancelar"
+            },
+            "select_all": {
+                "string": "Select all tasks"
+            },
+            "count": {
+                "string": "{count, plural, one {# selected} other {# selected}}"
+            },
+            "actions": {
+                "complete": {
+                    "string": "Completar"
+                },
+                "reopen": {
+                    "string": "Reabrir"
+                },
+                "delete": {
+                    "string": "Eliminar"
+                }
+            },
+            "delete_dialog": {
+                "title": {
+                    "string": "Delete selected tasks?"
+                },
+                "description": {
+                    "string": "You are about to delete {count, plural, one {# task} other {# tasks}}. This action cannot be undone."
+                },
+                "confirm": {
+                    "string": "Eliminar"
+                },
+                "cancel": {
+                    "string": "Cancelar"
+                }
+            }
+        },
+        "sidebar": {
+            "smart_views": {
+                "title": {
+                    "string": "Smart views"
+                },
+                "all": {
+                    "string": "All tasks"
+                },
+                "today": {
+                    "string": "Hoy"
+                },
+                "upcoming": {
+                    "string": "Próximas"
+                },
+                "overdue": {
+                    "string": "Vencidas"
+                },
+                "completed": {
+                    "string": "Completado"
+                }
+            },
+            "calendars": {
+                "title": {
+                    "string": "Calendarios"
+                },
+                "all": {
+                    "string": "Todos los calendarios"
+                }
+            }
+        },
+        "fast_access": {
+            "title": {
+                "string": "Tareas"
+            },
+            "view_all": {
+                "string": "View all tasks"
+            },
+            "empty": {
+                "string": "No pending tasks"
+            },
+            "loading": {
+                "string": "Cargando tareas…"
+            }
+        }
+    }
+}

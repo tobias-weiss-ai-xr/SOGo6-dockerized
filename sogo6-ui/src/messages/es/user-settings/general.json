@@ -1,0 +1,81 @@
+{
+    "US_GENERAL": {
+        "title": {
+            "string": "Configuración general",
+            "context": "Title for the general settings page"
+        },
+        "labels": {
+            "language": {
+                "string": "Idioma"
+            },
+            "timezone": {
+                "string": "Zona horaria"
+            },
+            "short_date_style": {
+                "string": "Formato de fecha corto"
+            },
+            "long_date_style": {
+                "string": "Formato de fecha largo"
+            },
+            "time_style": {
+                "string": "Formato de hora"
+            },
+            "default_view": {
+                "string": "Default View"
+            },
+            "refresh_frequency": {
+                "string": "Frecuencia de actualización"
+            },
+            "enable_notifications": {
+                "string": "Activar notificaciones"
+            },
+            "saved": {
+                "string": "Configuración general guardada"
+            },
+            "mail": {
+                "string": "Correo"
+            },
+            "calendar": {
+                "string": "Calendario"
+            },
+            "contacts": {
+                "string": "Contactos"
+            },
+            "last": {
+                "string": "Last displayed module"
+            },
+            "enable_external_avatar": {
+                "string": "Enable external avatar"
+            }
+        },
+        "descriptions": {
+            "language": {
+                "string": "The language used in the app."
+            },
+            "timezone": {
+                "string": "The time zone you are in."
+            },
+            "short_date_style": {
+                "string": "How dates are displayed in the app."
+            },
+            "long_date_style": {
+                "string": "How dates are displayed in the app."
+            },
+            "time_style": {
+                "string": "How time is displayed in the app."
+            },
+            "default_view": {
+                "string": "The default view when you open the app."
+            },
+            "refresh_frequency": {
+                "string": " How often the app should check for new emails, calendar events, and more."
+            },
+            "enable_notifications": {
+                "string": "Receive notifications for new emails, calendar events, and more."
+            },
+            "enable_external_avatar": {
+                "string": "Enable external avatar (e.g., Gravatar)"
+            }
+        }
+    }
+}

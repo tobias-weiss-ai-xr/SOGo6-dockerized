@@ -1,0 +1,59 @@
+{
+    "NAVIGATION": {
+        "address_book": {
+            "string": "Adressbuch"
+        },
+        "calendar": {
+            "string": "Kalender"
+        },
+        "tasks": {
+            "string": "Aufgaben"
+        },
+        "notes": {
+            "string": "Notizen"
+        },
+        "fast_access": {
+            "calendar": {
+                "title": "Kalender",
+                "view_all": "Alle anzeigen",
+                "today": "Heute",
+                "no_events": "Heute keine Termine",
+                "all_day": "Ganztägig",
+                "loading": "Lade Termine…",
+                "error": "Termine konnten nicht geladen werden"
+            },
+            "tasks": {
+                "title": "Aufgaben",
+                "view_all": "View all tasks",
+                "search_placeholder": "Aufgaben suchen",
+                "overdue": "Überfällig",
+                "today": "Heute",
+                "upcoming": "Bevorstehend",
+                "no_due_date": "Kein Fälligkeitsdatum",
+                "empty": "Alles erledigt",
+                "no_results": "Keine Treffer",
+                "loading": "Lade Aufgaben…",
+                "error": "Aufgaben konnten nicht geladen werden"
+            },
+            "address_book": {
+                "title": "Kontakte",
+                "view_all": "Alle anzeigen",
+                "search_placeholder": "Kontakte und Listen durchsuchen",
+                "distribution_lists": "Verteilerlisten",
+                "contacts": "Kontakte",
+                "member_count": "{number} Mitglieder",
+                "compose": "Nachricht schreiben",
+                "loading": "Lade Kontakte…",
+                "error": "Kontakte konnten nicht geladen werden",
+                "empty": "Kein Adressbuch verfügbar",
+                "no_entries": "Noch keine Kontakte oder Listen",
+                "no_results": "Keine Treffer",
+                "search_min_length": "Geben Sie mindestens 2 Zeichen ein, um zu suchen."
+            },
+            "coming_soon": {
+                "title": "Funktion in Kürze",
+                "description": "This section is under development and will be available soon."
+            }
+        }
+    }
+}

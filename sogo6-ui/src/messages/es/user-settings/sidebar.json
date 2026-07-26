@@ -1,0 +1,80 @@
+{
+    "US_SIDEBAR": {
+        "account": {
+            "title": {
+                "string": "Cuenta",
+                "context": "Section title for the settings sidebar"
+            },
+            "profile": {
+                "string": "Perfil",
+                "context": "Link to the account profile in the settings sidebar"
+            },
+            "security": {
+                "string": "Seguridad",
+                "context": "Link to the account security in the settings sidebar"
+            }
+        },
+        "settings": {
+            "title": {
+                "string": "Configuración",
+                "context": "Section title for the settings sidebar"
+            },
+            "general": {
+                "string": "General",
+                "context": "Link to the general settings in the settings sidebar"
+            },
+            "address_books": {
+                "string": "Libretas de direcciones",
+                "context": "Link to the settings address books in the settings sidebar"
+            },
+            "calendars": {
+                "title": {
+                    "string": "Calendario",
+                    "context": "Section title for the settings sidebar"
+                },
+                "general": {
+                    "string": "General",
+                    "context": "Link to the general calendars settings in the settings sidebar"
+                },
+                "categories": {
+                    "string": "Categorías",
+                    "context": "Link to the categories calendars settings in the settings sidebar"
+                }
+            },
+            "email": {
+                "title": {
+                    "string": "Correo",
+                    "context": "Section title for the settings sidebar"
+                },
+                "notifications": {
+                    "string": "Notificaciones",
+                    "context": "Link to the notifications settings in the settings sidebar"
+                },
+                "general": {
+                    "string": "General",
+                    "context": "Link to the general email settings in the settings sidebar"
+                },
+                "categories": {
+                    "string": "Categorías",
+                    "context": "Link to the categories email settings in the settings sidebar"
+                },
+                "filters": {
+                    "string": "Filtros",
+                    "context": "Link to the filters email settings in the settings sidebar"
+                },
+                "vacation": {
+                    "string": "Vacation",
+                    "context": "Link to the vacation email settings in the settings sidebar"
+                },
+                "external_accounts": {
+                    "string": "Cuentas externas",
+                    "context": "Link to the external accounts email settings in the settings sidebar"
+                },
+                "forward": {
+                    "string": "Reenvío",
+                    "context": "Link to the forward email settings in the settings sidebar"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,306 @@
+{
+    "US_MAIL_FILTERS": {
+        "title": {
+            "string": "Filtres de courrier",
+            "context": "Title for the mail filters settings page"
+        },
+        "page": {
+            "description": {
+                "string": "Organisez automatiquement les messages entrants avec des règles personnalisées."
+            }
+        },
+        "form": {
+            "edit": {
+                "string": "Modifier le filtre : {name}"
+            },
+            "create": {
+                "string": "Créer un filtre",
+                "description": "Create a new filter for incoming messages."
+            }
+        },
+        "operators": {
+            "title": {
+                "string": "Pour les messages entrants qui"
+            },
+            "all": {
+                "string": "Correspondre à tous les messages"
+            },
+            "or": {
+                "string": "Correspondre à l'une des règles suivantes",
+                "context": "test context",
+                "developer_comment": "Chaîne indiquant que l'une des règles doit correspondre."
+            },
+            "and": {
+                "string": "Correspondre à toutes les règles suivantes"
+            }
+        },
+        "conditions": {
+            "title": {
+                "string": "Correspondre aux conditions suivantes"
+            },
+            "is": {
+                "string": "Est"
+            },
+            "is_not": {
+                "string": "N'est pas"
+            },
+            "contains": {
+                "string": "Contient"
+            },
+            "not_contain": {
+                "string": "Ne contient pas"
+            },
+            "match": {
+                "string": "Match"
+            },
+            "not_match": {
+                "string": "Does not match"
+            },
+            "match_regex": {
+                "string": "Match regex"
+            },
+            "starts_with": {
+                "string": "Commence par"
+            },
+            "ends_with": {
+                "string": "Se termine par"
+            },
+            "exists": {
+                "string": "Exists"
+            },
+            "size_over": {
+                "string": "Is over (KB)"
+            },
+            "not_match_regex": {
+                "string": "Ne correspond pas à regex"
+            },
+            "not_exists": {
+                "string": "Does not exist"
+            },
+            "size_under": {
+                "string": "Is under (KB)"
+            },
+            "is_over": {
+                "string": "Is over"
+            }
+        },
+        "rules": {
+            "body": {
+                "string": "Corps"
+            },
+            "from": {
+                "string": "De"
+            },
+            "subject": {
+                "string": "Sujet"
+            },
+            "to": {
+                "string": "À"
+            },
+            "cc": {
+                "string": "CC"
+            },
+            "to_or_cc": {
+                "string": "To or CC"
+            },
+            "header": {
+                "string": "En-tête"
+            },
+            "size": {
+                "string": "Size (Kb)"
+            }
+        },
+        "actions": {
+            "title": {
+                "string": "Perform the following actions"
+            },
+            "move": {
+                "string": "File the message in"
+            },
+            "copy": {
+                "string": "Copy the message to"
+            },
+            "stop": {
+                "string": "Stop processing filter rules"
+            },
+            "reject": {
+                "string": "Send a reject message",
+                "disabled_tooltip": {
+                    "string": "Reject actions are not yet available on this server"
+                }
+            },
+            "discard": {
+                "string": "Discard the message"
+            },
+            "forward": {
+                "string": "Forward the message to"
+            },
+            "removeheader": {
+                "string": "Remove header"
+            },
+            "flag": {
+                "string": "Flag the message with",
+                "disabled_tooltip": {
+                    "string": "Flag actions are not yet available on this server"
+                }
+            },
+            "keep": {
+                "string": "Keep the message"
+            }
+        },
+        "empty_state": {
+            "title": {
+                "string": "No mail filters yet"
+            },
+            "description": {
+                "string": "Create rules to automatically organize incoming messages."
+            },
+            "add_button": {
+                "string": "Add your first filter"
+            }
+        },
+        "list": {
+            "section_title": {
+                "string": "Your filters"
+            },
+            "section_description": {
+                "string": "Drag to reorder. Disabled filters are skipped."
+            },
+            "add_filter": {
+                "string": "Add filter"
+            },
+            "advanced_structure": {
+                "string": "Advanced structure"
+            },
+            "read_only": {
+                "string": "Read-only"
+            },
+            "drag_handle": {
+                "string": "Reorder filter"
+            },
+            "delete_confirm": {
+                "title": {
+                    "string": "Delete filter?"
+                },
+                "description": {
+                    "string": "This filter will be removed when you save your changes."
+                },
+                "confirm": {
+                    "string": "Supprimer"
+                },
+                "cancel": {
+                    "string": "Annuler"
+                }
+            }
+        },
+        "folder_select": {
+            "placeholder": {
+                "string": "Select a folder"
+            },
+            "search": {
+                "string": "Search folders..."
+            },
+            "empty": {
+                "string": "No folders found"
+            },
+            "aria_label": {
+                "string": "Select destination folder"
+            },
+            "create_if_missing": {
+                "string": "Create folder if it does not exist"
+            }
+        },
+        "advanced_structure_readonly": {
+            "string": "This filter uses an advanced rule structure that cannot be edited in the simplified editor. You can still enable or disable it, or delete it."
+        },
+        "aria": {
+            "toggle_filter": {
+                "string": "Toggle filter"
+            }
+        },
+        "labels": {
+            "filter_name": {
+                "string": "Nom du filtre"
+            },
+            "custom_header": {
+                "string": "Header name"
+            }
+        },
+        "placeholders": {
+            "forward_email": {
+                "string": "name@example.com"
+            },
+            "header_name": {
+                "string": "Header name (e.g. X-Spam-Flag)"
+            },
+            "size_value": {
+                "string": "Size (e.g. 1024, 5M, 10K)"
+            },
+            "imap_flag": {
+                "string": "IMAP flag (e.g. \\Flagged)"
+            },
+            "reject_message": {
+                "string": "Optional reject message"
+            }
+        },
+        "success": {
+            "title": {
+                "string": "Filters saved"
+            },
+            "saved": {
+                "string": "Your mail filters have been updated."
+            }
+        },
+        "errors_api": {
+            "title": {
+                "string": "Could not save filters"
+            },
+            "save_failed": {
+                "string": "An error occurred while saving your mail filters."
+            },
+            "load_failed": {
+                "string": "Could not load mail filters. Please try again later."
+            },
+            "feature_disabled": {
+                "string": "Mail filtering has been disabled by your administrator."
+            }
+        },
+        "errors": {
+            "validation": {
+                "name_required": {
+                    "string": "Le nom du filtre est requis"
+                },
+                "rules_required": {
+                    "string": "At least one condition is required"
+                },
+                "actions_required": {
+                    "string": "At least one action is required"
+                },
+                "folder_required": {
+                    "string": "A destination folder is required"
+                },
+                "email_invalid": {
+                    "string": "Enter a valid email address"
+                },
+                "header_name_required": {
+                    "string": "Header name is required"
+                },
+                "rule_value_required": {
+                    "string": "Condition value is required"
+                },
+                "size_value_required": {
+                    "string": "Enter a valid size in KB"
+                },
+                "size_condition_required": {
+                    "string": "Size rules must use over or under"
+                },
+                "flag_required": {
+                    "string": "An IMAP flag is required"
+                },
+                "action_unavailable": {
+                    "string": "This action is not available yet"
+                }
+            }
+        }
+    }
+}

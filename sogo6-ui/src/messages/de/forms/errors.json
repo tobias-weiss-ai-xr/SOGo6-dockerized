@@ -1,0 +1,14 @@
+{
+    "FORM_ERRORS": {
+        "required": {
+            "default": {
+                "string": "Dieses Feld ist erforderlich"
+            }
+        },
+        "invalid": {
+            "email": {
+                "string": "Ungültige E-Mail-Adresse"
+            }
+        }
+    }
+}

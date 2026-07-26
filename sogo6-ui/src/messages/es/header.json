@@ -1,0 +1,88 @@
+{
+    "HEADER": {
+        "theme": {
+            "title": {
+                "string": "Tema",
+                "context": "Section title for the header dropdown"
+            },
+            "dark": {
+                "string": "Oscuro",
+                "context": "Dark theme switcher in the header"
+            },
+            "light": {
+                "string": "Claro",
+                "context": "Light theme switcher in the header"
+            },
+            "dyslexia": {
+                "string": "Dislexia",
+                "context": "Dyslexia theme switcher in the header"
+            },
+            "tritanopia": {
+                "string": "Tritanopía",
+                "context": "Tritanopia theme switcher in the header"
+            },
+            "protanopia": {
+                "string": "Protanopía",
+                "context": "Protanopia theme switcher in the header"
+            },
+            "deuteranopia": {
+                "string": "Deuteranopía",
+                "context": "Deuteranopia theme switcher in the header"
+            },
+            "system": {
+                "string": "Auto",
+                "context": "Auto theme switcher in the header"
+            }
+        },
+        "admin": {
+            "panel": {
+                "string": "Panel de administración",
+                "context": "Title of the admin panel in the header dropdown"
+            }
+        },
+        "account": {
+            "section": {
+                "string": "Cuenta",
+                "context": "Section title for the header dropdown"
+            },
+            "profile": {
+                "string": "Perfil",
+                "context": "Link to the account profile in the header dropdown"
+            },
+            "security": {
+                "string": "Seguridad",
+                "context": "Link to the account security in the header dropdown"
+            },
+            "defaultUser": {
+                "string": "Usuario",
+                "context": "Default username fallback when profile is not yet loaded"
+            }
+        },
+        "logout": {
+            "string": "Cerrar sesión",
+            "context": "Link to logout in the header dropdown"
+        },
+        "settings": {
+            "title": {
+                "string": "Configuración",
+                "context": "Section title for the header dropdown"
+            },
+            "general": {
+                "string": "General",
+                "context": "Link to the general settings in the header dropdown"
+            },
+            "calendar": {
+                "string": "Calendario",
+                "context": "Link to the calendar settings in the header dropdown"
+            },
+            "address_books": {
+                "string": "Libretas de direcciones",
+                "context": "Link to the address books settings in the header dropdown"
+            },
+            "email": {
+                "string": "Correo",
+                "context": "Link to the emails settings in the header dropdown"
+            }
+        }
+    }
+}

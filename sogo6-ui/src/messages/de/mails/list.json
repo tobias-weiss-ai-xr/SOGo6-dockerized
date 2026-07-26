@@ -1,0 +1,116 @@
+{
+    "MAILS_LIST": {
+        "messages_number": {
+            "string": "{number, plural, one {# message} other {# messages}}",
+            "context": "Displays the number of messages in an mail folder."
+        },
+        "sort": {
+            "date": {
+                "ascending": {
+                    "string": "Neueste zuerst"
+                },
+                "descending": {
+                    "string": "Older first"
+                }
+            },
+            "size": {
+                "ascending": {
+                    "string": "Smallest first"
+                },
+                "descending": {
+                    "string": "Largest first"
+                }
+            }
+        },
+        "pagination": {
+            "previous": {
+                "string": "Previous page"
+            },
+            "next": {
+                "string": "Next page"
+            }
+        },
+        "list_load_error": {
+            "folder_not_found": {
+                "string": "This folder no longer exists.",
+                "description": "Message when folder messages request returns 404"
+            },
+            "mail_unavailable": {
+                "string": "Mail server is temporarily unavailable.",
+                "description": "Message when folder messages request returns 503"
+            },
+            "retry": {
+                "string": "Erneut versuchen",
+                "description": "Button label to refetch folder messages after 503"
+            },
+            "open_inbox": {
+                "string": "Open Inbox",
+                "description": "Button label to navigate to INBOX after folder 404"
+            },
+            "generic": {
+                "string": "Unable to load messages. Please try again later.",
+                "description": "Generic folder list load error (e.g. 500)"
+            }
+        },
+        "filter": {
+            "client_scope_notice": {
+                "string": "Filters apply only to messages loaded on this page.",
+                "description": "Hint that URL filters are client-side on the current server page"
+            },
+            "all": {
+                "string": "All"
+            },
+            "unread": {
+                "string": "Unread"
+            },
+            "read": {
+                "string": "Read"
+            },
+            "starred": {
+                "string": "Starred"
+            },
+            "attachments": {
+                "string": "Attachments"
+            }
+        },
+        "layout": {
+            "full": {
+                "string": "Full view"
+            },
+            "split": {
+                "string": "Split view"
+            }
+        },
+        "select_message": {
+            "string": "Select a message to read"
+        },
+        "no_items": {
+            "string": "No message found."
+        },
+        "actions": {
+            "mark_as_read": {
+                "string": "Als gelesen markieren"
+            },
+            "mark_as_unread": {
+                "string": "Mark as unread"
+            },
+            "delete": {
+                "string": "Move to trash"
+            },
+            "archive": {
+                "string": "Archiv"
+            },
+            "select_mail": {
+                "string": "Select message"
+            },
+            "deselect_mail": {
+                "string": "Deselect message"
+            }
+        },
+        "time": {
+            "minutes_ago": {
+                "string": "{count}m ago"
+            }
+        }
+    }
+}

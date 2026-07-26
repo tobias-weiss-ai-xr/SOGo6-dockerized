@@ -1,0 +1,37 @@
+{
+    "ADMIN_PANNEL_DOMAIN": {
+        "title": {
+            "string": "Benutzerdefinierte Domains"
+        },
+        "filter_placeholder": {
+            "string": "Domains filtern..."
+        },
+        "add_new_domain": {
+            "string": "Neue benutzerdefinierte Domain hinzufügen"
+        },
+        "select_all": {
+            "string": "Alle auswählen"
+        },
+        "select_row": {
+            "string": "Zeile auswählen"
+        },
+        "domain": {
+            "string": "Domain"
+        },
+        "open_menu": {
+            "string": "Menü öffnen"
+        },
+        "actions": {
+            "string": "Aktionen"
+        },
+        "copy_domain": {
+            "string": "Domainnamen kopieren"
+        },
+        "edit": {
+            "string": "Bearbeiten"
+        },
+        "delete": {
+            "string": "Löschen"
+        }
+    }
+}

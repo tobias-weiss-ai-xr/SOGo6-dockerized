@@ -1,0 +1,53 @@
+{
+    "FORM_PROFILE": {
+        "title": "Profil",
+        "description": "Manage your profile information and settings.",
+        "sections": {
+            "basicInfo": "Grundinformationen",
+            "identities": "Identitäten"
+        },
+        "firstname": {
+            "string": "Vorname",
+            "description": "Label for the first name input field."
+        },
+        "lastname": {
+            "string": "Nachname",
+            "description": "Label for the last name input field."
+        },
+        "basicInfo": {
+            "title": "Grundinformationen",
+            "uid": "Benutzer-ID",
+            "email": "E-Mail",
+            "fullName": "Name",
+            "aliases": "E-Mail-Aliase"
+        },
+        "extraInfo": {
+            "title": "Extra Information",
+            "company": "Company",
+            "team": "Team"
+        },
+        "profilePictureSource": {
+            "title": "Profile Picture",
+            "description": "Choose how your profile picture is displayed. You can upload a custom image, use your Gravatar, Libravatar or use the default avatar.",
+            "useDefault": "Standard",
+            "useGravatar": "Gravatar",
+            "useLibravatar": "Libravatar",
+            "useCustom": "Benutzerdefiniert"
+        },
+        "identities": {},
+        "api": {
+            "title": {
+                "string": "Fehler"
+            },
+            "loading": {
+                "string": "Laden"
+            },
+            "load_failed": {
+                "string": "Failed to load profile. Please try again later."
+            },
+            "update_failed": {
+                "string": "Failed to update profile. Please try again."
+            }
+        }
+    }
+}

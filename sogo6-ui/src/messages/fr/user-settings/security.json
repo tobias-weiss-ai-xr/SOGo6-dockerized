@@ -1,0 +1,25 @@
+{
+    "US_SECURITY": {
+        "title": {
+            "string": "Sécurité",
+            "context": "Title for the Security settings section in user settings"
+        },
+        "totp": {
+            "title": {
+                "string": "Authentification à deux facteurs (TOTP)",
+                "context": "Title for the Two-Factor Authentication settings"
+            },
+            "description": {
+                "string": "L'authentification à deux facteurs ajoute une couche de sécurité supplémentaire."
+            },
+            "verification_code": {
+                "title": {
+                    "string": "Code de vérification"
+                },
+                "description": {
+                    "string": "Saisissez le code généré par votre application d'authentification."
+                }
+            }
+        }
+    }
+}

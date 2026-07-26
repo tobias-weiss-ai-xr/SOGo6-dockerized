@@ -1,0 +1,133 @@
+{
+    "US_MAIL_VACATIONS": {
+        "title": {
+            "string": "Configuración de ausencia",
+            "context": "Title for the vacation settings page"
+        },
+        "page": {
+            "description": {
+                "string": "Configure su mensaje de ausencia y su periodo de actividad."
+            }
+        },
+        "errors_api": {
+            "load_failed": {
+                "string": "No se pudo cargar la configuración."
+            },
+            "feature_disabled": {
+                "string": "La respuesta automática ha sido desactivada."
+            }
+        },
+        "errors": {
+            "validation": {
+                "message_required": {
+                    "string": "El mensaje de ausencia es obligatorio."
+                },
+                "dates_required": {
+                    "string": "Las fechas de inicio y fin son obligatorias."
+                },
+                "date_order": {
+                    "string": "La fecha de fin debe ser posterior a la de inicio."
+                },
+                "time_invalid": {
+                    "string": "Introduzca una hora válida en formato HH:MM."
+                },
+                "weekday_required": {
+                    "string": "Seleccione al menos un día de la semana."
+                },
+                "response_interval_invalid": {
+                    "string": "El intervalo debe ser cero o un número positivo."
+                },
+                "response_interval_zero": {
+                    "string": "A zero-day response interval is not allowed on this domain."
+                }
+            }
+        },
+        "auto_reply": {
+            "enable": {
+                "string": "Enable vacation auto reply"
+            },
+            "subject": {
+                "label": {
+                    "string": "Auto reply subject"
+                },
+                "description": {
+                    "string": "Leave blank to use default subject. You can write {subject} to insert the original subject."
+                }
+            },
+            "message": {
+                "string": "Mensaje de ausencia"
+            },
+            "constraints": {
+                "title": {
+                    "string": "Activation constraints"
+                },
+                "description": {
+                    "string": "Customize day and hour ranges independently and optionally combine them with specific weekdays to tailor your vacation filters to your preferences."
+                },
+                "enable": {
+                    "days": {
+                        "string": "Enable auto reply on these days"
+                    },
+                    "hours": {
+                        "string": "Enable auto reply between these hours"
+                    },
+                    "range": {
+                        "string": "Enable auto reply between these days"
+                    }
+                },
+                "time": {
+                    "start": {
+                        "string": "Hora de inicio"
+                    },
+                    "end": {
+                        "string": "Hora de fin"
+                    }
+                },
+                "weekdays": {
+                    "monday": {
+                        "string": "Lunes"
+                    },
+                    "tuesday": {
+                        "string": "Martes"
+                    },
+                    "wednesday": {
+                        "string": "Miércoles"
+                    },
+                    "thursday": {
+                        "string": "Jueves"
+                    },
+                    "friday": {
+                        "string": "Viernes"
+                    },
+                    "saturday": {
+                        "string": "Sábado"
+                    },
+                    "sunday": {
+                        "string": "Domingo"
+                    }
+                }
+            },
+            "response": {
+                "interval_days": {
+                    "label": {
+                        "string": "Minimum days between auto replies"
+                    },
+                    "placeholder": {
+                        "string": "Leave empty for default behavior"
+                    },
+                    "description": {
+                        "string": "Prevents sending duplicate vacation replies within this period (RFC 5230 :days)."
+                    }
+                },
+                "send_always": {
+                    "label": {
+                        "string": "Always send vacation message response"
+                    },
+                    "description": {
+                        "string": "The vacation message is sent prior to applying your filters."
+                    }
+                }
+            }
+        }
+    }
+}
