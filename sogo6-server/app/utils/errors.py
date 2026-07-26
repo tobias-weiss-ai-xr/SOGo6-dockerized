@@ -274,3 +274,24 @@ ERROR_UNKOWN = E("S999999", "Undefined Error", HTTPStatus.INTERNAL_SERVER_ERROR)
 ERROR_PWD_CHANGE_DISABLED     = E("S001100", "Password Change Is Not Enabled For This Domain", HTTPStatus.FORBIDDEN)
 ERROR_PWD_CHANGE_REAUTH_FAILED = E("S001101", "Current Password Is Incorrect", HTTPStatus.UNAUTHORIZED)
 ERROR_PWD_CHANGE_FAILED        = E("S001102", "Failed To Change Password", HTTPStatus.INTERNAL_SERVER_ERROR)
+
+# ── OIDC Authentication (S0012xx) ─────────────────────────────────────────────
+ERROR_OIDC_NOT_CONFIGURED     = E("S001200", "OIDC Is Not Configured For This Domain", HTTPStatus.PRECONDITION_FAILED)
+ERROR_OIDC_DISCOVERY_FAILED   = E("S001201", "OIDC Provider Discovery Failed", HTTPStatus.SERVICE_UNAVAILABLE)
+ERROR_OIDC_TOKEN_EXCHANGE_FAILED = E("S001202", "OIDC Token Exchange Failed", HTTPStatus.UNAUTHORIZED)
+ERROR_OIDC_ID_TOKEN_INVALID   = E("S001203", "OIDC ID Token Validation Failed", HTTPStatus.UNAUTHORIZED)
+ERROR_OIDC_USERINFO_FAILED     = E("S001204", "OIDC User Info Retrieval Failed", HTTPStatus.SERVICE_UNAVAILABLE)
+ERROR_OIDC_STATE_MISMATCH      = E("S001205", "OIDC State Parameter Mismatch", HTTPStatus.UNAUTHORIZED)
+ERROR_OIDC_REDIRECT_NOT_ALLOWED = E("S001206", "OIDC Redirect URI Not In Allowlist", HTTPStatus.BAD_REQUEST)
+
+# ── SAML2 Authentication (S00121x) ────────────────────────────────────────────
+ERROR_SAML_NOT_CONFIGURED      = E("S001210", "SAML2 Is Not Configured For This Domain", HTTPStatus.PRECONDITION_FAILED)
+ERROR_SAML_RESPONSE_INVALID    = E("S001211", "SAML2 Response Is Invalid", HTTPStatus.UNAUTHORIZED)
+ERROR_SAML_ISSUER_MISMATCH     = E("S001212", "SAML2 Assertion Issuer Mismatch", HTTPStatus.UNAUTHORIZED)
+ERROR_SAML_STATUS_FAILURE      = E("S001213", "SAML2 IdP Returned Failure Status", HTTPStatus.UNAUTHORIZED)
+
+# ── App Passwords (S00122x) ───────────────────────────────────────────────────
+ERROR_APP_PASSWORD_NOT_FOUND   = E("S001220", "App Password Not Found", HTTPStatus.NOT_FOUND)
+ERROR_APP_PASSWORD_NOT_OWNED   = E("S001221", "App Password Does Not Belong To User", HTTPStatus.FORBIDDEN)
+ERROR_APP_PASSWORD_INVALID     = E("S001222", "App Password Token Is Invalid", HTTPStatus.UNAUTHORIZED)
+ERROR_APP_PASSWORD_LABEL_EMPTY = E("S001223", "App Password Label Cannot Be Empty", HTTPStatus.BAD_REQUEST)

@@ -59,7 +59,7 @@ COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Install additional runtime dependencies not covered by poetry
-RUN pip install --no-cache-dir prometheus-client
+RUN pip install --no-cache-dir prometheus-client authlib
 
 # Copy application code
 COPY --from=builder /build/app /app/app
