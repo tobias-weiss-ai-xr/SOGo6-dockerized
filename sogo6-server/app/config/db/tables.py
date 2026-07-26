@@ -646,6 +646,24 @@ ALL_MFA_TOTP_COL = [COL_ID,
 TABLE_MFA_TOTP = Table(name=process_config.SOGO_P_TABLE_MFA_TOTP, columns=ALL_MFA_TOTP_COL,
                        primary_keys=(COL_ID.name,),)
 
+# ── Password Reset Tokens ───────────────────────────────────────────────────────
+
+COL_PWD_RESET_TOKEN   = Column(name="token_hash", data_type="str", extra_args={"max_len": 128}, is_unique=True)
+COL_PWD_RESET_USER_UID = Column(name="user_uid", data_type="text", extra_args={"max_len": 512})
+COL_PWD_RESET_EXPIRES  = Column(name="expires_at", data_type="datetime", is_nullable=True)
+COL_PWD_RESET_USED     = Column(name="used", data_type="bool", is_nullable=False)
+COL_PWD_RESET_CREATED  = Column(name="created_at", data_type="datetime", is_nullable=True)
+
+ALL_PWD_RESET_COL = [COL_ID,
+                     COL_PWD_RESET_TOKEN,
+                     COL_PWD_RESET_USER_UID,
+                     COL_PWD_RESET_EXPIRES,
+                     COL_PWD_RESET_USED,
+                     COL_PWD_RESET_CREATED]
+
+TABLE_PWD_RESET_TOKENS = Table(name=process_config.SOGO_P_TABLE_PWD_RESET_TOKENS, columns=ALL_PWD_RESET_COL,
+                               primary_keys=(COL_ID.name,),)
+
 ALL_TABLES = [TABLE_SETTINGS,
               TABLE_DOMAIN,
               TABLE_RULES,
@@ -661,4 +679,5 @@ ALL_TABLES = [TABLE_SETTINGS,
               TABLE_DRAFT_STATE,
               TABLE_CALENDAR_SHARE,
               TABLE_CONTACT_SHARE,
-              TABLE_MFA_TOTP]
+              TABLE_MFA_TOTP,
+              TABLE_PWD_RESET_TOKENS]

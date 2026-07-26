@@ -304,3 +304,14 @@ ERROR_MFA_TOTP_INVALID_CODE   = E("S001233", "TOTP Verification Code Is Invalid"
 ERROR_MFA_TOTP_SETUP_REQUIRED = E("S001234", "TOTP Setup Required Before Enabling", HTTPStatus.PRECONDITION_FAILED)
 ERROR_MFA_TOTP_NOT_ENABLED    = E("S001235", "TOTP Is Not Enabled For This Account", HTTPStatus.PRECONDITION_FAILED)
 ERROR_MFA_TOTP_VOUCHER_INVALID = E("S001236", "MFA Voucher Token Is Invalid Or Expired", HTTPStatus.UNAUTHORIZED)
+
+#Password Recovery
+ERROR_PWD_RESET_DISABLED          = E("S001310", "Password Recovery Is Not Enabled For This Domain", HTTPStatus.FORBIDDEN)
+ERROR_PWD_RESET_USER_NOT_FOUND    = E("S001311", "User Not Found For Password Recovery", HTTPStatus.NOT_FOUND)
+ERROR_PWD_RESET_TOKEN_INVALID     = E("S001312", "Password Reset Token Is Invalid Or Expired", HTTPStatus.UNAUTHORIZED)
+ERROR_PWD_RESET_TOKEN_USED        = E("S001313", "Password Reset Token Has Already Been Used", HTTPStatus.CONFLICT)
+ERROR_PWD_RESET_TOKEN_EXPIRED     = E("S001314", "Password Reset Token Has Expired", HTTPStatus.UNAUTHORIZED)
+ERROR_PWD_RESET_RATE_LIMITED      = E("S001315", "Password Reset Requested Too Frequently. Please Wait Before Trying Again", HTTPStatus.TOO_MANY_REQUESTS)
+ERROR_PWD_RESET_UPDATE_FAILED     = E("S001316", "Failed To Update Password During Reset", HTTPStatus.INTERNAL_SERVER_ERROR)
+ERROR_PWD_RESET_TOKEN_GEN_FAILED  = E("S001317", "Failed To Generate Password Reset Token", HTTPStatus.INTERNAL_SERVER_ERROR)
+ERROR_PWD_RESET_EMAIL_FAILED      = E("S001318", "Failed To Send Password Reset Email", HTTPStatus.SERVICE_UNAVAILABLE)
