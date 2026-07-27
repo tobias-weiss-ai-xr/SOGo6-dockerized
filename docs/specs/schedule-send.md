@@ -211,14 +211,17 @@ Prefix: `schedule_send:{user_uid}:{job_id}`
 ## 6. Test Pyramid
 
 ```
-        ╱  E2E (Playwright)  ╲          ← 2 critical paths
-       ╱   Integration (API)  ╲         ← 4 API scenarios
-      ╱    Unit (backend)      ╲        ← 8+ unit tests
-     ╱     Unit (frontend)      ╲       ← 4 component tests
-    ╱─────────────────────────────╲
+        ╱  E2E (Playwright)      ╲     ← 2 critical paths
+       ╱   Integration (API)      ╲    ← 4 API scenarios
+      ╱    Unit (backend)          ╲   ← 10 unit tests
+     ╯     Unit (frontend)          ╰  ← 4 component tests
+    ╱──────────────────────────────────╲
 ```
 
-### 6.1 Unit Tests — Backend (8+ tests)
+> **Status:** Backend unit tests ✅ (10), frontend unit tests ✅ (4),
+> integration tests ❌ (0 — planned), E2E ❌ (0 — planned).
+
+### 6.1 Unit Tests — Backend (10 tests)
 
 | # | Test | File | What it covers |
 |---|------|------|----------------|
@@ -241,7 +244,7 @@ Prefix: `schedule_send:{user_uid}:{job_id}`
 | 3 | `ScheduleSendPicker max=now+30d` | Beyond-admin-limit dates disallowed |
 | 4 | `ComposeFooter shows "Send now" / "Schedule…" split` | Dropdown has both options |
 
-### 6.3 Integration Tests — API (4 scenarios)
+### 6.3 Integration Tests — API (4 scenarios) ❌ Not Yet Implemented
 
 | # | Scenario | Steps |
 |---|----------|-------|
@@ -250,7 +253,7 @@ Prefix: `schedule_send:{user_uid}:{job_id}`
 | 3 | **List scheduled** | Schedule → `GET /mail/scheduled` → item appears in list |
 | 4 | **Send immediately (no send_at)** | `POST /mail/send` without `send_at` → assert 200 + mail arrives in inbox |
 
-### 6.4 E2E Tests — Playwright (2 critical paths)
+### 6.4 E2E Tests — Playwright (2 critical paths) ❌ Not Yet Implemented
 
 | # | Path | Steps |
 |---|------|-------|
@@ -299,6 +302,7 @@ ERROR_MAIL_SCHEDULE_MAX_DELAY        = E("S000389", "Scheduled Date Exceeds Maxi
 - [ ] User can cancel a scheduled send before delivery
 - [ ] User can view all scheduled sends in a dedicated view
 - [ ] All error states return appropriate HTTP codes and messages
-- [ ] 100% of unit tests pass
-- [ ] 2 E2E Playwright tests pass
+- [x] 100% of unit tests pass (10 backend + 4 frontend) ✅
+- [ ] 2 E2E Playwright tests pass (not yet implemented)
+- [ ] 4 API integration tests pass (not yet implemented)
 - [ ] Feature parity with SOGo 5 Schedule Send
