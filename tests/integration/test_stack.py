@@ -435,6 +435,93 @@ class TestServiceConnectivity:
 # =============================================================================
 
 
+class TestScheduleSend:
+    """Integration tests for Schedule Send feature (POST /mail/send with send_at)."""
+
+    TOKEN_CACHE: dict[str, str] = {}
+
+    @pytest.fixture(autouse=True)
+    def _auth(self):
+        """Authenticate once per session and cache the token."""
+        if "user" not in self.TOKEN_CACHE:
+            resp = requests.post(
+                f"{API_URL}/api/user/v1/auth/login",
+                json={"username": "testuser@example.org", "password": "password123"},
+                timeout=10,
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            self.TOKEN_CACHE["user"] = data.get("data", {}).get("jwt_token", "")
+        assert self.TOKEN_CACHE["user"], "Failed to obtain auth token"
+
+    def _send_mail(self, overrides: dict | None = None) -> tuple[dict, int]:
+        """Helper to POST /mail/send with standard payload + overrides."""
+        payload = {
+            "from": "testuser@example.org",
+            "to": ["testuser2@example.org"],
+            "subject": "Integration Test",
+            "body": "Hello from Schedule Send integration test",
+        }
+        if overrides:
+            payload.update(overrides)
+        resp = requests.post(
+            f"{API_URL}/api/user/v1/mailboxes/0/mail/send",
+            headers={"Authorization": f"Bearer {self.TOKEN_CACHE['user']}"},
+            json=payload,
+            timeout=15,
+        )
+        return resp.json(), resp.status_code
+
+    def test_schedule_send_future(self):
+        """Scenario 1: Schedule an email with send_at in the future."""
+        from datetime import datetime, timezone, timedelta
+        future = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+
+        result, status = self._send_mail({"send_at": future})
+
+        assert status == 200, f"Expected 200, got {status}: {result}"
+        assert result.get("error_code") == "S000000"
+        data = result.get("data", {})
+        assert data.get("status") == "scheduled", f"Expected 'scheduled', got {data.get('status')}"
+        assert data.get("scheduled_at") == future
+        assert data.get("job_id"), "Expected a job_id for scheduled send"
+
+    def test_schedule_send_immediate_no_send_at(self):
+        """Scenario 4: Send immediately (no send_at) — existing behaviour unchanged."""
+        result, status = self._send_mail()
+
+        assert status == 200, f"Expected 200, got {status}: {result}"
+        assert result.get("error_code") == "S000000"
+        # Without send_at, the email should be sent immediately
+        data = result.get("data", {})
+        assert data.get("status") in ("sent", "pending"), (
+            f"Expected 'sent' or 'pending', got {data.get('status')}"
+        )
+
+    def test_schedule_send_invalid_date_format(self):
+        """Invalid send_at format → 400 error."""
+        result, status = self._send_mail({"send_at": "not-a-date"})
+
+        assert status == 400, f"Expected 400, got {status}: {result}"
+        assert result.get("error_code") in ("S000391", "S000300"), (
+            f"Unexpected error_code: {result.get('error_code')}"
+        )
+
+    def test_schedule_send_past_date(self):
+        """send_at in the past → sent immediately (not an error)."""
+        from datetime import datetime, timezone, timedelta
+        past = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+
+        result, status = self._send_mail({"send_at": past})
+
+        assert status == 200, f"Expected 200, got {status}: {result}"
+        assert result.get("error_code") == "S000000"
+        data = result.get("data", {})
+        assert data.get("status") in ("sent", "pending"), (
+            f"Expected 'sent' or 'pending' for past send_at, got {data.get('status')}"
+        )
+
+
 class TestRateLimiting:
     def test_rapid_login_requests(self):
         for _ in range(20):

@@ -62,24 +62,28 @@ This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 
 | Work | Details |
 |------|---------|
 | Production Dockerfiles | Multi-stage, non-root, healthcheck for both server and UI |
-| E2E Tests | 23 Playwright tests (auth, admin, navigation, user settings) |
+| E2E Tests | 24 Playwright tests (auth, admin, navigation, user settings, schedule send) |
 | Admin API Tests | 29 bash tests covering all admin endpoints |
-| Backend Tests | 1,723 Python tests passing |
+| Backend Tests | **1,728** Python tests passing (5 new: max-delay, boundary, 3× ScheduleSendJob process) |
 | UI Tests | 69 Jest tests passing |
 | SMTP TLS Tests | 32 tests covering all encryption modes + auth mechanisms |
 | Load Tests | k6 admin API (~25ms avg, 100% pass), k6 user API (~8ms), sync benchmark (100/100) |
+| **Contract (new)** | **6 hypothesis property tests** in `tests/test_properties/` |
+| **Integration (new)** | **4 Schedule Send API scenarios** added |
 | Code Cleanup | Zero `return 'ERROR'` stubs, zero `alert()` calls, zero unguarded `console.log` |
 
 ## Test Suite Results
 
 | Suite | Pass | Notes |
 |-------|------|-------|
-| Backend Python | **1,723** | 1 pre-existing env-var failure |
+| Backend Python | **1,728** | 1 pre-existing env-var failure + 5 new Schedule Send tests |
 | UI Jest | **69** | 6 pre-existing a11y failures |
 | Admin API (bash) | **29** | 0 failures |
-| Playwright E2E | **23** | 0 failures |
+| Playwright E2E | **24** | 0 failures (+1 new schedule-send spec) |
+| Contract (hypothesis) | **6** | API envelope + error code format properties |
+| Integration (Schedule Send) | **4** | future, immediate, past, invalid-date scenarios |
 | k6 Load Tests | **100%** | 3 suites, 0% errors |
-| **Total** | **>1,800** | |
+| **Total** | **>1,860** | |
 
 ## Remaining Items (Non-Blocking)
 

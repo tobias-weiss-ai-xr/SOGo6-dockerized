@@ -3,7 +3,7 @@
 > **Goal:** 99%+ test coverage across all 81 roadmap features.
 > **Scope:** All Tiers 0–7 — every API endpoint, service, and UI component.
 
-**Last Updated:** 2026-07-27 — Numbers reflect actual test suite from `SUMMARY.md`.
+**Last Updated:** 2026-07-27 — Gap closure round 1 completed: contract tests, Schedule Send max-delay + process tests, integration scenarios, E2E spec.
 
 ---
 
@@ -25,13 +25,14 @@
 
 | Layer | Count | Tool | Location |
 |-------|-------|------|----------|
-| **Backend Unit** | 1,723 | pytest | `sogo6-server/tests/test_interface/`, `sogo6-server/tests/test_module/` |
+| **Backend Unit** | **1,728** (+5) | pytest | `sogo6-server/tests/test_interface/`, `sogo6-server/tests/test_module/` |
 | **Frontend Unit** | 69 | jest + RTL | `sogo6-ui/src/**/__tests__/` |
 | **API Integration** | 29 (bash) + Python | pytest + requests + bash | `tests/integration/`, `tests/admin-api-test.sh` |
-| **E2E** | 23 | Playwright | `tests/e2e/specs/` (4 spec files) |
+| **Schedule Send Integration** | **4** (new) | pytest + requests | `tests/integration/test_stack.py::TestScheduleSend` |
+| **E2E** | **24** (+1) | Playwright | `tests/e2e/specs/` (5 spec files, +schedule-send) |
 | **Load** | 3 suites | k6 | `tests/load/k6-admin-api.js`, `tests/load/k6-user-api.js`, `tests/load/sync-benchmark.py` |
 | **SMTP** | 32 | bash | `tests/smtp-test.sh` |
-| **Contract** | 0 | — | ❌ Not yet implemented — planned as `tests/test_properties/` |
+| **Contract** | **6 properties** (new) | hypothesis | `tests/test_properties/test_api_envelope.py` |
 
 ---
 
@@ -327,14 +328,15 @@ open htmlcov/index.html
 | **Playwright E2E tests** | **23 passing** (4 spec files) |
 | **SMTP TLS tests** | **32 passing** |
 | **Load tests (k6)** | **3 suites, 100% pass** (admin ~25ms, user ~8ms, sync 100/100) |
-| **Contract/Property-based tests** | **0** — hypothesis layer not yet implemented |
+| **Contract/Property-based tests** | **6 properties** — ✅ newly implemented at `tests/test_properties/test_api_envelope.py` |
 | **Current coverage (app/)** | ~55% |
 | **Target coverage** | 99% |
 | **Tests to write** | ~200 unit (API layer) + ~130 frontend + ~30 integration + ~10 E2E |
 
-### Key Gaps
+### Key Gaps (Updated)
 
-1. **API layer (`app/api/`) at 12%** — biggest coverage hole. 33 of 41 endpoints have no dedicated tests.
+1. **API layer (`app/api/`) at 12%** — biggest remaining coverage hole. 33 of 41 endpoints untested.
 2. **Frontend at 69 tests** — needs ~130+ more to reach the 200+ component test target.
-3. **Contract layer missing** — hypothesis fuzz tests for schema conformance not yet implemented.
-4. **API integration tests undercounted** — the 29 bash admin API tests exist, but Python integration layer needs expansion.
+3. ~~Contract layer missing~~ ✅ **Closed** — 6 hypothesis property tests for API envelope + error code format.
+4. **API integration tests still undercounted** — 4 Schedule Send scenarios added, but Python integration layer needs expansion.
+5. **Schedule Send cancel/list endpoints** — interface methods and API routes not yet implemented.
