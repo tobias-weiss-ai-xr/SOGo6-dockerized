@@ -1,18 +1,36 @@
 # SOGo 6 Evaluation Stack
 # Docker Compose orchestration targets
 
-.PHONY: setup build start stop restart status logs clean reset test setup-dev build-dev start-dev stop-dev restart-dev dev-status dev-logs dev-clean dev-reset dev-debug dev-debug-server dev-debug-ui dev-pgadmin dev-redis dev-ldap-tools dev-monitoring dev-shell-server dev-shell-ui test-dev dev-agent dev-minio dev-db-alternative
+.PHONY: setup build start stop restart status logs clean reset init test
+.PHONY: start-full start-stalwart start-minimal start-byo
 
+# ── Setup ────────────────────────────────────────────────────
 setup:
 	bash sogo6/scripts/setup.sh
 
+# ── Build ─────────────────────────────────────────────────────
 build:
 	docker compose build --parallel
 	docker images --filter "reference=sogo6*" --format "{{.Repository}}:{{.Tag}}"
 
-start:
-	docker compose up -d --wait --wait-timeout 180
+# ── Production profiles ──────────────────────────────────────
+# Full stack: Stalwart + PostgreSQL + LDAP
+start-full:
+	docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d --wait --wait-timeout 180
 	docker compose ps
+
+# Stalwart mail + MariaDB
+start-alt:
+	docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d --wait --wait-timeout 180
+	docker compose ps
+
+# Minimal: only core SOGo. Bring your own DB, mail, auth.
+start-minimal:
+	docker compose up -d --wait --wait-timeout 60
+	docker compose ps
+
+# Stalwart mail + PostgreSQL (default recommendation)
+start: start-full
 
 stop:
 	docker compose down
@@ -29,12 +47,14 @@ clean:
 	docker compose down -v
 	@echo "Volumes and containers removed."
 
-reset: clean start
+reset: clean
 	bash sogo6/scripts/init-sogo6.sh
+	bash sogo6/scripts/init-sogo6.sh  # second run applies domain config
 
 init:
 	bash sogo6/scripts/init-sogo6.sh
 
+# ── Tests ─────────────────────────────────────────────────────
 test:
 	bash tests/run-all-tests.sh
 
@@ -46,9 +66,6 @@ test-smoke:
 test-full:
 	bash tests/run-all-tests.sh
 	SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x 2>/dev/null || echo "Python tests skipped (set SOGO_INTEGRATION_TESTS=1)"
-
-setup-dev:
-	bash sogo6/scripts/setup.sh
 
 build-dev:
 	docker compose -f docker-compose.dev.yaml build --parallel

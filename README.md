@@ -46,11 +46,12 @@ cd sogo6-stalwart-openldap-dockerized
 # 2. Generate secrets & certs, build images
 bash sogo6/scripts/setup.sh
 
-# 3. Start the stack
-docker compose -f docker-compose.dev.yaml up -d
+# 3. Start the stack (Stalwart + PostgreSQL + LDAP)
+docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
 
 # 4. Initialize system
 bash sogo6/scripts/init-sogo6.sh
+bash sogo6/scripts/init-sogo6.sh  # second run applies domain config
 
 # 5. Open the UI
 open http://localhost:3000
@@ -60,9 +61,49 @@ Or use the Makefile:
 
 ```bash
 make setup     # Step 2
-make start-dev # Step 3
+make start     # Step 3 (same as start-full)
 make init      # Step 4
 ```
+
+### Modular Profiles
+
+Pick your infrastructure by enabling compose profiles:
+
+| Stack | Command | When to use |
+|-------|---------|-------------|
+| **Full (default)** | `make start` or `docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d` | All-in-one evaluation |
+| **Stalwart + MariaDB** | `docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d` | MariaDB instead of PostgreSQL |
+| **Minimal** | `docker compose up -d` | Only core SOGo — bring your own DB, mail, auth |
+| **Your own mail** | `docker compose --profile db-postgres --profile auth-ldap up -d` | Use Exim/Dovecot/… externally, just need SOGo's DB |
+
+**Available profiles:**
+
+| Profile | Services |
+|---------|----------|
+| `mail-stalwart` | Stalwart (IMAP + SMTP + Sieve) |
+| `db-postgres` | PostgreSQL (default application DB) |
+| `db-mariadb` | MariaDB (alternative DB) |
+| `auth-ldap` | OpenLDAP (user directory) |
+| `nginx` | Nginx reverse proxy (optional, access SOGo directly on :3000 / :5001) |
+| `agent` | Celery async job worker |
+| `minio` | S3-compatible object storage |
+| `monitoring` | Prometheus + Grafana |
+
+**Bring your own (BYO) services** — set these environment variables:
+
+```bash
+# Your own database
+SOGO_DB_URI=postgresql://user:pass@your-db:5432/sogo
+
+# Your own IMAP/SMTP
+SOGO_D_IMAP_SERVER=your-imap-host
+SOGO_D_SMTP_SERVER=your-smtp-host
+
+# Your own LDAP / OIDC
+SOGO_LDAP_URI=ldap://your-ldap:389
+```
+
+Set these in a `.env` file or pass them inline.
 
 ### Test Users
 
@@ -76,26 +117,40 @@ make init      # Step 4
 
 ### Core (always running)
 
-| Service | Image | Role |
-|---------|-------|------|
-| `sogo6-ui` | `sogo6-ui:dev` (built) | Next.js 16 frontend |
-| `sogo6-server` | `sogo6-server:dev` (built) | Flask API backend |
-| `sogo6-postgres` | `postgres:15-alpine` | Application database |
-| `sogo6-redis` | `redis:7-alpine` | Session cache + Celery broker |
-| `sogo6-ldap` | `sogo6-ldap:dev` (built) | User authentication (OpenLDAP) |
-| `sogo6-stalwart` | `stalwartlabs/stalwart:v0.16.6` | IMAP/SMTP/Sieve mail server |
-| `sogo6-smtp` | `maildev/maildev` | SMTP test web UI |
-| `sogo6-nginx` | `nginx:alpine` | Reverse proxy + TLS |
+| Service | Role |
+|---------|------|
+| `sogo6-ui` | Next.js frontend |
+| `sogo6-server` | Flask API backend |
+| `sogo6-redis` | Session cache + Celery broker |
 
-### Optional (`make dev-<name>`)
+### Profile-gated infrastructure
 
-| Service | Profile | Ports | Credentials |
-|---------|---------|-------|-------------|
-| `sogo6-agent` | `agent` | — | Celery async job worker |
-| `sogo6-minio` | `minio` | `9000` (API), `9001` (Console) | `minioadmin` / `minioadmin` |
-| `sogo6-mariadb` | `db-alternative` | `3306` | `sogo` / `sogo` |
-| `sogo6-prometheus` + `sogo6-grafana` | `monitoring` | `9090`, `3001` | `admin` / `password123` |
-| LDAP admin tools | `ldap-tools` | `8081`–`8084` | — |
+Pick what you need by enabling compose profiles:
+
+| Profile | Service | Role |
+|---------|---------|------|
+| `mail-stalwart` | `sogo6-stalwart` | IMAP/SMTP/Sieve mail server |
+| `db-postgres` | `sogo6-postgres` | PostgreSQL application database |
+| `db-mariadb` | `sogo6-mariadb` | MariaDB alternative database |
+| `auth-ldap` | `sogo6-ldap` | OpenLDAP user authentication |
+| `nginx` | `sogo6-nginx` | Reverse proxy + TLS termination |
+| `agent` | `sogo6-agent` | Celery async job worker |
+| `minio` | `sogo6-minio` | S3-compatible object storage |
+| `monitoring` | `sogo6-prometheus`, `sogo6-grafana` | Prometheus metrics + Grafana dashboards |
+
+### For your specific setup (Exim + Dovecot + MariaDB)
+
+You only need:
+```bash
+docker compose --profile nginx --profile db-mariadb up -d
+```
+
+Then configure SOGo's domain settings via Admin API to point to your:
+- **IMAP:** Dovecot server + port
+- **SMTP:** Exim server + port
+- **Auth:** Dovecot's LDAP or SQL auth (or configure SOGo's SQL user source)
+
+The SOGo server connects to your existing services like any other mail client.
 
 ### Access Points
 
