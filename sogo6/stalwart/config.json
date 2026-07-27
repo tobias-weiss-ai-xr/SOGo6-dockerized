@@ -1,11 +1,4 @@
 {
-  "@type": "PostgreSql",
-  "host": "sogo6-postgres",
-  "port": 5432,
-  "database": "stalwart",
-  "authUsername": "stalwart",
-  "authSecret": {
-    "@type": "Value",
-    "secret": "stalwart_sogo6_2026"
-  }
+  "@type": "Sqlite",
+  "path": "/var/lib/stalwart/data.db"
 }

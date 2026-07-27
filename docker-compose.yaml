@@ -242,6 +242,7 @@ services:
       STALWART_DB_PASSWORD: ${STALWART_DB_PASSWORD:-stalwart_sogo6_2026}
     volumes:
       - sogo6-stalwart-data:/var/lib/stalwart
+      - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"
