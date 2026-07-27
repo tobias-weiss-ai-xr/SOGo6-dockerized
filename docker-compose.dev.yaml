@@ -141,6 +141,39 @@ services:
       timeout: 3s
       retries: 5
 
+  # ── MariaDB (alternative to PostgreSQL) ─────────────────────────────────────
+  sogo6-mariadb:
+    image: mariadb:11.4
+    container_name: sogo6-mariadb-dev
+    profiles:
+      - db-alternative
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: sogo
+      MARIADB_USER: sogo
+      MARIADB_PASSWORD: sogo
+    command: >
+      mariadbd
+        --max-connections=100
+        --general-log=1
+        --general-log-file=/var/log/mysql/query.log
+    volumes:
+      - sogo6-mariadb-data-dev:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -u root -proot | grep 'mysqld is alive'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   sogo6-redis:
     image: redis:7-alpine
     container_name: sogo6-redis-dev
@@ -470,6 +503,7 @@ services:
 
 volumes:
   sogo6-postgres-data-dev:
+  sogo6-mariadb-data-dev:
   sogo6-redis-data-dev:
   sogo6-stalwart-data-dev:
   sogo6-ldap-data-dev:
