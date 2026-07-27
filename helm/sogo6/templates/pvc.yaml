@@ -1,0 +1,27 @@
+{{- if .Values.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sogo6.fullname" . }}-mailstore
+  labels:
+    {{- include "sogo6.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.persistence.storageClass | default "" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size.mailstore }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sogo6.fullname" . }}-database
+  labels:
+    {{- include "sogo6.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.persistence.storageClass | default "" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size.database }}
+{{- end }}

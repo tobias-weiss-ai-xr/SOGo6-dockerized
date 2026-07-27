@@ -1,0 +1,9 @@
+apiVersion: v2
+name: sogo6
+description: SOGo 6 groupware suite with Stalwart mail server and OpenLDAP
+type: application
+version: 0.1.0
+appVersion: "6.0.0"
+maintainers:
+  - name: sogo6
+    email: admin@example.org

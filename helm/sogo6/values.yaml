@@ -1,0 +1,58 @@
+# Default values for sogo6.
+
+image:
+  server: sogo6-server:latest
+  ui: sogo6-ui:latest
+  stalwart: stalwartlabs/stalwart:0.16.0
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+resources:
+  server: {}
+  ui: {}
+  stalwart: {}
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size:
+    mailstore: 50Gi
+    database: 20Gi
+
+ingress:
+  enabled: false
+  className: nginx
+  host: mail.example.org
+  tls:
+    enabled: true
+    secretName: sogo6-tls
+
+# LDAP
+ldap:
+  adminDN: cn=admin,dc=example,dc=org
+  baseDN: dc=example,dc=org
+  password: changeme
+
+# Database
+database:
+  host: sogo6-postgres
+  port: 5432
+  name: sogo6
+  user: sogo6
+  password: changeme
+
+# Redis
+redis:
+  host: sogo6-redis
+  port: 6379
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPU: 70
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

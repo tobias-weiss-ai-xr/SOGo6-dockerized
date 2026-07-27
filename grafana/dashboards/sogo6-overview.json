@@ -1,0 +1,148 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Overview",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "title": "Service Status",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "up{job=~'sogo6.*'}", "legendFormat": "{{job}}" }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 }
+    },
+    {
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{job='sogo6-server'}[5m]))", "legendFormat": "requests/s" }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 }
+    },
+    {
+      "title": "Error Rate (%)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{job='sogo6-server',status=~'5..'}[5m])) / sum(rate(http_requests_total{job='sogo6-server'}[5m])) * 100", "legendFormat": "errors" }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red", "value": 5 }
+          ]},
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 }
+    },
+    {
+      "title": "Response Time (p99)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job='sogo6-server'}[5m])) by (le))", "legendFormat": "p99" }],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 }
+    },
+    {
+      "title": "Services",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }
+    },
+    {
+      "title": "Redis Latency",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "redis_command_duration_seconds_total{job='sogo6-redis'}", "legendFormat": "redis" }],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 6 }
+    },
+    {
+      "title": "PostgreSQL Connections",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "pg_stat_activity_count{datname='sogo6'}", "legendFormat": "active connections" }],
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 60 },
+            { "color": "red", "value": 85 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 6 }
+    },
+    {
+      "title": "Stalwart IMAP Sessions",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "stalwart_imap_sessions_active", "legendFormat": "active sessions" }],
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 6 }
+    },
+    {
+      "title": "Storage",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 }
+    },
+    {
+      "title": "Mailstore Size",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "sogo6_mailstore_size_bytes", "legendFormat": "mailstore" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 11 }
+    },
+    {
+      "title": "DB Size",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "pg_database_size_bytes{datname='sogo6'}", "legendFormat": "database" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 11 }
+    },
+    {
+      "title": "Redis Memory",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [{ "expr": "redis_memory_used_bytes{job='sogo6-redis'}", "legendFormat": "redis" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 11 }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["sogo6", "production"],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROM",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "selected": true, "text": "Prometheus", "value": "Prometheus" }
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "SOGo 6 — Overview",
+  "uid": "sogo6-overview"
+}

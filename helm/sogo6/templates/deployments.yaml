@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-ui
+  labels:
+    {{- include "sogo6.labels" . | nindent 4 }}
+    component: ui
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sogo6.selectorLabels" . | nindent 6 }}
+      component: ui
+  template:
+    metadata:
+      labels:
+        {{- include "sogo6.selectorLabels" . | nindent 8 }}
+        component: ui
+    spec:
+      containers:
+        - name: ui
+          image: {{ .Values.image.ui }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://{{ include "sogo6.fullname" . }}-server:5000"
+          resources:
+            {{- toYaml .Values.resources.ui | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-server
+  labels:
+    {{- include "sogo6.labels" . | nindent 4 }}
+    component: server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sogo6.selectorLabels" . | nindent 6 }}
+      component: server
+  template:
+    metadata:
+      labels:
+        {{- include "sogo6.selectorLabels" . | nindent 8 }}
+        component: server
+    spec:
+      containers:
+        - name: server
+          image: {{ .Values.image.server }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.database.user }}:{{ .Values.database.password }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+            - name: REDIS_URL
+              value: "redis://{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: LDAP_URI
+              value: "ldap://{{ include "sogo6.fullname" . }}-openldap:389"
+            - name: LDAP_BASE_DN
+              value: "{{ .Values.ldap.baseDN }}"
+          resources:
+            {{- toYaml .Values.resources.server | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-stalwart
+  labels:
+    {{- include "sogo6.labels" . | nindent 4 }}
+    component: stalwart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sogo6.selectorLabels" . | nindent 6 }}
+      component: stalwart
+  template:
+    metadata:
+      labels:
+        {{- include "sogo6.selectorLabels" . | nindent 8 }}
+        component: stalwart
+    spec:
+      containers:
+        - name: stalwart
+          image: {{ .Values.image.stalwart }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 25
+            - containerPort: 143
+            - containerPort: 465
+            - containerPort: 587
+            - containerPort: 993
+          volumeMounts:
+            - name: mailstore
+              mountPath: /opt/stalwart/mail
+          resources:
+            {{- toYaml .Values.resources.stalwart | nindent 12 }}
+      volumes:
+        - name: mailstore
+          persistentVolumeClaim:
+            claimName: {{ include "sogo6.fullname" . }}-mailstore
