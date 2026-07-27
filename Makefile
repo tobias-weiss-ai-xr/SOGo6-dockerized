@@ -1,7 +1,7 @@
 # SOGo 6 Evaluation Stack
 # Docker Compose orchestration targets
 
-.PHONY: setup build start stop restart status logs clean reset test setup-dev build-dev start-dev stop-dev restart-dev dev-status dev-logs dev-clean dev-reset dev-debug dev-debug-server dev-debug-ui dev-pgadmin dev-redis dev-ldap-tools dev-monitoring dev-shell-server dev-shell-ui test-dev
+.PHONY: setup build start stop restart status logs clean reset test setup-dev build-dev start-dev stop-dev restart-dev dev-status dev-logs dev-clean dev-reset dev-debug dev-debug-server dev-debug-ui dev-pgadmin dev-redis dev-ldap-tools dev-monitoring dev-shell-server dev-shell-ui test-dev dev-agent dev-minio dev-db-alternative
 
 setup:
 	bash sogo6/scripts/setup.sh
@@ -90,6 +90,11 @@ dev-debug:
 	@echo "  - Grafana:         http://localhost:3001 (admin / password123)"
 	@echo "  - Nginx:           http://localhost:80 / https://localhost:443"
 	@echo ""
+	@echo "Optional (start with make dev-<name>):"
+	@echo "  - dev-agent:       Celery async job worker"
+	@echo "  - dev-minio:       S3-compatible object storage (MinIO)"
+	@echo "  - dev-db-alternative: MariaDB database"
+	@echo ""
 	@echo "Services exposed on host:"
 	@echo "  - PostgreSQL:      localhost:5432"
 	@echo "  - Redis:           localhost:6379"
@@ -133,6 +138,22 @@ dev-ldap-tools:
 	@echo "  - LDAP UI:     http://localhost:8082"
 	@echo "  - Ladon:       http://localhost:8083"
 	@echo "  - phpLDAPadmin: http://localhost:8084"
+
+dev-agent:
+	docker compose -f docker-compose.dev.yaml --profile agent up -d
+	@echo "Celery agent started:"
+	@echo "  - Worker: sogo6-agent-dev (async background jobs)"
+
+dev-minio:
+	docker compose -f docker-compose.dev.yaml --profile minio up -d
+	@echo "MinIO started:"
+	@echo "  - API:       http://localhost:9000"
+	@echo "  - Console:   http://localhost:9001 (minioadmin / minioadmin)"
+
+dev-db-alternative:
+	docker compose -f docker-compose.dev.yaml --profile db-alternative up -d
+	@echo "Alternative database started:"
+	@echo "  - MariaDB:   localhost:3306 (sogo / sogo)"
 
 dev-mail-tools:
 	docker compose -f docker-compose.dev.yaml --profile mail-tools up -d

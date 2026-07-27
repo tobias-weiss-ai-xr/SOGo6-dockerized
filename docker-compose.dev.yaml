@@ -105,6 +105,81 @@ services:
       retries: 3
       start_period: 20s
 
+  # ── Celery Agent Worker (async background jobs) ──────────────────────────
+  sogo6-agent:
+    image: sogo6-server:dev
+    container_name: sogo6-agent-dev
+    build:
+      context: ./sogo6-server
+      dockerfile: deploy/local/Dockerfile.local
+      target: development
+    environment:
+      FLASK_ENV: development
+      PYTHONUNBUFFERED: "1"
+      PYTHONFAULTHANDLER: "1"
+      LOG_LEVEL: debug
+      SOGO_DB_URI: postgresql://sogo:sogo@sogo6-postgres:5432/sogo
+      SOGO_REDIS_URI: redis://sogo6-redis:6379/0
+      SOGO_LDAP_URI: ldap://sogo6-ldap:389
+      SOGO_LDAP_BASE_DN: dc=example,dc=org
+      SOGO_LDAP_BIND_DN: cn=admin,dc=example,dc=org
+      SOGO_LDAP_BIND_PASSWORD: admin
+      SOGO_SMTP_SERVER: sogo6-stalwart
+      SOGO_SMTP_PORT: 20025
+      SOGO_P_DB_USER: sogo
+      SOGO_P_DB_HOST: sogo6-postgres
+      SOGO_P_AGENT_WORKER_CONCURRENCY: "2"
+    volumes:
+      - ./sogo6-server:/app:cached
+    networks:
+      - sogo6-net
+    depends_on:
+      sogo6-postgres:
+        condition: service_healthy
+      sogo6-redis:
+        condition: service_healthy
+      sogo6-ldap:
+        condition: service_healthy
+      sogo6-stalwart:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    command: ["python", "-m", "app.agent.run"]
+    profiles:
+      - agent
+
+  # ── MinIO (S3-compatible object storage for attachments) ─────────────────
+  sogo6-minio:
+    image: minio/minio:latest
+    container_name: sogo6-minio-dev
+    profiles:
+      - minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - sogo6-minio-data-dev:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   sogo6-postgres:
     image: postgres:15-alpine
     container_name: sogo6-postgres-dev
@@ -512,6 +587,7 @@ volumes:
   sogo6-redisinsight-data:
   sogo6-prometheus-data:
   sogo6-grafana-data:
+  sogo6-minio-data-dev:
 
 networks:
   sogo6-net:
