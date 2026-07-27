@@ -97,6 +97,21 @@ log_info() {
     echo "[INFO] $*"
 }
 
+# Convert a domain name (e.g. "example.org") to LDAP DC format (e.g. "dc=example,dc=org")
+domain_to_dc() {
+    local domain="$1"
+    local IFS='.'
+    local result=""
+    for part in $domain; do
+        if [ -z "$result" ]; then
+            result="dc=$part"
+        else
+            result="$result,dc=$part"
+        fi
+    done
+    echo "$result"
+}
+
 api_call() {
     local method="$1"
     local endpoint="$2"
@@ -264,6 +279,13 @@ admin_login() {
 configure_system_settings() {
     local jwt_token="$1"
 
+    # Defaults for DB connection (can be overridden via env)
+    SOGO_PG_USER="${SOGO_PG_USER:-sogo}"
+    SOGO_PG_DATABASE="${SOGO_PG_DATABASE:-sogo}"
+    SOGO_P_TABLE_SETTINGS="${SOGO_P_TABLE_SETTINGS:-sogo6_sogo_settings}"
+    SOGO_P_TABLE_RULES="${SOGO_P_TABLE_RULES:-sogo6_sogo_settings_rules}"
+    LOG_FILE="${LOG_FILE:-/dev/null}"
+
     # Run DB migration: add settings_theme column if missing
     log_info "Running DB migrations..."
     docker compose exec -T sogo6-postgres psql -U "${SOGO_PG_USER}" -d "${SOGO_PG_DATABASE}" -c "
@@ -316,6 +338,7 @@ configure_domain_default() {
 
     log_info "Configuring domain-default settings..."
 
+    local ldap_dc="$(domain_to_dc "$DOMAIN")"
     local domain_default_data='{
       "settings": {
         "AUTH_SETTINGS": {
@@ -331,9 +354,9 @@ configure_domain_default() {
             "US_TYPE": "ldap",
             "US_LDAP_HOSTNAME": "sogo6-ldap",
             "US_LDAP_PORT": 389,
-            "US_LDAP_BIND_DN": "cn=admin,dc='"$DOMAIN"',dc=org",
+            "US_LDAP_BIND_DN": "cn=admin,'"$ldap_dc"'",
             "US_LDAP_BIND_DN_PWD": "admin",
-            "US_LDAP_BASE_DN": "ou=users,dc='"$DOMAIN"',dc=org",
+            "US_LDAP_BASE_DN": "ou=users,'"$ldap_dc"'",
             "US_LDAP_UID": "uid",
             "US_LDAP_CN": "cn",
             "US_LDAP_ID": "uid",
@@ -419,6 +442,7 @@ create_domain() {
 
     log_info "Creating domain: $DOMAIN..."
 
+    local ldap_dc="$(domain_to_dc "$DOMAIN")"
     local settings_json
     settings_json=$(echo '{
       "domain_description": "Default domain for SOGo 6 evaluation",
@@ -437,9 +461,9 @@ create_domain() {
             "US_TYPE": "ldap",
             "US_LDAP_HOSTNAME": "sogo6-ldap",
             "US_LDAP_PORT": 389,
-            "US_LDAP_BIND_DN": "cn=admin,dc=EXAMPLE,dc=org",
+            "US_LDAP_BIND_DN": "cn=admin,'"$ldap_dc"'",
             "US_LDAP_BIND_DN_PWD": "admin",
-            "US_LDAP_BASE_DN": "ou=users,dc=EXAMPLE,dc=org",
+            "US_LDAP_BASE_DN": "ou=users,'"$ldap_dc"'",
             "US_LDAP_UID": "uid",
             "US_CAN_AUTH": true,
             "US_MAIL": ["mail"],
@@ -463,7 +487,7 @@ create_domain() {
           "SOGO_D_SMTP_ENCRYPTION": "SSL/TLS"
         }
       }
-    }' | python3 -c "import sys,json; d=json.load(sys.stdin); d['domain_info']['user_source']='ldap'; d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN'].replace('EXAMPLE','$DOMAIN'); d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN'].replace('EXAMPLE','$DOMAIN'); print(json.dumps(d))")
+    }' | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d))")
 
     local response
     response=$(api_call "POST" "/api/admin/v1/config/domains" "$settings_json" "$jwt_token" 3)
