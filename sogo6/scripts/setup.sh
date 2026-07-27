@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setup script for SOGo 6 evaluation environment
-# This script clones the SOGo 6 repositories and prepares them for building
+# This script initializes git submodules and prepares everything for building
 
 set -e
 
@@ -10,23 +10,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "=== SOGo 6 Setup Script ==="
 echo ""
 
-# Clone SOGo 6 UI if not exists
-if [ ! -d "$PROJECT_ROOT/sogo6-ui" ]; then
-    echo "Cloning SOGo 6 UI repository..."
-    git clone https://github.com/tobias-weiss-ai-xr/SOGo6-UI.git "$PROJECT_ROOT/sogo6-ui"
-else
-    echo "SOGo 6 UI repository already exists, pulling latest changes..."
-    cd "$PROJECT_ROOT/sogo6-ui" && git pull
-fi
-
-# Clone SOGo 6 server if not exists
-if [ ! -d "$PROJECT_ROOT/sogo6-server" ]; then
-    echo "Cloning SOGo 6 server repository..."
-    git clone https://github.com/tobias-weiss-ai-xr/SOGo6-server.git "$PROJECT_ROOT/sogo6-server"
-else
-    echo "SOGo 6 server repository already exists, pulling latest changes..."
-    cd "$PROJECT_ROOT/sogo6-server" && git pull
-fi
+# Initialize and update git submodules (SOGo6-UI and SOGo6-server)
+echo "Initializing git submodules..."
+cd "$PROJECT_ROOT"
+git submodule update --init --recursive
+cd "$PROJECT_ROOT/sogo6-ui"
+git checkout dev 2>/dev/null || true
+git pull origin dev 2>/dev/null || true
+cd "$PROJECT_ROOT/sogo6-server"
+git checkout dev 2>/dev/null || true
+git pull origin dev 2>/dev/null || true
+cd "$PROJECT_ROOT"
 
 echo ""
 
