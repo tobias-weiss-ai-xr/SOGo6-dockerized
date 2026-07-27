@@ -1,0 +1,13 @@
+{
+  "port": 8085,
+  "oidc": {
+    "provider_url": "http://sogo6-keycloak:8443/realms/sogo",
+    "client_id": "nubusintercom",
+    "client_secret": "CHANGE_ME"
+  },
+  "services": {
+    "sogo": {"url": "http://sogo6-server:5000"},
+    "opencloud": {"url": "http://sogo6-opencloud:8080"}
+  },
+  "redis": {"url": "redis://sogo6-redis:6379/0"}
+}
