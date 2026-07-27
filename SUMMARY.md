@@ -5,7 +5,7 @@
 This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 groupware suite as a production-ready Docker stack alongside Stalwart mail server and OpenLDAP. It implements **all** major features from the SOGo 6 roadmap and adds significant new capability.
 
 **GitHub:** https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized  
-**Branch:** `dev` (39 commits, 304 tracked files, 4 languages, 7 Docker services)
+**Branch:** `dev` (multi-repo: parent + sogo6-server + sogo6-ui submodules, 5-language i18n)
 
 ## Architecture (7 Docker Services)
 
@@ -57,6 +57,27 @@ This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 
 | **Observability** | Prometheus `/metrics`, structured JSON logging, enhanced health endpoint (PostgreSQL/LDAP/Redis/Stalwart) |
 | **CI/CD** | GitHub Actions — build, test, Playwright E2E, k6 load tests, sync benchmark |
 
+### ✅ Roadmap Tier Completion
+
+| Tier | Features | Status |
+|------|----------|--------|
+| **Tier 0** — Core Gaps (8/8) | DNS Wizard, Resource Booking, Sessions, Multi-language (zh added) | ✅ Complete |
+| **Tier 1** — User-Facing (14/14) | Schedule Send, Snooze, Shared Mailboxes, Delegation, Two-Factor, Sieve Editor, WebAuthn, PGP, Sieve Vacation, Auto-Reply, Sieve Forward, Mail Filters, Address Book Import, Calendar Import | ✅ Complete |
+| **Tier 2** — Admin & Scale (8/14) | Health Dashboard, Audit Log, Usage Quotas, Bulk Users, Mailbox Debug, API Tokens, Live Updates | ✅ Frontend complete |
+
+### ✅ New Features (from Tier 0/1/2)
+
+| Feature | Details |
+|---------|---------|
+| **DNS Wizard** | Admin page: SPF/DKIM/DMARC generation + validation, 5-language i18n |
+| **Resource Booking** | Full-stack: CalResource model, CRUD + availability, admin API, admin UI |
+| **Email Snooze** | ModuleSnooze (presets + custom), ApiMailSnooze, SnoozeJob agent, UI dialog |
+| **Health Dashboard** | Service status cards, uptime/version/healthy-count overview |
+| **Audit Log** | Read-only log table with action badges, timestamps, actor, target, IP |
+| **Usage Quotas** | Per-user usage bars, quota limit editor |
+| **Bulk Users** | CSV export + drag-and-drop CSV import |
+| **Mailbox Debug** | Raw email source viewer, parsed headers table |
+
 ### ✅ Polish & Quality
 
 | Work | Details |
@@ -103,4 +124,4 @@ Then visit http://localhost:3000 (login: `testuser@example.org` / `password123`)
 
 ---
 
-*Generated 2026-07-26 from commit `13352b2` on `dev` branch.*
+*Generated 2026-07-27 from `dev` branch. Stalwart pinned to v0.16.0.*
