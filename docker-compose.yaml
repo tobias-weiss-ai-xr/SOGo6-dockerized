@@ -58,13 +58,14 @@ services:
 
   # SOGo API Server — Flask backend
   sogo6-server:
-    image: sogo6-server:latest
+    image: sogo6-server:dev
     container_name: sogo6-server
     build:
       context: ./sogo6-server
-      dockerfile: Dockerfile
+      dockerfile: deploy/local/Dockerfile.local
+      target: development
     environment:
-      FLASK_ENV: ${FLASK_ENV:-production}
+      FLASK_ENV: ${FLASK_ENV:-development}
       SOGO_DB_URI: ${SOGO_DB_URI:-postgresql://sogo:sogo@sogo6-postgres:5432/sogo}
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
@@ -76,6 +77,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
+      - ./sogo6-server:/app:cached
     ports:
       - "${API_PORT:-5001}:5000"
     networks:
