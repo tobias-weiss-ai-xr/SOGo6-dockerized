@@ -5,9 +5,37 @@
 // Covers the two critical user paths:
 //   1. Happy path: compose → schedule → delivery
 //   2. Schedule → cancel
+//
+// Design: Tests use a two-tier strategy:
+//   - UI-level test: soft-fails if frontend not yet implemented (annotates docs)
+//   - API-level test: always runs against the backend regardless of UI state
 
 import { test, expect } from '../helpers';
-import { loginAsUser, setupEnvInterception, UI_BASE } from '../helpers';
+import { loginAsUser, setupEnvInterception, UI_BASE, API_BASE } from '../helpers';
+
+const API_SEND = `${API_BASE}/api/user/v1/mailboxes/0/mail/send`;
+
+/**
+ * Schedule an email via the API and return the response body.
+ */
+async function scheduleViaApi(page: any, overrides: Record<string, unknown> = {}) {
+  const token = await page.evaluate(() => localStorage.getItem('jwt_token'));
+  if (!token) return null;
+
+  const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const resp = await page.request.post(API_SEND, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: {
+      from: 'testuser@example.org',
+      to: ['testuser2@example.org'],
+      subject: 'E2E Schedule Send',
+      body: 'Test scheduled via E2E.',
+      send_at: future,
+      ...overrides,
+    },
+  });
+  return { status: resp.status(), body: await resp.json() };
+}
 
 test.describe('Schedule Send', () => {
 
@@ -16,138 +44,65 @@ test.describe('Schedule Send', () => {
     await loginAsUser(page);
   });
 
-  test('should show schedule send option in compose', async ({ page }) => {
-    // Navigate to mail compose
+  // ── UI presence ────────────────────────────────────────────
+
+  test('compose view has schedule send controls when frontend implemented', async ({ page }) => {
     await page.goto('/en/u/testuser@example.org/compose');
     await page.waitForTimeout(3000);
 
-    // Look for the compose window
     const composeForm = page.locator('form, [data-testid="compose-form"], [role="dialog"]').first();
     await expect(composeForm).toBeVisible({ timeout: 10000 });
 
-    // Check if schedule send UI elements exist
-    // The "Schedule send" button or dropdown should be visible
-    const scheduleButton = page.locator(
+    // Probe for schedule send UI — soft-fail if not yet implemented
+    const scheduleBtn = page.locator(
       'button:has-text("Schedule"), [data-testid="schedule-send"], button:has-text("Schedule send")'
     ).first();
+    const visible = await scheduleBtn.isVisible().catch(() => false);
 
-    // If schedule send UI is already implemented, verify it's present
-    // If not yet implemented, this test documents the expected behavior
-    const isScheduleVisible = await scheduleButton.isVisible().catch(() => false);
-    if (!isScheduleVisible) {
-      test.info().annotations.push({
-        type: 'issue',
-        description: 'Schedule send UI not yet implemented in compose view',
-      });
-    } else {
-      await expect(scheduleButton).toBeVisible();
-    }
-  });
-
-  test('schedule send happy path: compose → schedule → confirm', async ({ page }) => {
-    // Navigate to compose
-    await page.goto('/en/u/testuser@example.org/compose');
-    await page.waitForTimeout(3000);
-
-    // Fill in the email form
-    const toInput = page.locator('input[type="email"], [name="to"], [id="to"]').first();
-    await toInput.fill('testuser2@example.org');
-
-    const subjectInput = page.locator('input[name="subject"], [id="subject"]').first();
-    await subjectInput.fill('E2E Test: Schedule Send');
-
-    const bodyInput = page.locator('textarea, [contenteditable="true"], [role="textbox"]').first();
-    await bodyInput.fill('This email was scheduled via E2E test.');
-
-    // Look for schedule send controls
-    const scheduleSendBtn = page.locator(
-      'button:has-text("Schedule"), [data-testid="schedule-send"], button:has-text("Schedule send")'
-    ).first();
-    const isScheduleVisible = await scheduleSendBtn.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (isScheduleVisible) {
-      // Click schedule send
-      await scheduleSendBtn.click();
-      await page.waitForTimeout(1000);
-
-      // Check for confirmation
-      const confirmation = page.locator(
-        '[role="status"], [role="alert"], .toast, text=has-text("scheduled")'
-      ).first();
-      await expect(confirmation).toBeVisible({ timeout: 5000 });
-
-      test.info().annotations.push({
-        type: 'pass',
-        description: 'Schedule send completed successfully',
-      });
-    } else {
-      // Document that schedule send UI is not yet implemented
+    if (!visible) {
       test.info().annotations.push({
         type: 'pending',
-        description: 'Schedule send UI not yet implemented — tested via API directly',
+        description: 'Schedule send UI not yet implemented in compose view — tested via API instead',
       });
-
-      // Fallback: verify the API endpoint works directly
-      const token = await page.evaluate(() => localStorage.getItem('jwt_token'));
-      if (token) {
-        const future = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-        const response = await page.request.post(
-          `${UI_BASE.replace(':3000', ':5001')}/api/user/v1/mailboxes/0/mail/send`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            data: {
-              from: 'testuser@example.org',
-              to: ['testuser2@example.org'],
-              subject: 'E2E Test: Schedule Send (API fallback)',
-              body: 'Scheduled via API in E2E test.',
-              send_at: future,
-            },
-          }
-        );
-        const body = await response.json();
-        expect(response.status()).toBe(200);
-        expect(body.data.status).toBe('scheduled');
-        expect(body.data.job_id).toBeTruthy();
-      } else {
-        test.skip('No auth token available for API fallback test');
-      }
+      return;
     }
+    await expect(scheduleBtn).toBeVisible();
   });
 
-  test('happy path: schedule → delivery via API', async ({ page }) => {
-    // Direct API test for the schedule send feature
-    // This tests the backend regardless of frontend implementation status
-    const token = await page.evaluate(() => localStorage.getItem('jwt_token'));
-    test.skip(!token, 'No auth token available');
+  // ── API: schedule → confirm ────────────────────────────────
 
-    const future = new Date(Date.now() + 60 * 1000).toISOString(); // 1 minute from now
+  test('API: schedule an email with future send_at returns scheduled status', async ({ page }) => {
+    const result = await scheduleViaApi(page);
+    test.skip(!result, 'No auth token available');
 
-    // Schedule the email
-    const scheduleResp = await page.request.post(
-      `${UI_BASE.replace(':3000', ':5001')}/api/user/v1/mailboxes/0/mail/send`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        data: {
-          from: 'testuser@example.org',
-          to: ['testuser2@example.org'],
-          subject: 'E2E Schedule Send Delivery Test',
-          body: 'This email should be delivered shortly.',
-          send_at: future,
-        },
-      }
-    );
-    const scheduleBody = await scheduleResp.json();
-    expect(scheduleResp.status()).toBe(200);
-    expect(scheduleBody.data.status).toBe('scheduled');
-    expect(scheduleBody.data.job_id).toBeTruthy();
+    expect(result!.status).toBe(200);
+    expect(result!.body.data.status).toBe('scheduled');
+    expect(result!.body.data.job_id).toBeTruthy();
+    expect(result!.body.data.scheduled_at).toBeTruthy();
+  });
 
-    const jobId: string = scheduleBody.data.job_id;
+  test('API: schedule with invalid date format returns 400', async ({ page }) => {
+    const result = await scheduleViaApi(page, { send_at: 'not-a-date' });
+    test.skip(!result, 'No auth token available');
 
-    // Verify scheduled send appears in the user's scheduled list (when endpoint exists)
-    // For now, just verify the schedule was accepted
-    test.info().annotations.push({
-      type: 'info',
-      description: `Scheduled send job_id=${jobId} created successfully. List/cancel endpoints pending implementation.`,
-    });
+    expect(result!.status).toBe(400);
+    expect(result!.body.error_code).toMatch(/^S000\d{3}$/);
+  });
+
+  test('API: schedule with past send_at sends immediately', async ({ page }) => {
+    const past = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const result = await scheduleViaApi(page, { send_at: past });
+    test.skip(!result, 'No auth token available');
+
+    expect(result!.status).toBe(200);
+    expect(result!.body.data.status).toMatch(/^(sent|pending)$/);
+  });
+
+  test('API: send without send_at succeeds (immediate)', async ({ page }) => {
+    const result = await scheduleViaApi(page, { send_at: undefined });
+    test.skip(!result, 'No auth token available');
+
+    expect(result!.status).toBe(200);
+    expect(result!.body.data.status).toMatch(/^(sent|pending)$/);
   });
 });

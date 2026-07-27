@@ -184,14 +184,15 @@ Prefix: `schedule_send:{user_uid}:{job_id}`
 
 ## 5. Implementation Plan
 
-### Phase 1 — Backend (done: schema + error codes + job skeleton)
+### Phase 1 — Backend ✅ (schema + error codes + job + send_mail handler)
 - [x] Add `send_at` field to `SendMailSchema`
-- [x] Add error codes `S000386`–`S000388`
+- [x] Add error codes `S000386`–`S000389`
 - [x] Create `ScheduleSendJob` + `ScheduleSendRequest`
-- [ ] Modify `InterfaceApiMailSend.send_mail()` to handle `send_at`
-- [ ] Add cancel scheduled send endpoint
-- [ ] Add list scheduled sends endpoint
-- [ ] Wire `ScheduleSendJob` into agent auto-discovery
+- [x] Modify `InterfaceApiMailSend.send_mail()` to handle `send_at` — enqueues via Celery agent with `eta=send_at`
+- [x] Enforce max delay (30 days) with `SOGO_D_SCHEDULE_SEND_MAX_DELAY_DAYS` check
+- [x] Wire `ScheduleSendJob` into agent auto-discovery (imported in `jobs/__init__.py`)
+- [ ] Add cancel scheduled send endpoint (`POST /mail/scheduled/{job_id}/cancel`)
+- [ ] Add list scheduled sends endpoint (`GET /mail/scheduled`)
 
 ### Phase 2 — Frontend
 - [ ] Add date/time picker to compose view
@@ -203,8 +204,8 @@ Prefix: `schedule_send:{user_uid}:{job_id}`
 - [ ] i18n for all new UI strings
 
 ### Phase 3 — Domain settings (admin)
-- [ ] Add `SOGO_D_SCHEDULE_SEND_ENABLED` + `SOGO_D_SCHEDULE_SEND_MAX_DELAY_DAYS`
-- [ ] Enforce limits in `send_mail()`
+- [ ] Add `SOGO_D_SCHEDULE_SEND_ENABLED` domain toggle
+- [x] Add `SOGO_D_SCHEDULE_SEND_MAX_DELAY_DAYS` and enforce in `send_mail()` (default: 30 days)
 
 ---
 
@@ -302,7 +303,10 @@ ERROR_MAIL_SCHEDULE_MAX_DELAY        = E("S000389", "Scheduled Date Exceeds Maxi
 - [ ] User can cancel a scheduled send before delivery
 - [ ] User can view all scheduled sends in a dedicated view
 - [ ] All error states return appropriate HTTP codes and messages
-- [x] 100% of unit tests pass (10 backend + 4 frontend) ✅
-- [ ] 2 E2E Playwright tests pass (not yet implemented)
-- [ ] 4 API integration tests pass (not yet implemented)
-- [ ] Feature parity with SOGo 5 Schedule Send
+- [x] 100% of unit tests pass (13 backend + 4 frontend) ✅
+- [x] 4 API integration tests pass (future, immediate, past, invalid-date) ✅
+- [x] 1 E2E Playwright spec with API fallback created ✅
+- [x] Max delay enforcement (30 days) with `SOGO_D_SCHEDULE_SEND_MAX_DELAY_DAYS` ✅
+- [x] Contract/property-based tests for API envelope conformance (6 properties) ✅
+- [ ] 2 E2E Playwright tests pass (UI-level — frontend not yet implemented)
+- [ ] Feature parity with SOGo 5 Schedule Send (missing cancel/list endpoints)

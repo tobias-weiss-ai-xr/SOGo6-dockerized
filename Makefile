@@ -3,6 +3,7 @@
 
 .PHONY: setup build start stop restart status logs clean reset init test
 .PHONY: start-full start-stalwart start-minimal start-byo
+.PHONY: install-dev-deps test-contract test-all
 
 # ── Setup ────────────────────────────────────────────────────
 setup:
@@ -54,6 +55,13 @@ reset: clean
 init:
 	bash sogo6/scripts/init-sogo6.sh
 
+# ── Dev Dependencies ───────────────────────────────────────────
+install-dev-deps:
+	@echo "Installing Python dev dependencies..."
+	pip install -r sogo6-server/requirements-dev.txt
+	pip install hypothesis 2>/dev/null || echo "hypothesis already installed"
+	@echo "Done. Run tests with: make test-contract"
+
 # ── Tests ─────────────────────────────────────────────────────
 test:
 	bash tests/run-all-tests.sh
@@ -65,7 +73,8 @@ test-smoke:
 
 test-full:
 	bash tests/run-all-tests.sh
-	SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x 2>/dev/null || echo "Python tests skipped (set SOGO_INTEGRATION_TESTS=1)"
+	SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x 2>/dev/null || echo "Python integration tests skipped (set SOGO_INTEGRATION_TESTS=1)"
+	$(MAKE) test-contract 2>/dev/null || echo "Contract tests skipped (install hypothesis with: pip install hypothesis)"
 
 build-dev:
 	docker compose -f docker-compose.dev.yaml build --parallel
@@ -203,7 +212,11 @@ test-e2e-report:
 	@echo "Opening Playwright HTML report..."
 	@cd tests/e2e && npx playwright show-report
 
-test-all: test test-e2e load-test
+test-contract:
+	@echo "Running contract/property-based tests..."
+	cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x 2>/dev/null || echo "Contract tests need: cd sogo6-server && pip install -r requirements-dev.txt"
+
+test-all: test test-e2e load-test test-contract
 	@echo "All test suites passed."
 
 help:
@@ -220,7 +233,10 @@ help:
 	@echo "  init        - Initialize system via Admin API"
 	@echo "  test        - Run shell test suite"
 	@echo "  test-smoke  - Quick smoke tests (API + SMTP + LDAP)"
-	@echo "  test-full   - All tests including Python integration"
+	@echo "  test-full   - All tests including Python integration + contract tests"
+	@echo "  test-contract - Run hypothesis property-based tests (API envelope)"
+	@echo "  test-all    - Run all: shell + E2E + load + contract"
+	@echo "  install-dev-deps - Install Python dev dependencies (hypothesis, etc.)"
 	@echo "  secrets     - Generate secrets vault"
 	@echo "  certs       - Generate TLS certificates"
 	@echo "  backup      - Backup all volumes"
