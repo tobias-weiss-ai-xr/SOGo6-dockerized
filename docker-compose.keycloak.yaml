@@ -1,0 +1,52 @@
+# Keycloak Identity Provider Co-deployment (#39)
+# Optional Keycloak container pre-configured for SOGo + OpenCloud + nubusintercom
+#
+# Usage: docker compose --profile idp-keycloak up -d
+#
+# Default credentials: admin / admin
+# Console: http://localhost:8080/admin
+# Realm: sogo6
+
+services:
+  sogo6-postgres:
+    environment:
+      # Keycloak needs a database; reuse PostgreSQL
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://${POSTGRES_HOST:-sogo6-postgres}:5432/${POSTGRES_DB:-sogo6}?currentSchema=keycloak
+
+  sogo6-keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.0}
+    container_name: sogo6-keycloak
+    profiles: ["idp-keycloak"]
+    depends_on:
+      sogo6-postgres:
+        condition: service_healthy
+      sogo6-redis:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://${POSTGRES_HOST:-sogo6-postgres}:5432/${POSTGRES_DB:-sogo6}?currentSchema=keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-sogo6}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-sogo6}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HTTP_PORT: 8080
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: true
+      KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
+    command:
+      - start-dev
+      - --import-realm
+      - /opt/keycloak/data/import/sogo6-realm.json
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped

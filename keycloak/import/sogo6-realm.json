@@ -1,0 +1,50 @@
+{
+  "realm": "sogo6",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "SOGo Administrator", "composite": false },
+      { "name": "user", "description": "Standard SOGo User", "composite": false }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "sogo6-ui",
+      "name": "SOGo 6 Web UI",
+      "enabled": true,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true
+    },
+    {
+      "clientId": "sogo6-api",
+      "name": "SOGo 6 Backend API",
+      "enabled": true,
+      "redirectUris": ["http://localhost:5000/*"],
+      "webOrigins": ["http://localhost:5000"],
+      "publicClient": false,
+      "secret": "${KC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "clientScopes": [
+    { "name": "openid", "description": "OpenID Connect scope" },
+    { "name": "profile", "description": "User profile" },
+    { "name": "email", "description": "User email" }
+  ]
+}
