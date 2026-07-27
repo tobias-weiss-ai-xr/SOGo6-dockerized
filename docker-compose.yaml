@@ -233,7 +233,7 @@ services:
   # Stalwart — IMAP + SMTP + Sieve mail server
   sogo6-stalwart:
     profiles: ["mail-stalwart"]
-    image: stalwartlabs/stalwart:${STALWART_VERSION:-latest}
+    image: stalwartlabs/stalwart:${STALWART_VERSION:-0.16.0}
     container_name: sogo6-stalwart
     depends_on:
       sogo6-redis:
