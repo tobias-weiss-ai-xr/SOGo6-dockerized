@@ -1,20 +1,91 @@
-# Contributing
+# Contributing to SOGo 6
 
-Contributions are welcome! This is a community evaluation environment for SOGo 6.
+## Development Setup
 
-## How to Contribute
+```bash
+# Clone with submodules
+git clone --recurse-submodules git@github.com:tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
+cd sogo6-stalwart-openldap-dockerized
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-change`)
-3. Make your changes
-4. Verify no internal/private data leaks: `rg -n 'hrz\.uni-marburg|gitlab\.hrz|172\.25\.|vhrz[0-9]' .`
-5. Commit (`git commit -m "feat: description"`)
-6. Push and open a Pull Request
+# Copy environment template
+cp .env.example .env
+# Edit .env with your secrets
 
-## Guidelines
+# Start full stack (development mode)
+docker compose up -d --build
 
-- Keep the environment self-contained — no external service dependencies
-- Use `password123` for test credentials (consistency)
-- Use `example.org` for all example domains
-- Sanitize any internal hostnames, IPs, or secrets before committing
-- Ensure `docker compose up -d` works with just Docker and Git
+# Or minimal stack (SOGo + UI only)
+docker compose -f docker-compose.minimal.yaml up -d --build
+```
+
+## Project Structure
+
+```
+├── sogo6-server/          # Flask/Python backend (submodule)
+│   ├── app/
+│   │   ├── api/           # REST API endpoints (Flask-RESTful)
+│   │   ├── manager/       # DB, cache, LDAP, mail clients
+│   │   ├── module/        # Business logic modules
+│   │   └── utils/         # Shared utilities
+│   └── tests/
+├── sogo6-ui/              # Next.js frontend (submodule)
+│   ├── src/
+│   │   ├── app/           # Next.js App Router pages
+│   │   ├── components/    # React components
+│   │   ├── features/      # Feature modules
+│   │   └── lib/           # Shared libraries
+│   └── tests/
+├── deploy/                # Deployment configurations
+│   └── mariadb-e2e/       # MariaDB E2E test suite
+├── helm/sogo6/            # Kubernetes Helm chart
+├── sogo6/                 # Service configurations
+│   ├── loki/              # Loki/Promtail config
+│   ├── grafana/           # Grafana datasource provisioning
+│   └── prometheus/        # Prometheus rules & config
+├── tests/                 # Integration & load tests
+│   ├── load/              # k6 load/performance tests
+│   └── e2e/               # Playwright E2E tests
+└── docs/                  # Documentation
+```
+
+## CI Pipeline
+
+The `.github/workflows/test.yml` runs:
+
+1. **Lint** — ShellCheck on all shell scripts
+2. **UI Build & Test** — Jest unit tests + Next.js production build
+3. **Full Stack E2E** — Docker compose up, API tests, Playwright, k6 load tests
+
+## Running Tests Locally
+
+```bash
+# Backend unit tests
+cd sogo6-server && python3 -m pytest tests/ -v
+
+# Frontend unit tests
+cd sogo6-ui && npx jest --maxWorkers=2
+
+# Full stack E2E
+docker compose up -d --wait
+bash tests/run-all-tests.sh
+
+# Load tests
+bash tests/load/run.sh
+
+# MariaDB E2E
+cd deploy/mariadb-e2e && docker compose up -d --wait && ./run-e2e-tests.sh
+```
+
+## Code Style
+
+- **Python**: Black (88 chars), isort, mypy strict
+- **TypeScript/React**: ESLint (next/core-web-vitals), Prettier
+- **Shell**: ShellCheck-passing bash scripts
+
+## Pull Request Process
+
+1. Ensure tests pass locally
+2. Update `.env.example` if adding new environment variables
+3. Update Helm chart `values.yaml` if adding new services
+4. Update `SUMMARY.md` for new features
+5. PRs require CI green check

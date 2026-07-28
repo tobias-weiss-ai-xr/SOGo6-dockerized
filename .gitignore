@@ -5,7 +5,9 @@ postgres-*/
 screenshots/
 *.log
 .env
-.env.*
+.env.local
+.env.production
+.env.development
 .vscode/
 .idea/
 *.code-workspace
