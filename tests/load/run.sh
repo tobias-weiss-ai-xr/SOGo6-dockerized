@@ -5,11 +5,12 @@
 # Runs all load/performance tests and prints a summary.
 #
 # Usage:
-#   bash tests/load/run.sh               # run all load tests
-#   bash tests/load/run.sh --quick        # run only fast benchmarks
-#   bash tests/load/run.sh --k6-only      # run only HTTP load tests
-#   bash tests/load/run.sh --sync-only    # run only sync engine benchmark
-#   bash tests/load/run.sh --json         # JSON output for CI
+#   bash tests/load/run.sh                    # run all load tests
+#   bash tests/load/run.sh --quick             # run only fast benchmarks
+#   bash tests/load/run.sh --k6-only           # run only HTTP load tests
+#   bash tests/load/run.sh --sync-only         # run only sync engine benchmark
+#   bash tests/load/run.sh --json              # JSON output for CI
+#   bash tests/load/run.sh --results-dir DIR   # save results to DIR
 # ==============================================================
 
 set -euo pipefail
@@ -27,12 +28,16 @@ PASS=0
 FAIL=0
 ERRORS=()
 
-info()  { echo -e "${CYAN}[INFO]${NC} $*"; }
-pass()  { PASS=$((PASS + 1)); echo -e "  ${GREEN}[PASS]${NC} $*"; }
-fail()  { FAIL=$((FAIL + 1)); echo -e "  ${RED}[FAIL]${NC} $*"; ERRORS+=("$*"); }
+info()  { echo -e "${CYAN}[INFO]${NC} $*" >&2; }
+pass()  { PASS=$((PASS + 1)); echo -e "  ${GREEN}[PASS]${NC} $*" >&2; }
+fail()  { FAIL=$((FAIL + 1)); echo -e "  ${RED}[FAIL]${NC} $*" >&2; ERRORS+=("$*"); }
 
 MODE="${1:-all}"
-JSON_OUTPUT="${2:-}"
+RESULTS_DIR="${RESULTS_DIR:-$SCRIPT_DIR/results}"
+[[ "$*" == *--results-dir* ]] && RESULTS_DIR="$3"
+JSON_OUTPUT="$([[ "$*" == *--json* ]] && echo true || echo false)"
+
+mkdir -p "$RESULTS_DIR"
 
 # ── Config ──────────────────────────────────────────────────────
 source "$PROJECT_ROOT/tests/config.sh" 2>/dev/null || true
@@ -53,68 +58,64 @@ echo ""
 
 # ── 1. k6 Admin API Load Test ──────────────────────────────────
 run_k6_admin() {
-    echo ""
-    echo "──────────────────────────────────────────────────────────"
-    echo "  [1/3] Admin API Load Test (k6)"
-    echo "──────────────────────────────────────────────────────────"
-    echo ""
+    echo "" >&2
+    echo "──────────────────────────────────────────────────────────" >&2
+    echo "  [1/3] Admin API Load Test (k6)" >&2
+    echo "──────────────────────────────────────────────────────────" >&2
+    echo "" >&2
 
     if ! command -v k6 &>/dev/null; then
         fail "k6 not installed — skipping Admin API load test"
         return
     fi
 
-    K6_OUTPUT=$(mktemp)
+    local K6_JSON="$RESULTS_DIR/k6-admin-summary.json"
+    local K6_LOG="$RESULTS_DIR/k6-admin-output.log"
     set +e
-    k6 run --quiet \
+    k6 run --summary-export="$K6_JSON" \
         -e SOGO_API_URL="$SOGO_API_URL" \
         -e SOGO_ADMIN_USER="$SOGO_ADMIN_USER" \
         -e SOGO_ADMIN_PASSWORD="$SOGO_ADMIN_PASSWORD" \
-        "$SCRIPT_DIR/k6-admin-api.js" 2>&1 | tee "$K6_OUTPUT"
-    K6_EXIT=$?
+        "$SCRIPT_DIR/k6-admin-api.js" 2>&1 | tee "$K6_LOG"
+    local K6_EXIT=$?
     set -e
 
     if [ "$K6_EXIT" -eq 0 ]; then
-        # Extract pass/fail from k6 summary
-        PASS_COUNT=$(grep -c '✓' "$K6_OUTPUT" 2>/dev/null || echo 0)
-        FAIL_COUNT=$(grep -c '✗' "$K6_OUTPUT" 2>/dev/null || echo 0)
-        pass "k6 admin API load test: $PASS_COUNT checks OK, $FAIL_COUNT failures"
+        pass "k6 admin API load test OK (results: $K6_JSON)"
     else
         fail "k6 admin API load test exited with code $K6_EXIT"
     fi
-    rm -f "$K6_OUTPUT"
 }
 
 # ── 2. k6 User API Load Test ───────────────────────────────────
 run_k6_user() {
-    echo ""
-    echo "──────────────────────────────────────────────────────────"
-    echo "  [2/3] User API Load Test (k6)"
-    echo "──────────────────────────────────────────────────────────"
-    echo ""
+    echo "" >&2
+    echo "──────────────────────────────────────────────────────────" >&2
+    echo "  [2/3] User API Load Test (k6)" >&2
+    echo "──────────────────────────────────────────────────────────" >&2
+    echo "" >&2
 
     if ! command -v k6 &>/dev/null; then
         fail "k6 not installed — skipping User API load test"
         return
     fi
 
-    K6_OUTPUT=$(mktemp)
+    local K6_JSON="$RESULTS_DIR/k6-user-summary.json"
+    local K6_LOG="$RESULTS_DIR/k6-user-output.log"
     set +e
-    k6 run --quiet \
+    k6 run --summary-export="$K6_JSON" \
         -e SOGO_API_URL="$SOGO_API_URL" \
         -e SOGO_ADMIN_USER="$SOGO_ADMIN_USER" \
         -e SOGO_ADMIN_PASSWORD="$SOGO_ADMIN_PASSWORD" \
-        "$SCRIPT_DIR/k6-user-api.js" 2>&1 | tee "$K6_OUTPUT"
-    K6_EXIT=$?
+        "$SCRIPT_DIR/k6-user-api.js" 2>&1 | tee "$K6_LOG"
+    local K6_EXIT=$?
     set -e
 
     if [ "$K6_EXIT" -eq 0 ]; then
-        PASS_COUNT=$(grep -c '✓' "$K6_OUTPUT" 2>/dev/null || echo 0)
-        pass "k6 user API load test: checks OK"
+        pass "k6 user API load test OK (results: $K6_JSON)"
     else
         fail "k6 user API load test exited with code $K6_EXIT"
     fi
-    rm -f "$K6_OUTPUT"
 }
 
 # ── 3. Sync Engine Benchmark ────────────────────────────────────
@@ -165,19 +166,33 @@ case "$MODE" in
 esac
 
 # ── Summary ─────────────────────────────────────────────────────
-echo ""
-echo "=============================================================="
-echo "  Load Test Results Summary"
-echo "=============================================================="
-echo "  Passed: $PASS"
-echo "  Failed: $FAIL"
+echo "" >&2
+echo "==============================================================" >&2
+echo "  Load Test Results Summary" >&2
+echo "==============================================================" >&2
+echo "  Passed: $PASS" >&2
+echo "  Failed: $FAIL" >&2
 if [ ${#ERRORS[@]} -gt 0 ]; then
-    echo "  Errors:"
+    echo "  Errors:" >&2
     for e in "${ERRORS[@]}"; do
-        echo "    - $e"
+        echo "    - $e" >&2
     done
 fi
-echo "=============================================================="
-echo ""
+echo "==============================================================" >&2
+echo "" >&2
+
+# Write JSON summary for CI
+if [[ "$JSON_OUTPUT" == "true" ]]; then
+    cat > "$RESULTS_DIR/summary.json" <<EOF
+{
+  "timestamp": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
+  "passed": $PASS,
+  "failed": $FAIL,
+  "errors": [$(for e in "${ERRORS[@]}"; do echo "\"$e\","; done | sed 's/,$//')],
+  "results_dir": "$RESULTS_DIR"
+}
+EOF
+    echo "JSON summary: $RESULTS_DIR/summary.json" >&2
+fi
 
 exit $FAIL
