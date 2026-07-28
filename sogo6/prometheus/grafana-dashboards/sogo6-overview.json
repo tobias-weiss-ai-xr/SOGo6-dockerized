@@ -3,7 +3,7 @@
   "__requires": [],
   "title": "SOGo 6 Overview",
   "uid": "sogo6-overview",
-  "version": 1,
+  "version": 2,
   "timezone": "browser",
   "panels": [
     {
@@ -11,7 +11,7 @@
       "type": "graph",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
-        { "expr": "rate(flask_http_request_duration_seconds_count[5m])", "legendFormat": "{{method}} {{path}}", "datasource": "Prometheus" }
+        { "expr": "rate(sogo_http_requests_total[5m])", "legendFormat": "{{method}} {{endpoint}}", "datasource": "Prometheus" }
       ],
       "datasource": "Prometheus"
     },
@@ -20,25 +20,34 @@
       "type": "graph",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
-        { "expr": "rate(flask_http_request_duration_seconds_count{status=~\"5..\"}[5m])", "legendFormat": "{{method}} {{path}}", "datasource": "Prometheus" }
+        { "expr": "rate(sogo_http_errors_total[5m])", "legendFormat": "{{method}} {{endpoint}}", "datasource": "Prometheus" }
       ],
       "datasource": "Prometheus"
     },
     {
-      "title": "Redis Memory Usage",
-      "type": "gauge",
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
-      "targets": [
-        { "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100", "datasource": "Prometheus" }
-      ],
-      "datasource": "Prometheus"
-    },
-    {
-      "title": "PostgreSQL Connections",
+      "title": "API Latency (p95)",
       "type": "graph",
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
       "targets": [
-        { "expr": "pg_stat_database_numbackends", "legendFormat": "{{datname}}", "datasource": "Prometheus" }
+        { "expr": "histogram_quantile(0.95, sum(rate(sogo_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "DB Query Duration (p95)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(sogo_db_query_duration_seconds_bucket[5m])) by (le))", "legendFormat": "{{operation}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "In-flight Requests",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        { "expr": "sogo_http_requests_in_flight", "datasource": "Prometheus" }
       ],
       "datasource": "Prometheus"
     },
@@ -47,7 +56,7 @@
       "type": "logs",
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
       "targets": [
-        { "expr": "{service=\"sogo6-server\"} |= \"ERROR\"", "datasource": "Loki" }
+        { "expr": "{job=\"sogo6-server\"} |= \"ERROR\"", "datasource": "Loki" }
       ],
       "datasource": "Loki"
     }

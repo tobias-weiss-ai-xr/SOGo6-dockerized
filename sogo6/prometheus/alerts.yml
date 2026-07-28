@@ -1,8 +1,6 @@
 # Prometheus Alerting Rules for SOGo6 Stack
-# Production-ready alerts for monitoring critical services
-
+# Matches actual metrics exported by the SOGo6 server (sogo_ prefix)
 groups:
-  # ── SOGo6 Server Alerts ─────────────────────────────────────────────
   - name: sogo6-server
     rules:
       - alert: SOGo6ServerDown
@@ -12,41 +10,39 @@ groups:
           severity: critical
         annotations:
           summary: "SOGo6 Server is down"
-          description: "SOGo6 server has been down for more than 1 minute."
 
       - alert: SOGo6HighErrorRate
         expr: |
-          sum(rate(http_requests_total{job="sogo6-server", status=~"5.."}[5m])) 
-          / sum(rate(http_requests_total{job="sogo6-server"}[5m])) > 0.05
+          sum(rate(sogo_http_errors_total{job="sogo6-server"}[5m]))
+          / sum(rate(sogo_http_requests_total{job="sogo6-server"}[5m])) > 0.05
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "High error rate on SOGo6 Server"
-          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+          description: "Error rate is {{ $value | humanizePercentage }} over 5m"
 
       - alert: SOGo6HighLatency
-        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="sogo6-server"}[5m])) by (le)) > 2
+        expr: histogram_quantile(0.95, sum(rate(sogo_http_request_duration_seconds_bucket{job="sogo6-server"}[5m])) by (le)) > 2
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "High latency on SOGo6 Server"
-          description: "95th percentile latency is {{ $value }}s over the last 5 minutes."
+          description: "95th percentile latency is {{ $value }}s over 5m"
 
-      - alert: SOGo6MemoryUsage
+      - alert: SOGo6DownstreamDegraded
         expr: |
-          (process_resident_memory_bytes{job="sogo6-server"} 
-          / process_resident_memory_max_bytes{job="sogo6-server"}) > 0.9
-        for: 5m
+          sogo_http_errors_total{job="sogo6-server", status=~"5.."}
+          > 0
+        for: 2m
         labels:
-          severity: warning
+          severity: critical
         annotations:
-          summary: "High memory usage on SOGo6 Server"
-          description: "Memory usage is {{ $value | humanizePercentage }} of max."
+          summary: "SOGo6 downstream errors"
+          description: "Server returning 5xx errors — check DB/cache/LDAP"
 
-  # ── PostgreSQL Alerts ───────────────────────────────────────────────
-  - name: sogo6-postgres
+  - name: sogo6-database
     rules:
       - alert: PostgreSQLDown
         expr: up{job="sogo6-postgres"} == 0
@@ -55,29 +51,7 @@ groups:
           severity: critical
         annotations:
           summary: "PostgreSQL is down"
-          description: "PostgreSQL has been down for more than 1 minute."
 
-      - alert: PostgreSQLConnectionExhausted
-        expr: |
-          pg_stat_database_numbackends 
-          / pg_settings_max_connections * 100 > 90
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "PostgreSQL connections near capacity"
-          description: "Connection pool is {{ $value }}% full."
-
-      - alert: PostgreSQLReplicationLag
-        expr: pg_replication_lag_seconds > 60
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "PostgreSQL replication lag detected"
-          description: "Replication lag is {{ $value }} seconds."
-
-  # ── Redis Alerts ────────────────────────────────────────────────────
   - name: sogo6-redis
     rules:
       - alert: RedisDown
@@ -87,89 +61,16 @@ groups:
           severity: critical
         annotations:
           summary: "Redis is down"
-          description: "Redis has been down for more than 1 minute."
 
-      - alert: RedisMemoryUsage
-        expr: |
-          (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 90
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High Redis memory usage"
-          description: "Redis memory usage is {{ $value }}%."
-
-      - alert: RedisEvictions
-        expr: rate(redis_evicted_keys_total[5m]) > 10
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Redis key evictions detected"
-          description: "Redis is evicting keys at {{ $value }} keys/sec."
-
-  # ── Nginx Alerts ────────────────────────────────────────────────────
-  - name: sogo6-nginx
+  - name: sogo6-infrastructure
     rules:
-      - alert: NginxDown
-        expr: up{job="sogo6-nginx"} == 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Nginx is down"
-          description: "Nginx has been down for more than 1 minute."
-
-      - alert: NginxHighErrorRate
+      - alert: ContainerRestartLoop
         expr: |
-          sum(rate(nginx_http_requests_total{status=~"5.."}[5m])) 
-          / sum(rate(nginx_http_requests_total[5m])) > 0.05
+          sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total[5m]))
+          == 0
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High Nginx error rate"
-          description: "Nginx error rate is {{ $value | humanizePercentage }}."
-
-      - alert: NginxHighLatency
-        expr: histogram_quantile(0.95, sum(rate(nginx_http_request_duration_seconds_bucket[5m])) by (le)) > 1
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High Nginx latency"
-          description: "Nginx 95th percentile latency is {{ $value }}s."
-
-  # ── Infrastructure Alerts ───────────────────────────────────────────
-  - name: infrastructure
-    rules:
-      - alert: ContainerRestarting
-        expr: |
-          sum by (name) (rate(container_restart_total[5m])) > 0
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Container {{ $labels.name }} is restarting"
-          description: "Container has restarted {{ $value }} times in the last 5 minutes."
-
-      - alert: DiskSpaceLow
-        expr: |
-          (node_filesystem_avail_bytes{fstype!="tmpfs",mountpoint!="/"} 
-          / node_filesystem_size_bytes{fstype!="tmpfs",mountpoint!="/"}) * 100 < 15
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Low disk space on {{ $labels.instance }}"
-          description: "Available disk space is {{ $value }}% on {{ $labels.mountpoint }}."
-
-      - alert: HighCPUUsage
-        expr: |
-          (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100 > 80
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High CPU usage on {{ $labels.instance }}"
-          description: "CPU usage is {{ $value }}% over the last 10 minutes."
+          summary: "Service possibly down — no CPU activity"
+          description: "Service {{ $labels.container_label_com_docker_compose_service }} shows no CPU usage"
