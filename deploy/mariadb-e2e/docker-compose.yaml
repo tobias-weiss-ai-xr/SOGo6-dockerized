@@ -131,6 +131,12 @@ services:
       - server
     ports:
       - "${UI_PORT:-30000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/env || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 networks:
   mariadb-e2e-net:
