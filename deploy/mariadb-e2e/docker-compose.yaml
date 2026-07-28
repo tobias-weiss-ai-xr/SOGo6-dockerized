@@ -107,6 +107,12 @@ services:
       - "${API_PORT:-5001}:5000"
     volumes:
       - logs:/var/log/sogo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/api/user/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # ── SOGo Frontend ─────────────────────────────────────────────
   ui:
