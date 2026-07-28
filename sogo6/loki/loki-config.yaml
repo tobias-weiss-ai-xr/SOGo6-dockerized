@@ -1,0 +1,44 @@
+# Loki configuration for SOGo 6 monitoring stack
+# https://grafana.com/docs/loki/latest/configuration/
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+auth_enabled: false
+
+ingester:
+  wal:
+    dir: /loki/wal
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_query_series: 10000
+  max_entries_limit_per_query: 5000
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  retention_delete_delay: 2h

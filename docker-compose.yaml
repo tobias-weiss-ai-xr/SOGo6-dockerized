@@ -340,12 +340,56 @@ services:
     container_name: sogo6-grafana
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_INSTALL_PLUGINS: grafana-lokiexplore-app
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/sogo6-overview.json
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
     networks:
       - sogo6-net
     depends_on:
       - sogo6-prometheus
+      - sogo6-loki
+    volumes:
+      - sogo6-grafana-data:/var/lib/grafana
+      - ./sogo6/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./sogo6/prometheus/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ── Loki (log aggregation, monitoring profile) ──────────────
+  sogo6-loki:
+    profiles: ["monitoring"]
+    image: grafana/loki:3.4.2
+    container_name: sogo6-loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks:
+      - sogo6-net
+    volumes:
+      - ./sogo6/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - sogo6-loki-data:/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ── Promtail (log collector, monitoring profile) ────────────
+  sogo6-promtail:
+    profiles: ["monitoring"]
+    image: grafana/promtail:3.4.2
+    container_name: sogo6-promtail
+    networks:
+      - sogo6-net
+    volumes:
+      - ./sogo6/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - sogo6-logs:/var/log/sogo:ro
+      - /var/log:/var/log/host:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - sogo6-loki
     deploy:
       resources:
         limits:
@@ -402,10 +446,12 @@ volumes:
   sogo6-postgres-data:
   sogo6-mariadb-data:
   sogo6-stalwart-data:
+  sogo6-logs:
+  sogo6-loki-data:
+  sogo6-grafana-data:
   sogo6-ldap-data:
   sogo6-ldap-config:
   sogo6-minio-data:
-  sogo6-logs:
 
 networks:
   sogo6-net:

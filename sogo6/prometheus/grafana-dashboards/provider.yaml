@@ -1,0 +1,13 @@
+# Grafana dashboard provisioning — SOGo 6 monitoring stack
+apiVersion: 1
+
+providers:
+  - name: SOGo6
+    orgId: 1
+    folder: SOGo 6
+    type: file
+    disableDeletion: true
+    editable: true
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/provisioning/dashboards

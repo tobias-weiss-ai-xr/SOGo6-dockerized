@@ -1,0 +1,77 @@
+# Promtail configuration for SOGo 6 monitoring stack
+# https://grafana.com/docs/loki/latest/clients/promtail/configuration/
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://sogo6-loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # ── SOGo Server logs ──────────────────────────────────────
+  - job_name: sogo6-server
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: sogo6-server
+          service: sogo6-server
+          __path__: /var/log/sogo/*.log
+    pipeline_stages:
+      - regex:
+          # Parse structured JSON logs
+          expression: '^{"timestamp":\s*"(?P<timestamp>[^"]+)",\s*"level":\s*"(?P<level>[^"]+)",\s*"logger":\s*"(?P<logger>[^"]+)",\s*"pid":\s*(?P<pid>\d+),\s*"file":\s*"(?P<file>[^"]+)",\s*"func":\s*"(?P<func>[^"]+)",\s*"line":\s*(?P<line>\d+),\s*"request_id":\s*"(?P<request_id>[^"]*)",\s*"user":\s*"(?P<user>[^"]*)",\s*"domain":\s*"(?P<domain>[^"]*)",\s*"message":\s*"(?P<message>[^"]*)".*'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          logger:
+          request_id:
+          user:
+          domain:
+
+  # ── Nginx access logs ─────────────────────────────────────
+  - job_name: nginx-access
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: nginx-access
+          service: nginx
+          __path__: /var/log/host/nginx/access.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<remote_addr>\S+)\s+-\s+(?P<remote_user>\S+)\s+\[(?P<time_local>[^\]]+)\]\s+"(?P<method>\S+)\s+(?P<path>\S+)\s+\S+"\s+(?P<status>\d+)\s+(?P<body_bytes>\d+)\s+"(?P<http_referer>[^"]*)"\s+"(?P<http_user_agent>[^"]*)"'
+      - labels:
+          method:
+          status:
+
+  # ── Nginx error logs ──────────────────────────────────────
+  - job_name: nginx-error
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: nginx-error
+          service: nginx
+          __path__: /var/log/host/nginx/error.log
+
+  # ── PostgreSQL logs ───────────────────────────────────────
+  - job_name: postgresql
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: postgresql
+          service: sogo6-postgres
+          __path__: /var/log/host/postgresql/*.log
+
+  # ── Docker container logs (via journald or file) ──────────
+  - job_name: journald
+    journal:
+      path: /var/log/journal
+      labels:
+        job: containers
+    relabel_configs:
+      - source_labels: ["__journal__container_name"]
+        target_label: "container"

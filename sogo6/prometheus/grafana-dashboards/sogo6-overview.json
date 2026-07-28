@@ -1,0 +1,56 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "SOGo 6 Overview",
+  "uid": "sogo6-overview",
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "API Request Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(flask_http_request_duration_seconds_count[5m])", "legendFormat": "{{method}} {{path}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "API Error Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "rate(flask_http_request_duration_seconds_count{status=~\"5..\"}[5m])", "legendFormat": "{{method}} {{path}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "Redis Memory Usage",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "PostgreSQL Connections",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        { "expr": "pg_stat_database_numbackends", "legendFormat": "{{datname}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "Recent Logs (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "{service=\"sogo6-server\"} |= \"ERROR\"", "datasource": "Loki" }
+      ],
+      "datasource": "Loki"
+    }
+  ],
+  "schemaVersion": 39
+}
