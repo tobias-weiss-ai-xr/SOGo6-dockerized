@@ -33,7 +33,9 @@ scrape_configs:
           user:
           domain:
 
-  # ── Nginx access logs ─────────────────────────────────────
+  # ── Nginx access logs (requires nginx profile + host log mount) ──
+  # Paths are only valid when the nginx profile is enabled and its
+  # logs are exposed via a host volume at /var/log/host/nginx/.
   - job_name: nginx-access
     static_configs:
       - targets: [localhost]
@@ -48,7 +50,7 @@ scrape_configs:
           method:
           status:
 
-  # ── Nginx error logs ──────────────────────────────────────
+  # ── Nginx error logs (requires host log mount) ─────────────────
   - job_name: nginx-error
     static_configs:
       - targets: [localhost]
@@ -57,7 +59,7 @@ scrape_configs:
           service: nginx
           __path__: /var/log/host/nginx/error.log
 
-  # ── PostgreSQL logs ───────────────────────────────────────
+  # ── PostgreSQL logs (requires host log mount) ──────────────────
   - job_name: postgresql
     static_configs:
       - targets: [localhost]
