@@ -1,12 +1,10 @@
-# MariaDB E2E Test Deployment - vhrz2392
+# MariaDB E2E Test Deployment
 # Purpose: Test MariaDB adapter end-to-end
 # 
 # Usage:
 #   cd deploy/mariadb-e2e
 #   docker compose up -d
 #   bash run-e2e-tests.sh
-
-version: "3.8"
 
 services:
   # ── MariaDB Database ──────────────────────────────────────────
