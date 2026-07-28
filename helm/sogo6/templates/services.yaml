@@ -1,43 +1,52 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "sogo6.fullname" . }}-ui
-  labels:
-    {{- include "sogo6.labels" . | nindent 4 }}
-    component: ui
+  name: {{ include "sogo6.fullname" . }}-server
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: server
+  annotations:
+    {{- if .Values.monitoring.enabled }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ .Values.monitoring.prometheus.serverScrapePort | quote }}
+    {{- end }}
 spec:
   type: ClusterIP
   ports:
-    - port: 3000
-      targetPort: 3000
+    - name: http
+      port: 5000
+      targetPort: 5000
       protocol: TCP
   selector:
-    {{- include "sogo6.selectorLabels" . | nindent 4 }}
-    component: ui
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
+    component: server
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "sogo6.fullname" . }}-server
-  labels:
-    {{- include "sogo6.labels" . | nindent 4 }}
-    component: server
+  name: {{ include "sogo6.fullname" . }}-ui
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: ui
+  annotations:
+    {{- if .Values.monitoring.enabled }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ .Values.monitoring.prometheus.uiScrapePort | quote }}
+    {{- end }}
 spec:
   type: ClusterIP
   ports:
-    - port: 5000
-      targetPort: 5000
+    - name: http
+      port: 3000
+      targetPort: 3000
       protocol: TCP
   selector:
-    {{- include "sogo6.selectorLabels" . | nindent 4 }}
-    component: server
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
+    component: ui
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "sogo6.fullname" . }}-stalwart
-  labels:
-    {{- include "sogo6.labels" . | nindent 4 }}
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
     component: stalwart
 spec:
   type: ClusterIP
@@ -45,18 +54,78 @@ spec:
     - name: smtp
       port: 25
       targetPort: 25
+      protocol: TCP
     - name: smtps
       port: 465
       targetPort: 465
+      protocol: TCP
     - name: submission
       port: 587
       targetPort: 587
+      protocol: TCP
     - name: imap
       port: 143
       targetPort: 143
+      protocol: TCP
     - name: imaps
       port: 993
       targetPort: 993
+      protocol: TCP
   selector:
-    {{- include "sogo6.selectorLabels" . | nindent 4 }}
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
     component: stalwart
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sogo6.fullname" . }}-redis
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
+    component: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sogo6.fullname" . }}-postgres
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
+    component: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sogo6.fullname" . }}-openldap
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: openldap
+spec:
+  type: ClusterIP
+  ports:
+    - name: ldap
+      port: 389
+      targetPort: 389
+      protocol: TCP
+    - name: ldaps
+      port: 636
+      targetPort: 636
+      protocol: TCP
+  selector:
+    {{ include "sogo6.selectorLabels" . | nindent 4 }}
+    component: openldap

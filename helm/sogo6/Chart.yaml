@@ -1,9 +1,28 @@
 apiVersion: v2
 name: sogo6
-description: SOGo 6 groupware suite with Stalwart mail server and OpenLDAP
+description: |
+  SOGo 6 groupware suite — production-ready Helm chart.
+  Includes SOGo server (Flask/Python), Next.js UI, Stalwart mail server,
+  PostgreSQL, Redis, and OpenLDAP with autoscaling, network policies,
+  persistent storage, and monitoring support.
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "6.0.0"
+keywords:
+  - sogo
+  - groupware
+  - email
+  - calendar
+  - contacts
+  - stalwart
+  - openldap
+home: https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+sources:
+  - https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+  - https://github.com/tobias-weiss-ai-xr/SOGo6-server
+  - https://github.com/tobias-weiss-ai-xr/SOGo6-UI
 maintainers:
-  - name: sogo6
+  - name: SOGo 6 Team
     email: admin@example.org
+    url: https://github.com/tobias-weiss-ai-xr
+dependencies: []

@@ -1,58 +1,133 @@
-# Default values for sogo6.
+# ═══════════════════════════════════════════════════════════════
+# SOGo 6 Helm Chart — Production Defaults
+# ═══════════════════════════════════════════════════════════════
 
+global:
+  # Domain used for email addresses and LDAP
+  domain: example.org
+  # Base DN for OpenLDAP directory
+  ldapBaseDN: dc=example,dc=org
+
+# ── Image Configuration ────────────────────────────────────────
 image:
-  server: sogo6-server:latest
-  ui: sogo6-ui:latest
-  stalwart: stalwartlabs/stalwart:0.16.0
-  pullPolicy: IfNotPresent
+  registry: ghcr.io/tobias-weiss-ai-xr
+  server:
+    repository: sogo6-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  ui:
+    repository: sogo6-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  stalwart:
+    repository: stalwartlabs/stalwart
+    tag: 0.16.0
+    pullPolicy: IfNotPresent
+  redis:
+    repository: redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: 17-alpine
+    pullPolicy: IfNotPresent
+  openldap:
+    repository: osixia/openldap
+    tag: 1.5.0
+    pullPolicy: IfNotPresent
 
+# ── Replicas ───────────────────────────────────────────────────
 replicaCount: 1
 
-resources:
-  server: {}
-  ui: {}
-  stalwart: {}
+# ── Secrets (override via --set or external secret store) ──────
+secrets:
+  # Database
+  postgresPassword: ""
+  # LDAP
+  ldapAdminPassword: ""
+  # SCIM / Intercom
+  scimBearerToken: ""
+  intercomSharedSecret: ""
+  # Encryption
+  aesEncKey: ""
 
+# ── Persistence ────────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: ""
+  accessMode: ReadWriteOnce
   size:
+    postgres: 20Gi
     mailstore: 50Gi
-    database: 20Gi
+    ldap: 5Gi
+    ldapConfig: 1Gi
+    redis: 1Gi
+    logs: 10Gi
 
+# ── Ingress ────────────────────────────────────────────────────
 ingress:
   enabled: false
   className: nginx
   host: mail.example.org
   tls:
     enabled: true
-    secretName: sogo6-tls
+    secretName: sogo6-tls-cert
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
 
-# LDAP
-ldap:
-  adminDN: cn=admin,dc=example,dc=org
-  baseDN: dc=example,dc=org
-  password: changeme
-
-# Database
-database:
-  host: sogo6-postgres
-  port: 5432
-  name: sogo6
-  user: sogo6
-  password: changeme
-
-# Redis
-redis:
-  host: sogo6-redis
-  port: 6379
-
+# ── Autoscaling ────────────────────────────────────────────────
 autoscaling:
   enabled: false
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPU: 70
+  server:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPU: 70
+  ui:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
 
+# ── Resource Limits ────────────────────────────────────────────
+resources:
+  server:
+    limits: { cpu: "2", memory: 768Mi }
+    requests: { cpu: 250m, memory: 256Mi }
+  ui:
+    limits: { cpu: "2", memory: 2Gi }
+    requests: { cpu: 100m, memory: 512Mi }
+  stalwart:
+    limits: { cpu: "2", memory: 1Gi }
+    requests: { cpu: 250m, memory: 256Mi }
+  redis:
+    limits: { cpu: 500m, memory: 256Mi }
+    requests: { cpu: 100m, memory: 64Mi }
+  postgres:
+    limits: { cpu: "2", memory: 1Gi }
+    requests: { cpu: 250m, memory: 256Mi }
+  openldap:
+    limits: { cpu: 500m, memory: 256Mi }
+    requests: { cpu: 100m, memory: 128Mi }
+
+# ── Environment ────────────────────────────────────────────────
+env:
+  # Logging
+  SOGO_LOG_LEVEL: info
+  SOGO_JSON_LOG: "1"
+  # LDAP
+  ldapURI: ""
+  ldapBindDN: ""
+  # Server
+  serverExtraEnv: []
+
+# ── Monitoring ─────────────────────────────────────────────────
+monitoring:
+  enabled: false
+  prometheus:
+    serverScrapePort: 5000
+    uiScrapePort: 3000
+
+# ── Node Selection ─────────────────────────────────────────────
 nodeSelector: {}
 tolerations: []
 affinity: {}
