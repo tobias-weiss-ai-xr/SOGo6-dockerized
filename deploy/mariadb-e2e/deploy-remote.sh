@@ -5,7 +5,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REMOTE_HOST="${REMOTE_HOST:-mariadb-e2e}"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REMOTE_HOST="${REMOTE_HOST:-localhost}"
 REMOTE_USER="${REMOTE_USER:-root}"
 REMOTE_DIR="${REMOTE_DIR:-/opt/mariadb-e2e}"
 
@@ -92,13 +93,32 @@ upload_files() {
     # Create remote directory
     ssh ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p ${REMOTE_DIR}"
     
-    # Upload all files except Docker build cache
+    # Upload deploy files
     tar -czf - -C "$SCRIPT_DIR" \
         --exclude='node_modules' \
         --exclude='.next' \
         --exclude='__pycache__' \
         --exclude='*.pyc' \
+        --exclude='.env' \
         . | ssh ${REMOTE_USER}@${REMOTE_HOST} "tar -xzf - -C ${REMOTE_DIR}"
+    
+    # Upload submodule source code for building
+    log_info "Uploading sogo6-server source code..."
+    tar -czf - -C "$PROJECT_ROOT/sogo6-server" \
+        --exclude='__pycache__' \
+        --exclude='*.pyc' \
+        --exclude='.git' \
+        --exclude='.venv' \
+        . | ssh ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p ${REMOTE_DIR}/sogo6-server && tar -xzf - -C ${REMOTE_DIR}/sogo6-server"
+    
+    log_info "Uploading sogo6-ui source code..."
+    tar -czf - -C "$PROJECT_ROOT/sogo6-ui" \
+        --exclude='__pycache__' \
+        --exclude='*.pyc' \
+        --exclude='.git' \
+        --exclude='node_modules' \
+        --exclude='.next' \
+        . | ssh ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p ${REMOTE_DIR}/sogo6-ui && tar -xzf - -C ${REMOTE_DIR}/sogo6-ui"
     
     log_info "✓ Files uploaded successfully"
 }
