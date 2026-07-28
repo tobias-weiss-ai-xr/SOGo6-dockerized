@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # ── Root Docker images ───────────────────────────────────────────────
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -13,12 +14,41 @@ updates:
       prefix: "chore(deps)"
       include: "scope"
 
-  - package-ecosystem: "npm"
-    directory: "/tests"
+  # ── sogo6-server Docker ──────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/sogo6-server"
     schedule:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ── sogo6-ui Docker ──────────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/sogo6-ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ── sogo6-ui npm ─────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/sogo6-ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "javascript"
@@ -26,6 +56,35 @@ updates:
       prefix: "chore(deps)"
       include: "scope"
 
+  # ── sogo6-server pip ─────────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/sogo6-server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ── nubusintercom ────────────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/nubusintercom"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ── Integration tests ────────────────────────────────────────────────
   - package-ecosystem: "pip"
     directory: "/tests/integration"
     schedule:
@@ -39,6 +98,7 @@ updates:
       prefix: "chore(deps)"
       include: "scope"
 
+  # ── GitHub Actions ──────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

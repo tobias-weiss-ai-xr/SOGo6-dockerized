@@ -37,6 +37,7 @@ services:
       SSE_ENABLED: "false"
       LOGIN_PREFILL_EMAIL: ${SOGO_TEST_USER:-mmustermann@example.org}
       LOGIN_PREFILL_PASSWORD: ${SOGO_TEST_PASS:-UniMarburg2026!}
+      HOSTNAME: 0.0.0.0
     ports:
       - "${UI_PORT:-3000}:3000"
     networks:
@@ -71,13 +72,18 @@ services:
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
       SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
       SOGO_LDAP_BIND_DN: ${SOGO_LDAP_BIND_DN:-cn=admin,dc=example,dc=org}
-      SOGO_LDAP_BIND_PASSWORD: ${SOGO_LDAP_BIND_PASSWORD:-admin}
+      SOGO_LDAP_BIND_PASSWORD: ${SOGO_LDAP_BIND_PASSWORD:-}
       SOGO_SMTP_SERVER: ${SOGO_SMTP_SERVER:-sogo6-stalwart}
       SOGO_SMTP_PORT: ${SOGO_SMTP_PORT:-20025}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      SOGO_LOG_LEVEL: ${SOGO_LOG_LEVEL:-info}
+      SOGO_JSON_LOG: ${SOGO_JSON_LOG:-0}
+      SOGO_LOG_DIR: ${SOGO_LOG_DIR:-/var/log/sogo}
+      SOGO_PROPAGATE_REQUEST_ID: ${SOGO_PROPAGATE_REQUEST_ID:-0}
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
       - ./sogo6-server:/app:cached
+      - sogo6-logs:/var/log/sogo
     ports:
       - "${API_PORT:-5001}:5000"
     networks:
@@ -156,8 +162,9 @@ services:
     environment:
       LDAP_ORGANISATION: ${LDAP_ORGANISATION:-Example Org}
       LDAP_DOMAIN: ${LDAP_DOMAIN:-example.org}
-      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
-      LDAP_CONFIG_PASSWORD: ${LDAP_CONFIG_PASSWORD:-admin}
+      # ⚠️  Change these in production — generate strong passwords and set via env
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-}
+      LDAP_CONFIG_PASSWORD: ${LDAP_CONFIG_PASSWORD:-}
       LDAP_SEED_INTERNAL_LDIF_PATH: /ldif-seed
     volumes:
       - sogo6-ldap-data:/var/lib/ldap
@@ -172,7 +179,8 @@ services:
         limits:
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost:389 -b ${LDAP_BASE_DN:-dc=example,dc=org} -D cn=admin,${LDAP_BASE_DN:-dc=example,dc=org} -w ${LDAP_ADMIN_PASSWORD:-admin} -s base 2>/dev/null"]
+      # Use a wrapper that falls back to anonymous bind when no admin password is set
+      test: ["CMD-SHELL", "PASS=${LDAP_ADMIN_PASSWORD}; ldapsearch -x -H ldap://localhost:389 -b ${LDAP_BASE_DN:-dc=example,dc=org} ${PASS:+-D cn=admin,${LDAP_BASE_DN:-dc=example,dc=org} -w $PASS} -s base 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -185,7 +193,8 @@ services:
     container_name: sogo6-postgres
     environment:
       POSTGRES_USER: ${PG_USER:-sogo}
-      POSTGRES_PASSWORD: ${PG_PASSWORD:-sogo}
+      # ⚠️  Change in production — set PG_PASSWORD env var to a strong password
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-}
       POSTGRES_DB: ${PG_DATABASE:-sogo}
     volumes:
       - sogo6-postgres-data:/var/lib/postgresql/data
@@ -209,9 +218,10 @@ services:
     image: mariadb:11
     container_name: sogo6-mariadb
     environment:
-      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
+      # ⚠️  Change in production — set MARIADB_ROOT_PASSWORD / MARIADB_PASSWORD
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-}
       MYSQL_USER: ${MARIADB_USER:-sogo}
-      MYSQL_PASSWORD: ${MARIADB_PASSWORD:-sogo}
+      MYSQL_PASSWORD: ${MARIADB_PASSWORD:-}
       MYSQL_DATABASE: ${MARIADB_DATABASE:-sogo}
     volumes:
       - sogo6-mariadb-data:/var/lib/mysql
@@ -241,7 +251,8 @@ services:
     environment:
       STALWART_RECOVERY_ADMIN: admin:${STALWART_SECRET:-eval_admin_2026}
       STALWART_HOSTNAME: mail.${LDAP_DOMAIN:-example.org}
-      STALWART_DB_PASSWORD: ${STALWART_DB_PASSWORD:-stalwart_sogo6_2026}
+      # ⚠️  Change in production — set STALWART_DB_PASSWORD env var
+      STALWART_DB_PASSWORD: ${STALWART_DB_PASSWORD:-}
     volumes:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
@@ -291,11 +302,12 @@ services:
 
   sogo6-minio:
     profiles: ["minio"]
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
     container_name: sogo6-minio
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      # ⚠️  Change in production — set MINIO_PASSWORD env var
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-}
     command: server /data --console-address ":9001"
     volumes:
       - sogo6-minio-data:/data
@@ -311,7 +323,7 @@ services:
 
   sogo6-prometheus:
     profiles: ["monitoring"]
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.54.1
     container_name: sogo6-prometheus
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
@@ -324,7 +336,7 @@ services:
 
   sogo6-grafana:
     profiles: ["monitoring"]
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.3.0
     container_name: sogo6-grafana
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -351,7 +363,8 @@ services:
       KC_DB_PASSWORD: ${PG_PASSWORD:-sogo}
       KC_HOSTNAME: localhost
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:-admin123}
+      # ⚠️  Change in production — set KEYCLOAK_PASSWORD env var
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:-}
     command: start-dev
     ports:
       - "${KEYCLOAK_PORT:-8443}:8443"
@@ -368,12 +381,13 @@ services:
   # ── Collabora Online (Document Preview, Tier 3 #42) ──────
   sogo6-collabora:
     profiles: ["collabora"]
-    image: collabora/code:latest
+    image: collabora/code:24.04.9.3.1
     container_name: sogo6-collabora
     environment:
       aliasgroup1: https://localhost:443
       username: ${COLLABORA_USERNAME:-admin}
-      password: ${COLLABORA_PASSWORD:-admin123}
+      # ⚠️  Change in production — set COLLABORA_PASSWORD env var
+      password: ${COLLABORA_PASSWORD:-}
       extra_params: --o:ssl.enable=false --o:ssl.termination=true
     ports:
       - "${COLLABORA_PORT:-9980}:9980"
@@ -391,6 +405,7 @@ volumes:
   sogo6-ldap-data:
   sogo6-ldap-config:
   sogo6-minio-data:
+  sogo6-logs:
 
 networks:
   sogo6-net:

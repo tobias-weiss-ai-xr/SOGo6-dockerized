@@ -1,0 +1,95 @@
+# Stalwart DMARC/DKIM/SPF/ARC Konfiguration
+# für sogo6-stalwart-openldap-dockerized (v0.16.x)
+#
+# Anwendung: Config in Stalwart über Web-Admin-UI einspielen
+# oder bei Upgrade auf v0.17+ als config.toml mounten.
+#
+# Web-Admin: http://localhost:8080/admin/
+# Credentials: admin / eval_admin_2026
+
+# =============================================================================
+# 1. AUTHENTIFIZIERUNG & VERSAND
+# =============================================================================
+
+# Ausgehende Mails signieren
+[session.smtp.mail]
+sign = true                                    # DKIM-Signatur aktivieren
+key = "s1"                                     # Selector-Name (vorher via UI anlegen)
+domain = "example.org"                         # Domain für DKIM-Signatur
+allow-recipient-addresses = false              # Nur Header-From signieren
+
+[session.smtp.mail.dkim]
+canonicalization = "relaxed/simple"            # relaxed Header, simple Body
+headers = ["From", "Reply-To", "Subject", "Date", "To", "Cc", "Message-ID"]
+signature-expiry = "7d"                        # Signatur 7 Tage gültig
+body-length-count = false                      # Kein Body-Length-Tag
+
+# =============================================================================
+# 2. EINGEHENDE PRÜFUNG (DMARC/SPF/DKIM/ARC)
+# =============================================================================
+
+[session.smtp.rcpt]
+reject-spf = false                             # SPF verweigern (erstmal false für Test)
+reject-dkim = false                            # DKIM verweigern (erstmal false)
+reject-dmarc = false                           # DMARC verweigern (erstmal false)
+reject-arc = false                             # ARC verweigern
+
+# DMARC-Prüfung für eingehende Mails
+[session.smtp.rcpt.dmarc]
+reject = false                                 # Noch nicht ablehnen
+report = true                                  # DMARC-Reports generieren
+report-interval = 86400                        # Reports alle 24h
+report-rua = "mailto:dmarc@example.org"       # Aggregierte Reports
+report-ruf = "mailto:dmarc-ruf@example.org"   # Forensische Reports (optional)
+report-fo = "1"                                # Report bei DKIM ODER SPF Fail
+
+# SPF-Prüfung
+[session.smtp.rcpt.spf]
+reject = false                                 # Noch nicht ablehnen
+
+# DKIM-Prüfung
+[session.smtp.rcpt.dkim]
+reject = false                                 # Noch nicht ablehnen
+verify = true                                  # Trotzdem verifizieren
+
+# =============================================================================
+# 3. ARC (Authenticated Received Chain) - für Mailinglisten/Weiterleitungen
+# =============================================================================
+
+[session.smtp.arc]
+add-seal = true                                # ARC-Seal hinzufügen
+add-timestamp = true                           # Timestamp im Seal
+verify = true                                  # Eingehende ARC-Chain prüfen
+
+# =============================================================================
+# 4. REPORTING
+# =============================================================================
+
+[report.dmarc]
+enable = true                                  # DMARC-Reporting aktivieren
+rua = "mailto:dmarc@example.org"              # Empfänger für aggregierte Reports
+interval = 86400                               # Sende-Intervall in Sekunden
+
+[report.tls]
+enable = true                                  # TLS-Reporting (RFC 8460)
+rua = "mailto:tls-report@example.org"
+
+# =============================================================================
+# 5. RATE LIMITING (Schutz vor Abuse)
+# =============================================================================
+
+[rate-limit]
+max-messages-per-session = 100
+max-recipients-per-message = 50
+max-connections-per-ip = 30
+max-message-size = 25600000                   # 25 MB Max
+
+# =============================================================================
+# 6. SCHRITTWEISE AKTIVIERUNG
+# =============================================================================
+#
+# Phase 1 (Monitoring):   reject-* = false, report = true
+# Phase 2 (Quarantine):   reject-dmarc = true (p=quarantine analog)
+# Phase 3 (Reject):       reject-dmarc = true, reject-spf = true, reject-dkim = true
+#
+# Aktuelle Phase: 1 (Monitoring)

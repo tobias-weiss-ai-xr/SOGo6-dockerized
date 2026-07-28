@@ -1,0 +1,11 @@
+{
+  "settings": {
+    "sogo_display_name": "SOGo 6",
+    "sogo_organization_name": "E2E Test",
+    "allow_new_users": true,
+    "allow_ldap_login": true,
+    "session_timeout_minutes": 480,
+    "default_language": "en",
+    "default_timezone": "Europe/Berlin"
+  }
+}

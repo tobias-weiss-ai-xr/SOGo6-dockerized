@@ -24,7 +24,7 @@ services:
     environment:
       OPENCLOUD_BASE_URL: ${OPENCLOUD_BASE_URL:-http://localhost:9100}
       SOGO_BASE_URL: ${SOGO_BASE_URL:-http://sogo6-server:5000}
-      INTERCOM_SHARED_SECRET: ${INTERCOM_SHARED_SECRET:-change-me-in-production}
+      INTERCOM_SHARED_SECRET: ${INTERCOM_SHARED_SECRET:-}
       INTERCOM_PORT: 8100
       INTERCOM_DEBUG: ${INTERCOM_DEBUG:-0}
     ports:
