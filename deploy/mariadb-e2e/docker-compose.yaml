@@ -69,6 +69,10 @@ services:
       context: ./sogo6-server
       dockerfile: deploy/local/Dockerfile.local
       target: development
+      args:
+        HTTP_PROXY: http://www-proxy3.uni-marburg.de:3128
+        HTTPS_PROXY: http://www-proxy3.uni-marburg.de:3128
+        NO_PROXY: localhost,127.0.0.1
     container_name: mariadb-e2e-server
     environment:
       FLASK_ENV: ${NODE_ENV:-production}
@@ -112,6 +116,10 @@ services:
       context: ./sogo6-ui
       dockerfile: Dockerfile.prod
       target: runner
+      args:
+        HTTP_PROXY: http://www-proxy3.uni-marburg.de:3128
+        HTTPS_PROXY: http://www-proxy3.uni-marburg.de:3128
+        NO_PROXY: localhost,127.0.0.1
     container_name: mariadb-e2e-ui
     environment:
       NODE_ENV: ${NODE_ENV:-production}
