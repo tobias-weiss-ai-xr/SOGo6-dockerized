@@ -21,6 +21,43 @@ env:
   SOGO_REDIS_HOST: localhost
 
 jobs:
+  security:
+    name: Security scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner (repo)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+          hide-progress: true
+
+      - name: Run Trivy vulnerability scanner (server Dockerfile)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: sogo6-server/Dockerfile
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
+      - name: Run Trivy vulnerability scanner (UI Dockerfile)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: sogo6-ui/Dockerfile
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
   lint:
     name: Lint shell scripts
     runs-on: ubuntu-24.04
