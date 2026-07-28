@@ -27,6 +27,7 @@ services:
   # SOGo UI — Next.js frontend
   sogo6-ui:
     image: sogo6-ui:latest
+    restart: unless-stopped
     container_name: sogo6-ui
     build:
       context: ./sogo6-ui
@@ -60,6 +61,7 @@ services:
   # SOGo API Server — Flask backend
   sogo6-server:
     image: sogo6-server:dev
+    restart: unless-stopped
     container_name: sogo6-server
     build:
       context: ./sogo6-server
@@ -108,12 +110,14 @@ services:
   # Redis — session cache + Celery broker
   sogo6-redis:
     image: redis:7-alpine
+    restart: unless-stopped
     container_name: sogo6-redis
     networks:
       - sogo6-net
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 128M
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -125,6 +129,7 @@ services:
   sogo6-nginx:
     profiles: ["nginx"]
     image: nginx:alpine
+    restart: unless-stopped
     container_name: sogo6-nginx
     volumes:
       - ./sogo6/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -140,6 +145,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 64M
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -155,6 +161,7 @@ services:
   sogo6-ldap:
     profiles: ["auth-ldap"]
     image: sogo6-ldap:latest
+    restart: unless-stopped
     build:
       context: ./sogo6/ldap
       dockerfile: Dockerfile
@@ -177,6 +184,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 128M
     healthcheck:
       # Use a wrapper that falls back to anonymous bind when no admin password is set
@@ -190,6 +198,7 @@ services:
   sogo6-postgres:
     profiles: ["db-postgres"]
     image: postgres:15-alpine
+    restart: unless-stopped
     container_name: sogo6-postgres
     environment:
       POSTGRES_USER: ${PG_USER:-sogo}
@@ -205,6 +214,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "2.0"
           memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-sogo}"]
@@ -216,6 +226,7 @@ services:
   sogo6-mariadb:
     profiles: ["db-mariadb"]
     image: mariadb:11
+    restart: unless-stopped
     container_name: sogo6-mariadb
     environment:
       # ⚠️  Change in production — set MARIADB_ROOT_PASSWORD / MARIADB_PASSWORD
@@ -232,6 +243,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "2.0"
           memory: 256M
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
@@ -244,6 +256,7 @@ services:
   sogo6-stalwart:
     profiles: ["mail-stalwart"]
     image: stalwartlabs/stalwart:${STALWART_VERSION:-0.16.0}
+    restart: unless-stopped
     container_name: sogo6-stalwart
     depends_on:
       sogo6-redis:
@@ -268,6 +281,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "2.0"
           memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "ss -tln | grep -q ':143 '"]
@@ -283,6 +297,7 @@ services:
   sogo6-agent:
     profiles: ["agent"]
     image: sogo6-server:latest
+    restart: unless-stopped
     container_name: sogo6-agent
     environment:
       SOGO_DB_URI: ${SOGO_DB_URI:-postgresql://sogo:sogo@sogo6-postgres:5432/sogo}
@@ -297,6 +312,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 256M
     command: ["python", "-m", "app.agent.run"]
     healthcheck:
@@ -309,6 +325,7 @@ services:
   sogo6-minio:
     profiles: ["minio"]
     image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    restart: unless-stopped
     container_name: sogo6-minio
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
@@ -332,11 +349,13 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 256M
 
   sogo6-prometheus:
     profiles: ["monitoring"]
     image: prom/prometheus:v2.54.1
+    restart: unless-stopped
     container_name: sogo6-prometheus
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
@@ -352,11 +371,13 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 256M
 
   sogo6-grafana:
     profiles: ["monitoring"]
     image: grafana/grafana:11.3.0
+    restart: unless-stopped
     container_name: sogo6-grafana
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -383,12 +404,14 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 256M
 
   # ── Loki (log aggregation, monitoring profile) ──────────────
   sogo6-loki:
     profiles: ["monitoring"]
     image: grafana/loki:3.4.2
+    restart: unless-stopped
     container_name: sogo6-loki
     ports:
       - "${LOKI_PORT:-3100}:3100"
@@ -407,12 +430,14 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 512M
 
   # ── Promtail (log collector, monitoring profile) ────────────
   sogo6-promtail:
     profiles: ["monitoring"]
     image: grafana/promtail:3.4.2
+    restart: unless-stopped
     container_name: sogo6-promtail
     networks:
       - sogo6-net
@@ -433,12 +458,14 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 128M
 
   # ── Keycloak (OIDC IdP, Tier 3 #39) ────────────────────────
   sogo6-keycloak:
     profiles: ["keycloak"]
     image: quay.io/keycloak/keycloak:25.0
+    restart: unless-stopped
     container_name: sogo6-keycloak
     environment:
       KC_DB: postgres
@@ -446,7 +473,7 @@ services:
       KC_DB_USERNAME: ${PG_USER:-sogo}
       KC_DB_PASSWORD: ${PG_PASSWORD:-sogo}
       KC_HOSTNAME: localhost
-      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       # ⚠️  Change in production — set KEYCLOAK_PASSWORD env var
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:-}
     command: start-dev
@@ -467,12 +494,14 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 1G
 
   # ── Collabora Online (Document Preview, Tier 3 #42) ──────
   sogo6-collabora:
     profiles: ["collabora"]
     image: collabora/code:24.04.9.3.1
+    restart: unless-stopped
     container_name: sogo6-collabora
     environment:
       aliasgroup1: https://localhost:443
@@ -494,6 +523,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "2.0"
           memory: 512M
 
 volumes:

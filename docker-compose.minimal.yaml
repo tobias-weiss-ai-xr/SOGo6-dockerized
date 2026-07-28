@@ -1,6 +1,6 @@
 # Minimal SOGo6 Stack — SOGo + UI only
 # No Nginx, no optional services
-# 
+#
 # Usage:
 #   docker compose -f docker-compose.minimal.yaml up -d
 #
