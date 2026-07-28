@@ -66,7 +66,7 @@ services:
   # ── SOGo Backend (MariaDB) ────────────────────────────────────
   server:
     build:
-      context: ../../sogo6-server
+      context: ./sogo6-server
       dockerfile: deploy/local/Dockerfile.local
       target: development
     container_name: mariadb-e2e-server
@@ -109,7 +109,7 @@ services:
   # ── SOGo Frontend ─────────────────────────────────────────────
   ui:
     build:
-      context: ../../sogo6-ui
+      context: ./sogo6-ui
       dockerfile: Dockerfile.prod
       target: runner
     container_name: mariadb-e2e-ui
