@@ -79,7 +79,7 @@ services:
       SOGO_SMTP_PORT: ${SOGO_SMTP_PORT:-20025}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       SOGO_LOG_LEVEL: ${SOGO_LOG_LEVEL:-info}
-      SOGO_JSON_LOG: ${SOGO_JSON_LOG:-0}
+      SOGO_JSON_LOG: ${SOGO_JSON_LOG:-1}
       SOGO_LOG_DIR: ${SOGO_LOG_DIR:-/var/log/sogo}
       SOGO_PROPAGATE_REQUEST_ID: ${SOGO_PROPAGATE_REQUEST_ID:-0}
     volumes:
