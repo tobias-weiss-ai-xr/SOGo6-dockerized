@@ -2,23 +2,15 @@
 # Remote Deployment Script for mariadb-e2e MariaDB E2E Test
 # Deploys and runs tests on remote host via SSH
 
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Load shared library
+source "${PROJECT_ROOT}/lib/common.sh"
+
 REMOTE_HOST="${REMOTE_HOST:-localhost}"
 REMOTE_USER="${REMOTE_USER:-root}"
 REMOTE_DIR="${REMOTE_DIR:-/opt/mariadb-e2e}"
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-log_info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 # ── Configuration ───────────────────────────────────────────────
 # Parse command line arguments

@@ -1,16 +1,14 @@
 #!/bin/bash
 # SOGo 6 Test Suite Runner
-set -euo pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Load shared library
+source "${SCRIPT_DIR}/../lib/common.sh"
 
-log()    { echo -e "${GREEN}[RUN]${NC} $*"; }
-warn()   { echo -e "${YELLOW}[WARN]${NC} $*"; }
-fail()   { echo -e "${RED}[FAIL]${NC} $*"; }
+TOTAL_PASS=0
+TOTAL_FAIL=0
+REPORT_FILE="$SCRIPT_DIR/test-report-$(date +%Y%m%d-%H%M%S).json"
 
 TOTAL_PASS=0
 TOTAL_FAIL=0

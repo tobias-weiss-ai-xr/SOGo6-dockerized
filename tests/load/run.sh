@@ -1,9 +1,9 @@
 #!/bin/bash
 # ==============================================================
-# SOGo Load Test Suite — Runner
+# SOGo Load Test Suite - Runner
 # ==============================================================
 # Runs all load/performance tests and prints a summary.
-#
+# 
 # Usage:
 #   bash tests/load/run.sh                    # run all load tests
 #   bash tests/load/run.sh --quick             # run only fast benchmarks
@@ -13,17 +13,19 @@
 #   bash tests/load/run.sh --results-dir DIR   # save results to DIR
 # ==============================================================
 
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Load shared library
+source "${PROJECT_ROOT}/lib/common.sh"
+
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m'
-
+# Test-specific counters and logging (extends lib/common.sh)
 PASS=0
 FAIL=0
 ERRORS=()
