@@ -29,8 +29,8 @@ Docker-based deployment of **SOGo 6** — the next-generation groupware suite (N
    ▼  ▼                 ▼              ▼
 ┌──────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
 │Redis │ │PostgreSQL│ │OpenLDAP  │ │ Stalwart │
-│Cache │ │  (Main)  │ │  (Auth)  │ │Mail/IMAP │
-│      │ │ MariaDB  │ │          │ │  /SMTP   │
+│Cache │ │ MariaDB  │ │  (Auth)  │ │Mail/IMAP │
+│      │ │ (Choose) │ │          │ │  /SMTP   │
 └──────┘ └──────────┘ └──────────┘ └──────────┘
                          │
                          ▼
@@ -51,11 +51,11 @@ cd sogo6-stalwart-openldap-dockerized
 # 2. Copy and configure environment
 cp .env.example .env
 # Edit .env — at minimum set:
-#   LDAP_ADMIN_PASSWORD, PG_PASSWORD, INTERCOM_SHARED_SECRET
+#   LDAP_ADMIN_PASSWORD, PG_PASSWORD/MARIADB_PASSWORD, INTERCOM_SHARED_SECRET
 
-# 3. Generate TLS certs and start
+# 3. Generate TLS certs and start (MariaDB - default)
 bash sogo6/scripts/gen-certs.sh
-docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d --build
+docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d --build
 
 # 4. Initialize SOGo (creates DB tables + default config)
 bash sogo6/scripts/init-sogo6.sh
@@ -69,23 +69,43 @@ open http://localhost:3000
 docker compose up -d
 ```
 
-**MariaDB** instead of PostgreSQL:
+**PostgreSQL** instead of MariaDB:
 ```bash
-docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
+docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
 ```
+
+📖 **Database Switch Guide**: See [`DATABASE_SWITCH.md`](DATABASE_SWITCH.md) for detailed instructions on switching between PostgreSQL and MariaDB.
 
 ## Profiles
 
 | Profile | What it adds | Command |
 |---------|-------------|---------|
 | `mail-stalwart` | Stalwart IMAP/SMTP/Sieve | `docker compose --profile mail-stalwart up -d` |
-| `db-postgres` | PostgreSQL (default DB) | `docker compose --profile db-postgres up -d` |
-| `db-mariadb` | MariaDB (alternative DB) | `docker compose --profile db-mariadb up -d` |
+| `db-mariadb` | MariaDB (default database) | `docker compose --profile db-mariadb up -d` |
+| `db-postgres` | PostgreSQL (alternative) | `docker compose --profile db-postgres up -d` |
 | `auth-ldap` | OpenLDAP user directory | `docker compose --profile auth-ldap up -d` |
 | `nginx` | Nginx reverse proxy + TLS | `docker compose --profile nginx up -d` |
 | `agent` | Celery async job worker | `docker compose --profile agent up -d` |
 | `minio` | S3-compatible object storage | `docker compose --profile minio up -d` |
 | `monitoring` | Prometheus + Grafana + Loki | `docker compose --profile monitoring up -d` |
+
+### Database Selection
+
+**MariaDB (Default)**: Better performance for SOGo, simpler setup
+```bash
+docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
+# or
+make start
+```
+
+**PostgreSQL (Alternative)**: If you prefer PostgreSQL
+```bash
+docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
+# or
+make start-alt
+```
+
+⚠️ **Important**: Only enable ONE database profile at a time. See [`DATABASE_SWITCH.md`](DATABASE_SWITCH.md) for switching instructions.
 
 ## Features
 
