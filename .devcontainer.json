@@ -16,7 +16,7 @@
     "prometheus.prometheus-syntax"
   ],
   "forwardPorts": [5000, 3000, 5432, 6379, 5050, 5540, 9090, 3001, 8025],
-  "appPort": [5001:5000, 3000:3000],
+  "appPort": [5001, 3000],
   "postCreateCommand": "pip install -e '.[dev]' && npm install",
   "postStartCommand": "docker compose ps",
   "remoteEnv": {

@@ -15,7 +15,7 @@
 
 services:
   sogo6-nubusintercom:
-    build: ./nubusintercom
+    build: ./sogo6/nubusintercom
     container_name: sogo6-nubusintercom
     profiles: ["nubus"]
     depends_on:
