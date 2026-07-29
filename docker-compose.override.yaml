@@ -72,11 +72,6 @@ services:
     environment:
       MYSQL_LOG_CONSOLE: "true"
       MYSQL_DEBUG: "true"
-    command: >
-      mysqld
-        --verbose
-        --log-output=TABLE
-        --max_connections=100
     deploy:
       resources:
         limits:

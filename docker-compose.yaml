@@ -55,7 +55,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # SOGo API Server — Flask backend
+  # SOGo API Server — Flask backend (MariaDB default)
   sogo6-server:
     image: sogo6-server:dev
     restart: unless-stopped
@@ -66,9 +66,8 @@ services:
       target: development
     environment:
       FLASK_ENV: ${FLASK_ENV:-development}
-      SOGO_DB_URI: ${SOGO_DB_URI:-mysql://${MARIADB_USER:-sogo}:${MARIADB_PASSWORD:-sogo}@sogo6-mariadb:3306/${MARIADB_DATABASE:-sogo}}
-      SOGO_DB_HOST: ${SOGO_DB_HOST:-sogo6-mariadb}
-      SOGO_DB_PORT: ${SOGO_DB_PORT:-3306}
+      # ⚠️ Database config is in sogo6/config/process.conf (SOGO_P_DB_* settings)
+      # Switch: edit process.conf → uncomment MySQL or PostgreSQL section
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
       SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
@@ -124,6 +123,7 @@ services:
       timeout: 3s
       retries: 5
 
+  # PostgreSQL database-specific server configuration (overrides sogo6-server when db-postgres profile is enabled)
   # Nginx — reverse proxy + TLS termination
   sogo6-nginx:
     profiles: ["nginx"]
@@ -300,9 +300,7 @@ services:
     restart: unless-stopped
     container_name: sogo6-agent
     environment:
-      SOGO_DB_URI: ${SOGO_DB_URI:-mysql://${MARIADB_USER:-sogo}:${MARIADB_PASSWORD:-sogo}@sogo6-mariadb:3306/${MARIADB_DATABASE:-sogo}}
-      SOGO_DB_HOST: ${SOGO_DB_HOST:-sogo6-mariadb}
-      SOGO_DB_PORT: ${SOGO_DB_PORT:-3306}
+      # ⚠️ Database config is in sogo6/config/process.conf (SOGO_P_DB_* settings)
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
