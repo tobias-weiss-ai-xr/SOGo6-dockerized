@@ -1,8 +1,13 @@
-# SOGo 6 — Docker Compose with MariaDB
-# =====================================
+# SOGo 6 — Docker Compose
+# =======================
 #
-# Start the full stack:
+# Choose your database backend using profiles:
+#
+#   # MariaDB (MySQL) - Default
 #   docker compose --profile mail-stalwart --profile auth-ldap up -d
+#
+#   # PostgreSQL instead of MariaDB
+#   docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
 #
 # Minimal setup (bring your own DB, mail, auth):
 #   docker compose up -d
@@ -188,8 +193,38 @@ services:
       retries: 5
       start_period: 10s
 
-  # MariaDB — application database
+  # PostgreSQL — application database (alternative to MariaDB)
+  sogo6-postgres:
+    profiles: ["db-postgres"]
+    image: postgres:15-alpine
+    restart: unless-stopped
+    container_name: sogo6-postgres
+    environment:
+      POSTGRES_USER: ${PG_USER:-sogo}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-}
+      POSTGRES_DB: ${PG_DATABASE:-sogo},stalwart
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - sogo6-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    networks:
+      - sogo6-net
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-sogo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # MariaDB — application database (default)
   sogo6-mariadb:
+    profiles: ["db-mariadb"]
     image: mariadb:11
     restart: unless-stopped
     container_name: sogo6-mariadb
@@ -496,6 +531,7 @@ services:
           memory: 512M
 
 volumes:
+  sogo6-postgres-data:
   sogo6-mariadb-data:
   sogo6-stalwart-data:
   sogo6-logs:

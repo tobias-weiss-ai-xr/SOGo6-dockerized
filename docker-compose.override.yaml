@@ -52,6 +52,22 @@ services:
           memory: 768M
           cpus: "2.0"
 
+  sogo6-postgres:
+    environment:
+      POSTGRES_LOG_STATEMENT: "all"
+      POSTGRES_LOG_DURATION: "on"
+    command: >
+      postgres
+        -c shared_buffers=256MB
+        -c work_mem=16MB
+        -c max_connections=100
+        -c log_statement=all
+        -c log_duration=on
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   sogo6-mariadb:
     environment:
       MYSQL_LOG_CONSOLE: "true"
