@@ -12,8 +12,7 @@
 .DEFAULT_GOAL := help
 
 # ── Profile presets ─────────────────────────────────────────────
-PROD_PROFILES   := --profile mail-stalwart --profile db-mariadb --profile auth-ldap
-ALT_PROFILES    := --profile mail-stalwart --profile db-postgres --profile auth-ldap
+PROD_PROFILES   := --profile mail-stalwart --profile auth-ldap
 DEV_COMPOSE     := -f docker-compose.dev.yaml
 
 .PHONY: setup build start stop restart status logs clean reset init
@@ -44,10 +43,6 @@ start: start-full
 
 start-full:
 	docker compose $(PROD_PROFILES) up -d --wait --wait-timeout 180
-	docker compose ps
-
-start-alt:
-	docker compose $(ALT_PROFILES) up -d --wait --wait-timeout 180
 	docker compose ps
 
 start-minimal:

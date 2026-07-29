@@ -122,10 +122,10 @@ node --inspect-brk ./node_modules/.bin/react-scripts start
 
 ### Database Debugging
 
-**PostgreSQL:**
+**MariaDB:**
 ```bash
 # Connect
-make dev-shell-postgres
+make dev-shell-mariadb
 
 # Show slow queries (log_min_duration_statement)
 ALTER SYSTEM SET log_min_duration_statement = '100ms';
@@ -286,7 +286,7 @@ clinic doctor -- node ./node_modules/.bin/react-scripts start
 
 ### Database Query Profiling
 
-**PostgreSQL:**
+**MariaDB:**
 ```sql
 -- Enable timing
 \timing on
@@ -318,8 +318,8 @@ redis-cli INFO commandstats
 ### Check Container Connectivity
 
 ```bash
-# Test connection from server to postgres
-docker compose exec sogo6-server nc -zv sogo6-postgres 5432
+# Test connection from server to mariadb
+docker compose exec sogo6-server nc -zv sogo6-mariadb 5432
 
 # Test connection from server to redis
 docker compose exec sogo6-server nc -zv sogo6-redis 6379
@@ -328,7 +328,7 @@ docker compose exec sogo6-server nc -zv sogo6-redis 6379
 docker compose exec sogo6-server nc -zv sogo6-ldap 389
 
 # DNS lookup test
-docker compose exec sogo6-server nslookup sogo6-postgres
+docker compose exec sogo6-server nslookup sogo6-mariadb
 ```
 
 ### Check Open Ports
@@ -417,7 +417,7 @@ lsof -i :5000
 docker compose logs sogo6-server
 
 # Check if database is ready
-docker compose logs sogo6-postgres
+docker compose logs sogo6-mariadb
 
 # Try pdb
 make dev-shell-server
@@ -428,11 +428,11 @@ python -m pdb app.py
 
 ```bash
 # Test connection manually
-make dev-shell-postgres
+make dev-shell-mariadb
 psql -U sogo -d sogo -h localhost
 
 # Check connection from server
-docker compose exec sogo6-server psql -U sogo -d sogo -h sogo6-postgres
+docker compose exec sogo6-server mariadb -u sogo -p sogo sogo
 
 # Check if database exists
 psql -U sogo -l

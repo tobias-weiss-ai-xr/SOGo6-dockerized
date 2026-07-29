@@ -1,7 +1,7 @@
 # DMARC-TODO: sogo6-stalwart-openldap-dockerized (Dev‑Stack)
 
 > **Kontext:** Docker Compose‑Entwicklungsumgebung für SOGo 6 (Next.js + Flask)  
-> mit Stalwart Mail Server, OpenLDAP, PostgreSQL/MariaDB, Redis, Nginx.  
+> mit Stalwart Mail Server, OpenLDAP, MariaDB/MariaDB, Redis, Nginx.  
 > Stalwart ist der alleinige MTA (built‑in SMTP). Ideal für DMARC‑Tests.
 
 ---
@@ -226,7 +226,7 @@
   # tests/dmarc-test.sh
   #!/bin/bash
   # 1. Stalwart starten
-  docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
+  docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
   
   # 2. DKIM-Key generieren
   docker compose exec sogo6-stalwart stalwart-cli domain key generate example.org ci-test 1024

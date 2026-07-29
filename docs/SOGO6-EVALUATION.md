@@ -5,7 +5,7 @@
 SOGo 6 is a complete rebuild of the SOGo webmail and groupware suite. Unlike SOGo 5 (which uses GNUstep/Objective-C), SOGo 6 is built with modern technologies:
 
 - **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
-- **Backend**: Python 3.10+, Flask, PostgreSQL, Redis
+- **Backend**: Python 3.10+, Flask, MariaDB, Redis
 - **Authentication**: LDAP (with plans for SQL user sources)
 
 ## Quick Start
@@ -66,7 +66,7 @@ docker compose logs -f
 docker compose logs -f sogo6-server
 
 # Database
-docker exec -it sogo6-postgres psql -U sogo -d sogo
+docker exec -it sogo6-mariadb psql -U sogo -d sogo
 
 # Redis
 docker exec -it sogo6-redis redis-cli

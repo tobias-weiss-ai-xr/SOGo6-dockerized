@@ -70,7 +70,7 @@ SOGo 6 is a complete rebuild of the legacy SOGo groupware suite. This fork (`sog
 ```mermaid
 graph TD
     A[SOGo 6 UI - Next.js :3000] -->|HTTP REST API| B[SOGo 6 Server - Flask :5000]
-    B -->|PostgreSQL| C[PostgreSQL Database]
+    B -->|MariaDB| C[MariaDB Database]
     B -->|Cache| D[Redis]
     B -->|LDAP Auth| E[OpenLDAP]
     B -->|IMAP/SMTP/Sieve| F[Stalwart Mail Server]

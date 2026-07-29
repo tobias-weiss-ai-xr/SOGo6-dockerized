@@ -41,7 +41,7 @@ tests/
 ├── api-test.sh        # Shell-based API tests
 ├── ldap-test.sh       # LDAP verification
 ├── smtp-test.sh       # Email testing
-├── postgres-test.sh   # Database testing
+├── mariadb-test.sh   # Database testing
 ├── redis-test.sh      # Redis testing
 ├── nginx-test.sh      # Nginx testing
 ├── security-test.sh   # Security scanning
@@ -153,7 +153,7 @@ from sqlalchemy.orm import sessionmaker
 @pytest.fixture
 def db_session():
     """Create a test database session."""
-    engine = create_engine('postgresql://sogo:sogo@sogo6-postgres:5432/sogo_test')
+    engine = create_engine('mariadbql://sogo:sogo@sogo6-mariadb:5432/sogo_test')
     Session = sessionmaker(bind=engine)
     session = Session()
     
@@ -441,21 +441,21 @@ def test_redis_connection():
     assert r.get('test_key') == b'test_value'
 ```
 
-## Testing PostgreSQL
+## Testing MariaDB
 
 ```bash
-# Quick PostgreSQL test
-bash tests/postgres-test.sh
+# Quick MariaDB test
+bash tests/mariadb-test.sh
 ```
 
-**Python PostgreSQL Test:**
+**Python MariaDB Test:**
 ```python
 import psycopg2
 
 
-def test_postgres_connection():
+def test_mariadb_connection():
     conn = psycopg2.connect(
-        host='sogo6-postgres',
+        host='sogo6-mariadb',
         database='sogo',
         user='sogo',
         password='sogo'
@@ -627,7 +627,7 @@ from sqlalchemy.orm import sessionmaker
 # Fixture for database session
 @pytest.fixture(scope='session')
 def engine():
-    return create_engine('postgresql://sogo:sogo@sogo6-postgres:5432/sogo_test')
+    return create_engine('mariadbql://sogo:sogo@sogo6-mariadb:5432/sogo_test')
 
 
 @pytest.fixture
@@ -748,8 +748,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:15-alpine
+      mariadb:
+        image: mariadb:15-alpine
         env:
           POSTGRES_USER: sogo
           POSTGRES_PASSWORD: sogo
@@ -781,7 +781,7 @@ jobs:
     - name: Run integration tests
       run: pytest tests/integration/ -v
       env:
-        SOGO_DB_URI: postgresql://sogo:sogo@localhost:5432/sogo_test
+        SOGO_DB_URI: mariadbql://sogo:sogo@localhost:5432/sogo_test
         SOGO_REDIS_URI: redis://localhost:6379/0
     
     - name: Upload coverage

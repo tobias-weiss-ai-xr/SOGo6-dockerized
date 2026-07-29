@@ -62,20 +62,19 @@ services:
           memory: 768M
           cpus: "2.0"
 
-  # ── Extra: PgAdmin (PostgreSQL admin UI) ───────────────────
-  sogo6-pgadmin:
-    image: dpage/pgadmin4:8.14
-    container_name: sogo6-pgadmin
+  # ── Extra: Adminer (Database admin UI - MySQL/MariaDB, PostgreSQL, etc.) ───────────────────
+  sogo6-adminer:
+    image: adminer:latest
+    container_name: sogo6-adminer
     environment:
-      PGADMIN_DEFAULT_EMAIL: dev@example.org
-      PGADMIN_DEFAULT_PASSWORD: password123
+      ADMINER_DEFAULT_SERVER: sogo6-mariadb
     ports:
-      - "5050:80"
+      - "5050:8080"
     networks:
       - sogo6-net
-    profiles: ["pgadmin"]
+    profiles: ["dbadmin"]
     depends_on:
-      sogo6-postgres:
+      sogo6-mariadb:
         condition: service_healthy
 
   # ── Extra: Redis Insight (Redis admin UI) ───────────────────

@@ -102,7 +102,7 @@
 
 18. **Local development without Docker**
     - Native development setup guide
-    - Local PostgreSQL/Redis install instructions
+    - Local MariaDB/Redis install instructions
 
 19. **Performance optimization**
     - Docker layer caching
