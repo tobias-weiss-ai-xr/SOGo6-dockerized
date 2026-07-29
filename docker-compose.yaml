@@ -392,8 +392,8 @@ services:
       - sogo6-loki
     volumes:
       - sogo6-grafana-data:/var/lib/grafana
-      - ./sogo6/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./sogo6/prometheus/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./sogo6/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./sogo6/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 15s
@@ -418,7 +418,7 @@ services:
     networks:
       - sogo6-net
     volumes:
-      - ./sogo6/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./sogo6/monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - sogo6-loki-data:/loki
     command: -config.file=/etc/loki/loki-config.yaml
     healthcheck:
@@ -442,7 +442,7 @@ services:
     networks:
       - sogo6-net
     volumes:
-      - ./sogo6/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - ./sogo6/monitoring/loki/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - sogo6-logs:/var/log/sogo:ro
       - /var/log:/var/log/host:ro
     command: -config.file=/etc/promtail/promtail-config.yaml
