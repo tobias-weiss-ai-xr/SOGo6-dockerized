@@ -464,7 +464,7 @@ services:
   # ── Keycloak (OIDC IdP, Tier 3 #39) ────────────────────────
   sogo6-keycloak:
     profiles: ["keycloak"]
-    image: quay.io/keycloak/keycloak:25.0
+    image: quay.io/keycloak/keycloak:26.0
     restart: unless-stopped
     container_name: sogo6-keycloak
     environment:
@@ -483,6 +483,8 @@ services:
       - sogo6-net
     depends_on:
       sogo6-postgres:
+        condition: service_healthy
+      sogo6-redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nconnection: close\r\n\r\n' >&3 && head -1 <&3 | grep -q '200' || exit 1"]
