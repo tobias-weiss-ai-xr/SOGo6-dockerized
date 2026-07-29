@@ -31,3 +31,6 @@ backups/
 __pycache__/
 .pytest_cache/
 *.pyc
+sogo6/nginx/certs/
+.next/
+*.tsbuildinfo
