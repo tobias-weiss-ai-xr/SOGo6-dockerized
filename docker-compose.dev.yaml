@@ -1,600 +1,154 @@
-# SOGo 6 Development Stack (standalone)
-# =======================================
-# This is a SELF-CONTAINED dev stack with extra tools (pgadmin, redisinsight,
-# mailhog, LDAP tools). It DOES NOT extend docker-compose.yaml.
+# SOGo 6 Development Stack (extends main compose)
+# =================================================
+# Extends docker-compose.yaml with dev settings and extra tools.
+# For a lightweight alternative, use docker-compose.override.yaml instead.
 #
-# For a lighter dev setup that extends the main compose, use:
+# Usage:
+#   docker compose -f docker-compose.dev.yaml up -d
+#   docker compose -f docker-compose.dev.yaml exec sogo6-server /bin/sh
+#
+# If you just need hot-reload without extra tools, use:
 #   docker compose -f docker-compose.yaml -f docker-compose.override.yaml up
-#
-# =======================================
+# =================================================
+
+include:
+  - docker-compose.yaml
 
 services:
+  # ── Override: SOGo UI (dev mode with hot reload) ───────────
   sogo6-ui:
     image: sogo6-ui:dev
-    container_name: sogo6-ui-dev
-    restart: unless-stopped
     build:
       context: ./sogo6-ui
       dockerfile: Dockerfile
       target: development
     environment:
-      REACT_APP_API_BASE_URL: http://sogo6-server:5000/api/user/v1
-      NEXT_PUBLIC_ADMIN_DOMAINS: admin.localhost
-      SSE_ENABLED: "true"
-      LOGIN_PREFILL_EMAIL: testuser@example.org
-      LOGIN_PREFILL_PASSWORD: password123
       NODE_ENV: development
       DEBUG: "true"
       WDS_SOCKET_PORT: "3000"
       NODE_OPTIONS: "--max-old-space-size=6144"
-      NEXT_TELEMETRY_DISABLED: "1"
+      SSE_ENABLED: "true"
+      LOGIN_PREFILL_EMAIL: testuser@example.org
+      LOGIN_PREFILL_PASSWORD: password123
     ports:
       - "3000:3000"
       - "24678:24678"
-    networks:
-      - sogo6-net
-    depends_on:
-      - sogo6-server
-    deploy:
-      resources:
-        limits:
-          memory: 4G
-          cpus: "4.0"
-        reservations:
-          memory: 512M
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/env || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
     volumes:
       - ./sogo6-ui:/app:cached
       - /app/node_modules
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
 
+  # ── Override: SOGo Server (dev mode with debugger) ─────────
   sogo6-server:
     image: sogo6-server:dev
-    container_name: sogo6-server-dev
     build:
       context: ./sogo6-server
       dockerfile: deploy/local/Dockerfile.local
       target: development
     environment:
       FLASK_ENV: development
-      FLASK_APP: app
       FLASK_DEBUG: "1"
       PYTHONUNBUFFERED: "1"
-      PYTHONFAULTHANDLER: "1"
-      PYTHONDEVMODE: "1"
-      SOGO_DB_URI: postgresql://sogo:sogo@sogo6-postgres:5432/sogo
-      SOGO_REDIS_URI: redis://sogo6-redis:6379/0
-      SOGO_LDAP_URI: ldap://sogo6-ldap:389
-      SOGO_LDAP_BASE_DN: dc=example,dc=org
-      SOGO_LDAP_BIND_DN: cn=admin,dc=example,dc=org
-      SOGO_LDAP_BIND_PASSWORD: admin
-      SOGO_SMTP_SERVER: sogo6-stalwart
-      SOGO_SMTP_PORT: 20025
-      SOGO_P_DB_USER: sogo
-      SOGO_P_DB_HOST: sogo6-postgres
-      GUNICORN_WORKERS: "1"
       LOG_LEVEL: debug
-      LOG_FORMAT: "%(asctime)s %(levelname)s %(name)s: %(message)s"
-    # Secrets are optional for dev - can use environment variables instead
-    # Uncomment and create file if needed: env_file: - ./secrets/sogo6.vault.env
     volumes:
-      - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
       - ./sogo6-server:/app:cached
-    ports:
-      - "5001:5000"
-      - "5678:5678"
-    networks:
-      - sogo6-net
-    depends_on:
-      sogo6-postgres:
-        condition: service_healthy
-      sogo6-redis:
-        condition: service_healthy
-      sogo6-ldap:
-        condition: service_healthy
-      sogo6-stalwart:
-        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 768M
           cpus: "2.0"
-        reservations:
-          memory: 384M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/user/v1/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
 
-  # ── Celery Agent Worker (async background jobs) ──────────────────────────
-  sogo6-agent:
-    image: sogo6-server:dev
-    container_name: sogo6-agent-dev
-    build:
-      context: ./sogo6-server
-      dockerfile: deploy/local/Dockerfile.local
-      target: development
-    environment:
-      FLASK_ENV: development
-      PYTHONUNBUFFERED: "1"
-      PYTHONFAULTHANDLER: "1"
-      LOG_LEVEL: debug
-      SOGO_DB_URI: postgresql://sogo:sogo@sogo6-postgres:5432/sogo
-      SOGO_REDIS_URI: redis://sogo6-redis:6379/0
-      SOGO_LDAP_URI: ldap://sogo6-ldap:389
-      SOGO_LDAP_BASE_DN: dc=example,dc=org
-      SOGO_LDAP_BIND_DN: cn=admin,dc=example,dc=org
-      SOGO_LDAP_BIND_PASSWORD: admin
-      SOGO_SMTP_SERVER: sogo6-stalwart
-      SOGO_SMTP_PORT: 20025
-      SOGO_P_DB_USER: sogo
-      SOGO_P_DB_HOST: sogo6-postgres
-      SOGO_P_AGENT_WORKER_CONCURRENCY: "2"
-    volumes:
-      - ./sogo6-server:/app:cached
-    networks:
-      - sogo6-net
-    depends_on:
-      sogo6-postgres:
-        condition: service_healthy
-      sogo6-redis:
-        condition: service_healthy
-      sogo6-ldap:
-        condition: service_healthy
-      sogo6-stalwart:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "1.0"
-        reservations:
-          memory: 256M
-    command: ["python", "-m", "app.agent.run"]
-    profiles:
-      - agent
-
-  # ── MinIO (S3-compatible object storage for attachments) ─────────────────
-  sogo6-minio:
-    image: minio/minio:latest
-    container_name: sogo6-minio-dev
-    profiles:
-      - minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    volumes:
-      - sogo6-minio-data-dev:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  sogo6-postgres:
-    image: postgres:15-alpine
-    container_name: sogo6-postgres-dev
-    environment:
-      POSTGRES_USER: sogo
-      POSTGRES_PASSWORD: sogo
-      POSTGRES_DB: sogo
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_LOG_STATEMENT: "all"
-      POSTGRES_LOG_DURATION: "on"
-    command: >
-      postgres
-        -c shared_buffers=256MB
-        -c work_mem=16MB
-        -c max_connections=100
-        -c log_statement=all
-        -c log_duration=on
-        -c log_min_duration_statement=0
-        -c log_line_prefix='%m [%p] %q%u@%d '
-    volumes:
-      - sogo6-postgres-data-dev:/var/lib/postgresql/data
-      - ./sogo6/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "5432:5432"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sogo"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  # ── MariaDB (alternative to PostgreSQL) ─────────────────────────────────────
-  sogo6-mariadb:
-    image: mariadb:11.4
-    container_name: sogo6-mariadb-dev
-    profiles:
-      - db-alternative
-    environment:
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_DATABASE: sogo
-      MARIADB_USER: sogo
-      MARIADB_PASSWORD: sogo
-    command: >
-      mariadbd
-        --max-connections=100
-        --general-log=1
-        --general-log-file=/var/log/mysql/query.log
-    volumes:
-      - sogo6-mariadb-data-dev:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -u root -proot | grep 'mysqld is alive'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-
-  sogo6-redis:
-    image: redis:7-alpine
-    container_name: sogo6-redis-dev
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --loglevel debug
-    volumes:
-      - sogo6-redis-data-dev:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  sogo6-ldap:
-    image: sogo6-ldap:dev
-    build:
-      context: ./sogo6/ldap
-      dockerfile: Dockerfile
-    container_name: sogo6-ldap-dev
-    environment:
-      LDAP_ORGANISATION: Example Org
-      LDAP_DOMAIN: example.org
-      LDAP_ADMIN_PASSWORD: admin
-      LDAP_BASE_DN: dc=example,dc=org
-      LDAP_CONFIG_PASSWORD: admin
-      LDAP_TLS: "false"
-      LDAP_SEED_INTERNAL_LDIF_PATH: /ldif-seed
-      SLAPD_LOG_LEVEL: "32768"
-    volumes:
-      - sogo6-ldap-data-dev:/var/lib/ldap
-      - sogo6-ldap-config-dev:/etc/ldap/slapd.d
-      - ./sogo6/ldap/init.ldif:/ldif-seed/00-init.ldif
-    ports:
-      - "389:389"
-      - "636:636"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    healthcheck:
-      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  sogo6-stalwart:
-    image: stalwartlabs/stalwart:v0.16.6
-    container_name: sogo6-stalwart-dev
-    depends_on:
-      sogo6-postgres:
-        condition: service_healthy
-    environment:
-      STALWART_RECOVERY_ADMIN: admin:eval_admin_2026
-      STALWART_HOSTNAME: mail.example.org
-      STALWART_DB_PASSWORD: stalwart_sogo6_2026
-      RUST_LOG: "debug"
-    volumes:
-      - sogo6-stalwart-data-dev:/var/lib/stalwart
-      - ./sogo6/stalwart/config.json:/etc/stalwart/config.json
-    ports:
-      - "20025:25"
-      - "20465:465"
-      - "20587:587"
-      - "20143:143"
-      - "20993:993"
-      - "24190:4190"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 768M
-          cpus: "2.0"
-        reservations:
-          memory: 384M
-    healthcheck:
-      test: ["CMD-SHELL", "/usr/bin/curl -skf https://localhost/healthz/live || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  sogo6-smtp:
-    image: maildev/maildev:latest
-    container_name: sogo6-smtp-dev
-    environment:
-      MAILDEV_SMTP_PORT: 25
-      MAILDEV_WEB_PORT: 1080
-    ports:
-      - "1080:1080"
-      - "1025:1025"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:1080/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
-  sogo6-nginx:
-    image: nginx:alpine
-    container_name: sogo6-nginx-dev
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
-    volumes:
-      - ./sogo6/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./sogo6/nginx/certs:/etc/nginx/certs:ro
-    networks:
-      - sogo6-net
-    depends_on:
-      - sogo6-ui
-      - sogo6-server
-    deploy:
-      resources:
-        limits:
-          memory: 192M
-        reservations:
-          memory: 64M
-    healthcheck:
-      test: ["CMD-SHELL", "curl -skf https://localhost/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
-  # Dev Tools
+  # ── Extra: PgAdmin (PostgreSQL admin UI) ───────────────────
   sogo6-pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: sogo6-pgadmin-dev
+    image: dpage/pgadmin4:8.14
+    container_name: sogo6-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: dev@example.org
       PGADMIN_DEFAULT_PASSWORD: password123
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
-    volumes:
-      - sogo6-pgadmin-data:/var/lib/pgadmin
     ports:
       - "5050:80"
     networks:
       - sogo6-net
+    profiles: ["pgadmin"]
     depends_on:
-      - sogo6-postgres
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+      sogo6-postgres:
+        condition: service_healthy
 
+  # ── Extra: Redis Insight (Redis admin UI) ───────────────────
   sogo6-redisinsight:
-    image: redis/redis-insight:latest
-    container_name: sogo6-redisinsight-dev
+    image: redis/redisinsight:2.66
+    container_name: sogo6-redisinsight
     ports:
       - "5540:5540"
-    volumes:
-      - sogo6-redisinsight-data:/var/lib/redisinsight
     networks:
       - sogo6-net
-    depends_on:
-      - sogo6-redis
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    profiles:
-      - mail-tools
+    profiles: ["redisinsight"]
 
+  # ── Extra: Mailhog (SMTP test server) ──────────────────────
+  sogo6-mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: sogo6-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - sogo6-net
+    profiles: ["mailhog"]
+
+  # ── Extra: LDAP Admin UI ───────────────────────────────────
   sogo6-ldapadmin:
-    image: osixia/openldap:1.5.0
-    container_name: sogo6-ldapadmin-dev
+    image: osixia/phpldapadmin:0.9.0
+    container_name: sogo6-ldapadmin
     environment:
-      LDAP_ADMIN_PASSWORD: admin
+      PHPLDAPADMIN_LDAP_HOSTS: sogo6-ldap
     ports:
       - "8081:80"
     networks:
       - sogo6-net
+    profiles: ["ldap-tools"]
     depends_on:
       sogo6-ldap:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
 
-  sogo6-ldapui:
-    image: pulsetri/react-ldap-admin:latest
-    container_name: sogo6-ldapui-dev
-    environment:
-      LDAP_HOST: sogo6-ldap
-      LDAP_PORT: 389
-      LDAP_BASE_DN: dc=example,dc=org
-      LDAP_BIND_DN: cn=admin,dc=example,dc=org
-      LDAP_BIND_PASSWORD: admin
+  # ── Extra: LDAP Account Manager ────────────────────────────
+  sogo6-lam:
+    image: ldapaccountmanager/lam:9.0
+    container_name: sogo6-lam
     ports:
-      - "8082:3000"
+      - "8082:80"
     networks:
       - sogo6-net
+    profiles: ["ldap-tools"]
     depends_on:
       sogo6-ldap:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
 
-  sogo6-mailhog:
-    image: mailhog/mailhog:latest
-    container_name: sogo6-mailhog-dev
-    ports:
-      - "8025:8025"
-      - "1026:1025"
-    networks:
-      - sogo6-net
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - mail-tools
-
-  sogo6-prometheus:
-    image: prom/prometheus:latest
-    container_name: sogo6-prometheus-dev
-    volumes:
-      - ./sogo6/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - sogo6-prometheus-data:/prometheus
-    ports:
-      - "9090:9090"
-    networks:
-      - sogo6-net
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    profiles:
-      - monitoring
-
-  sogo6-grafana:
-    image: grafana/grafana:latest
-    container_name: sogo6-grafana-dev
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: password123
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    volumes:
-      - sogo6-grafana-data:/var/lib/grafana
-    ports:
-      - "3001:3000"
-    networks:
-      - sogo6-net
-    depends_on:
-      - sogo6-prometheus
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    profiles:
-      - monitoring
-
+  # ── Extra: LDAP browser (Ladon) ────────────────────────────
   sogo6-ladon:
-    image: orlangur/ladon:latest
-    container_name: sogo6-ladon-dev
-    environment:
-      LADON_LDAP_HOST: sogo6-ldap
-      LADON_LDAP_PORT: 389
-      LADON_LDAP_BASE_DN: dc=example,dc=org
-      LADON_LDAP_BIND_DN: cn=admin,dc=example,dc=org
-      LADON_LDAP_BIND_PASSWORD: admin
+    image: mirhej/ladon:latest
+    container_name: sogo6-ladon
     ports:
-      - "8083:8080"
+      - "8083:80"
     networks:
       - sogo6-net
+    profiles: ["ldap-tools"]
     depends_on:
       sogo6-ldap:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
 
+  # ── Extra: Web-based LDAP browser ──────────────────────────
   sogo6-wd-ldap:
-    image: osixia/phpldapadmin:latest
-    container_name: sogo6-wd-ldap-dev
-    environment:
-      PHPLDAPADMIN_LDAP_HOSTS: sogo6-ldap
-      PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: "never"
+    image: wheezil/ldapjs-webui:latest
+    container_name: sogo6-wd-ldap
     ports:
       - "8084:80"
     networks:
       - sogo6-net
+    profiles: ["ldap-tools"]
     depends_on:
       sogo6-ldap:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    profiles:
-      - ldap-tools
-
-volumes:
-  sogo6-postgres-data-dev:
-  sogo6-mariadb-data-dev:
-  sogo6-redis-data-dev:
-  sogo6-stalwart-data-dev:
-  sogo6-ldap-data-dev:
-  sogo6-ldap-config-dev:
-  sogo6-pgadmin-data:
-  sogo6-redisinsight-data:
-  sogo6-prometheus-data:
-  sogo6-grafana-data:
-  sogo6-minio-data-dev:
-
-networks:
-  sogo6-net:
