@@ -2,14 +2,14 @@
 # ================================
 # Pick your infrastructure by enabling profiles:
 #
-#   # Stalwart (IMAP+SMTP) + PostgreSQL (default)
-#   docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
+#   # Stalwart (IMAP+SMTP) + MariaDB (default)
+#   docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
 #
 #   # Minimal — bring your own everything (DB, mail, auth)
 #   docker compose up -d
 #
-#   # MariaDB instead of PostgreSQL
-#   docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
+#   # PostgreSQL instead of MariaDB
+#   docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
 #
 #   # Dovecot + Exim + MariaDB (your own mail + DB)
 #   docker compose --profile db-mariadb up -d
@@ -69,7 +69,9 @@ services:
       target: development
     environment:
       FLASK_ENV: ${FLASK_ENV:-development}
-      SOGO_DB_URI: ${SOGO_DB_URI:-postgresql://sogo:sogo@sogo6-postgres:5432/sogo}
+      SOGO_DB_URI: ${SOGO_DB_URI:-mysql://${MARIADB_USER:-sogo}:${MARIADB_PASSWORD:-sogo}@sogo6-mariadb:3306/${MARIADB_DATABASE:-sogo}}
+      SOGO_DB_HOST: ${SOGO_DB_HOST:-sogo6-mariadb}
+      SOGO_DB_PORT: ${SOGO_DB_PORT:-3306}
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
       SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
@@ -205,6 +207,7 @@ services:
       # ⚠️  Change in production — set PG_PASSWORD env var to a strong password
       POSTGRES_PASSWORD: ${PG_PASSWORD:-}
       POSTGRES_DB: ${PG_DATABASE:-sogo},stalwart
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - sogo6-postgres-data:/var/lib/postgresql/data
     ports:
@@ -255,7 +258,7 @@ services:
   # Stalwart — IMAP + SMTP + Sieve mail server
   sogo6-stalwart:
     profiles: ["mail-stalwart"]
-    image: stalwartlabs/stalwart:${STALWART_VERSION:-0.16.0}
+    image: stalwartlabs/stalwart:${STALWART_VERSION:-latest}
     restart: unless-stopped
     container_name: sogo6-stalwart
     depends_on:
@@ -300,7 +303,9 @@ services:
     restart: unless-stopped
     container_name: sogo6-agent
     environment:
-      SOGO_DB_URI: ${SOGO_DB_URI:-postgresql://sogo:sogo@sogo6-postgres:5432/sogo}
+      SOGO_DB_URI: ${SOGO_DB_URI:-mysql://${MARIADB_USER:-sogo}:${MARIADB_PASSWORD:-sogo}@sogo6-mariadb:3306/${MARIADB_DATABASE:-sogo}}
+      SOGO_DB_HOST: ${SOGO_DB_HOST:-sogo6-mariadb}
+      SOGO_DB_PORT: ${SOGO_DB_PORT:-3306}
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
@@ -468,10 +473,10 @@ services:
     restart: unless-stopped
     container_name: sogo6-keycloak
     environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://sogo6-postgres:5432/keycloak
-      KC_DB_USERNAME: ${PG_USER:-sogo}
-      KC_DB_PASSWORD: ${PG_PASSWORD:-sogo}
+      KC_DB: mariadb
+      KC_DB_URL: jdbc:mariadb://sogo6-mariadb:3306/keycloak
+      KC_DB_USERNAME: ${MARIADB_USER:-sogo}
+      KC_DB_PASSWORD: ${MARIADB_PASSWORD:-sogo}
       KC_HOSTNAME: localhost
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       # ⚠️  Change in production — set KEYCLOAK_PASSWORD env var
@@ -482,7 +487,7 @@ services:
     networks:
       - sogo6-net
     depends_on:
-      sogo6-postgres:
+      sogo6-mariadb:
         condition: service_healthy
       sogo6-redis:
         condition: service_healthy

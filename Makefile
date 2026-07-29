@@ -12,8 +12,8 @@
 .DEFAULT_GOAL := help
 
 # ── Profile presets ─────────────────────────────────────────────
-PROD_PROFILES   := --profile mail-stalwart --profile db-postgres --profile auth-ldap
-ALT_PROFILES    := --profile mail-stalwart --profile db-mariadb --profile auth-ldap
+PROD_PROFILES   := --profile mail-stalwart --profile db-mariadb --profile auth-ldap
+ALT_PROFILES    := --profile mail-stalwart --profile db-postgres --profile auth-ldap
 DEV_COMPOSE     := -f docker-compose.dev.yaml
 
 .PHONY: setup build start stop restart status logs clean reset init
