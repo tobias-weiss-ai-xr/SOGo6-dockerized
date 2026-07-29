@@ -14,6 +14,10 @@
 set -euo pipefail
 
 # Auto-detect server URL
+
+# Load shared library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE 'sogo6-server(-dev)?'; then
     DEFAULT_SERVER="http://localhost:5001"
 else
@@ -75,23 +79,9 @@ echo "Force: $FORCE"
 echo "Skip domain: $SKIP_DOMAIN"
 echo ""
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-log_success() {
-    echo -e "${GREEN}[OK]${NC} $*"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $*"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*" >&2
-}
+# Logging aliases (colors and functions provided by lib/common.sh)
+log_success() { echo -e "${GREEN}[OK]${NC} $*"; }
+log_warning() { log_warn "$@"; }
 
 log_info() {
     echo "[INFO] $*"

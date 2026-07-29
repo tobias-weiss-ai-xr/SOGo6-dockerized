@@ -99,8 +99,8 @@ jobs:
           cd sogo6-ui
           npm run build
 
-  test:
-    name: Full stack E2E test
+  test-stack:
+    name: Stack build + backend tests
     runs-on: ubuntu-24.04
     needs: [lint]
     steps:
@@ -162,17 +162,60 @@ jobs:
           pip3 install -q hypothesis
           cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x
 
-      # ────────────────────────────────────────────────────
-      # E2E Frontend Integration Tests (Playwright)
-      # ────────────────────────────────────────────────────
-      # The containerized UI uses the production standalone build (Dockerfile.prod)
-      # which doesn't hydrate React client-side (Next.js 16.2.10 Turbopack issue).
-      # For E2E tests we stop the container and run next dev on the host.
+  test-e2e:
+    name: Playwright E2E tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js for Playwright
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            curl openssl python3 python3-pip \
+            ldap-utils netcat-openbsd
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install dependencies
+        run: |
+          cd sogo6-ui
+          npm ci || npm install
+
+      - name: Generate secrets
+        run: bash sogo6/scripts/manage-secrets.sh
+
+      - name: Generate TLS certs
+        run: bash sogo6/scripts/gen-certs.sh
+
+      - name: Build Docker images
+        run: |
+          docker compose build --parallel
+
+      - name: Start Docker stack (for API backend)
+        run: |
+          docker compose up -d --wait --wait-timeout 180 sogo6-redis sogo6-server
+          docker compose ps
+
+      - name: Wait for API
+        run: |
+          echo "Waiting for API..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5001/api/user/v1/system >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Initialize SOGo6
+        run: bash sogo6/scripts/init-sogo6.sh
 
       - name: Install Playwright with Chromium
         run: |
@@ -182,30 +225,23 @@ jobs:
 
       - name: Run Playwright E2E tests
         run: |
-          # Stop the containerized UI (production build — no React hydration)
-          echo "Stopping containerized UI..."
+          # Stop the containerized UI (Next.js standalone doesn't hydrate in CI)
           docker compose stop sogo6-ui 2>/dev/null || true
           docker compose rm -f sogo6-ui 2>/dev/null || true
-
-          # Free port 3000
           fuser -k 3000/tcp 2>/dev/null || true
           sleep 2
 
-          # Set env vars for dev mode
+          # Start next dev on the host for Playwright
           export NODE_ENV=development
           export NEXT_TELEMETRY_DISABLED=1
-          export REACT_APP_API_BASE_URL=http://localhost:5001/api/user/v1
           export LOGIN_PREFILL_EMAIL=testuser@example.org
           export LOGIN_PREFILL_PASSWORD=password123
 
-          # Start next dev in the background
-          echo "Starting next dev on host..."
           cd sogo6-ui
           npx next dev --port 3000 --hostname 0.0.0.0 &
           NEXT_PID=$!
           cd ..
 
-          # Wait for the dev server to be ready
           echo "Waiting for UI dev server..."
           for i in $(seq 1 30); do
             if curl -sf http://localhost:3000/en/auth/login >/dev/null 2>&1; then
@@ -215,28 +251,29 @@ jobs:
             sleep 2
           done
 
-          # Use a compose override to provide env to the API tests
-          # Actually, the Playwright tests expect port 3000 for UI and 5001 for API
-          echo "Running Playwright E2E tests..."
-
-          # Pre-compile known routes to avoid on-demand SSR crashes
+          # Warm up known routes
           for route in /en/auth/login /en/auth/login/pwd; do
             curl -sf -o /dev/null "http://localhost:3000$route" &
           done
           wait
 
+          echo "Running Playwright E2E tests..."
           cd tests/e2e
           npx playwright test --config=playwright.config.ts --reporter=list,json 2>&1 || true
           cd ../..
 
-          # Stop next dev
-          echo "Stopping next dev (PID $NEXT_PID)..."
           kill $NEXT_PID 2>/dev/null || true
           wait $NEXT_PID 2>/dev/null || true
 
-      # ────────────────────────────────────────────────────
-      # Load / Performance Tests
-      # ────────────────────────────────────────────────────
+  test-load:
+    name: Load / Performance tests
+    runs-on: ubuntu-24.04
+    needs: [test-stack]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install k6 for load testing
         run: |
@@ -246,20 +283,17 @@ jobs:
           sudo cp "/tmp/k6-v${K6_VERSION}-linux-amd64/k6" /usr/local/bin/
           k6 version
 
+      - name: Start stack (reuse cached images)
+        run: |
+          docker compose up -d --wait --wait-timeout 180 || docker compose up -d
+
       - name: Run load tests (JSON output)
         id: load-tests
         continue-on-error: true
         run: |
           echo "Running load/performance test suite..."
           mkdir -p tests/load/results
-          
-          # Run load tests with JSON summary output
           bash tests/load/run.sh 2>&1 | tee tests/load/results/load-test-output.log
-          
-          # Copy k6 JSON output if available
-          ls tests/load/results/ 2>/dev/null || true
-          
-          echo "Load test run complete (exit code: $?)"
 
       - name: Upload load test reports
         if: always()
@@ -281,9 +315,6 @@ jobs:
           name: test-reports
           path: |
             tests/test-report-*.json
-            tests/e2e/playwright-results.json
-            tests/e2e/playwright-report/
-            tests/e2e/test-results/
           if-no-files-found: ignore
 
       - name: Print Docker logs
