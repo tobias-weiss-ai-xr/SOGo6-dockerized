@@ -1,8 +1,24 @@
 # Development override for docker-compose.yaml
-# This file extends the main stack with development settings
-# Usage: docker compose -f docker-compose.yaml -f docker-compose.override.yaml up
+# ==============================================
+# This file extends the MAIN stack (docker-compose.yaml) with development
+# settings like hot-reload volume mounts and debug flags.
 #
-# This is ALTERNATIVE to docker-compose.dev.yaml - use one or the other
+# Usage:
+#   docker compose -f docker-compose.yaml -f docker-compose.override.yaml up
+#
+# ── Docker Compose Dev Files Explained ───────────────────────
+#
+# docker-compose.dev.yaml   — STANDALONE dev stack (593 lines, self-contained)
+#                             Has extra tools: pgadmin, redisinsight, mailhog
+#                             Use: docker compose -f docker-compose.dev.yaml up
+#
+# docker-compose.override.yaml — EXTENDS main compose (68 lines, lightweight)
+#                               Adds hot-reload, debug flags. No extra tools.
+#                               Use: docker compose -f docker-compose.yaml \
+#                                      -f docker-compose.override.yaml up
+#
+# Pick one based on whether you need the extra dev tools.
+# ==============================================================
 
 services:
   sogo6-ui:
