@@ -204,7 +204,7 @@ services:
       POSTGRES_USER: ${PG_USER:-sogo}
       # ⚠️  Change in production — set PG_PASSWORD env var to a strong password
       POSTGRES_PASSWORD: ${PG_PASSWORD:-}
-      POSTGRES_DB: ${PG_DATABASE:-sogo}
+      POSTGRES_DB: ${PG_DATABASE:-sogo},stalwart
     volumes:
       - sogo6-postgres-data:/var/lib/postgresql/data
     ports:
