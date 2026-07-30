@@ -100,11 +100,11 @@ services:
           memory: 768M
           cpus: "2.0"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/api/user/v1/health"]
-      interval: 30s
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/api/user/v1/health | grep -qE '^(200|503)$'"]
+      interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 30s
       # Note: healthcheck succeeds even without a database if the API process is running.
       # A running database is required for most API operations.
 
