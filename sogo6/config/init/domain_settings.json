@@ -25,9 +25,12 @@
     "USER_SOURCE": {
       "main": {
         "US_UID": "main",
-        "US_NAME": "main",
-        "US_TYPE": "sql",
-        "US_ENABLED": true
+        "US_NAME": "Main User Source",
+        "US_TYPE": "mysql",
+        "US_CAN_AUTH": true,
+        "US_MAIL": ["mail"],
+        "US_IS_ADDRESSBOOK": true,
+        "US_HAS_RESOURCE": false
       }
     }
   }
