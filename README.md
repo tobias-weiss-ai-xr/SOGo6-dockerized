@@ -91,21 +91,40 @@ docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap
 
 ### Database Selection
 
-**MariaDB (Default)**: Better performance for SOGo, simpler setup
+The database is controlled by **one file**: `sogo6/config/process.conf`. Edit it to switch:
+
 ```bash
+# 1. Stop everything
+docker compose down -v
+
+# 2. Edit process.conf — uncomment ONE database section:
+vi sogo6/config/process.conf
+
+#   For MariaDB (default):
+#     SOGO_P_DB_TYPE=MySQL
+#     SOGO_P_DB_HOST=sogo6-mariadb
+#     SOGO_P_DB_PORT=3306
+
+#   For PostgreSQL:
+#     SOGO_P_DB_TYPE=PostgreSQL
+#     SOGO_P_DB_HOST=sogo6-postgres
+#     SOGO_P_DB_PORT=5432
+
+# 3. Start with the matching profile
+
+# MariaDB:
 docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d
-# or
-make start
-```
+# or: make start
 
-**PostgreSQL (Alternative)**: If you prefer PostgreSQL
-```bash
+# PostgreSQL:
 docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
-# or
-make start-alt
+# or: make start-alt
+
+# 4. Initialize SOGo
+bash sogo6/scripts/init-sogo6.sh
 ```
 
-⚠️ **Important**: Only enable ONE database profile at a time. See [`DATABASE_SWITCH.md`](DATABASE_SWITCH.md) for switching instructions.
+⚠️ **Important**: Always `docker compose down -v` when switching — the process.conf is mounted read-only into the container. Only enable ONE database profile at a time.
 
 ## Features
 

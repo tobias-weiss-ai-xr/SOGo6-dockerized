@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "AUTH_SETTINGS": {
+      "SOGO_D_AUTH_TYPE": "plain",
+      "SOGO_D_PWD_CHANGE_ENABLED": false,
+      "SOGO_D_PWD_RECOVERY": false,
+      "SOGO_D_LOGIN_MFA": false
+    },
+    "CALENDAR_SETTINGS": {
+      "SOGO_D_CALENDAR_ENABLED": true,
+      "SOGO_D_CALENDAR_DEFAULT_REMINDER": 15,
+      "SOGO_D_CALENDAR_DEFAULT_VIEW": "week"
+    },
+    "MAIL_SETTINGS": {
+      "SOGO_D_MAIL_ENABLED": true,
+      "SOGO_D_MAX_MAILBOX_SIZE": 1024,
+      "SOGO_D_MAX_ATTACHMENT_SIZE": 25
+    },
+    "CONTACT_SETTINGS": {
+      "SOGO_D_CONTACT_ENABLED": true
+    },
+    "TASK_SETTINGS": {
+      "SOGO_D_TASK_ENABLED": true
+    },
+    "USER_SOURCE": {
+      "main": {
+        "US_UID": "main",
+        "US_NAME": "main",
+        "US_TYPE": "sql",
+        "US_ENABLED": true
+      }
+    }
+  }
+}

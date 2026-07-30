@@ -17,7 +17,7 @@ set -euo pipefail
 
 # Load shared library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/common.sh"
+source "${SCRIPT_DIR}/../../lib/common.sh"
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE 'sogo6-server(-dev)?'; then
     DEFAULT_SERVER="http://localhost:5001"
 else
