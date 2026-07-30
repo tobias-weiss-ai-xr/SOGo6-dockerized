@@ -183,6 +183,16 @@ docker compose --profile pgadmin up -d
 - **PostgreSQL**: Ensure `sogo6-postgres` is running and healthy
 - Check that `SOGO_P_DB_HOST` matches the container name
 
+### Marshmallow Serialization Errors
+
+**Symptom:** `ValueError: dictionary update sequence element #0 has length 1; 2 is required`
+
+**Root Cause:** MariaDB returns JSON columns as strings, PostgreSQL returns them as dicts.
+
+**Status:** ✅ **FIXED** in commit `5888e9b` and `3f32e7e`
+
+Both databases now work correctly with the same configuration schema. The fix normalizes JSON column values on read operations.
+
 ## Comparison
 
 | Feature | MariaDB | PostgreSQL |

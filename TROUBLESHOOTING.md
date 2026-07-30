@@ -148,6 +148,43 @@ make up
 
 ---
 
+## Issue: Admin Config API Returns HTML Error Page
+
+### Symptoms
+```
+HTTP 500 Internal Server Error
+ValueError: dictionary update sequence element #0 has length 1; 2 is required
+```
+
+### Root Cause
+MariaDB stores JSON columns as `LONGTEXT` (string), while PostgreSQL stores them as `JSONB` (native dict). When marshmallow tried to serialize database results, it received strings from MariaDB but expected dicts, causing `TypeError: string indices must be integers` or marshmallow serialization errors.
+
+### Solution
+Fixed in commit `5888e9b` and `3f32e7e`. The code now normalizes JSON column values:
+
+1. **`sogo6-server/app/module/admin/ModuleAdminConfig.py`**:
+   - Added `json.loads()` in `_get_setting_from_table_settings()` for SELECT queries
+   - Added `json.loads()` in `_update_setting_in_table_settings()` for UPDATE/INSERT queries
+
+2. **`sogo6/config/init/domain_settings.json`**:
+   - Fixed `US_TYPE`: `"sql"` → `"mysql"` (valid: ldap, postgresql, mysql)
+   - Added required fields: `US_CAN_AUTH`, `US_MAIL`, `US_IS_ADDRESSBOOK`, `US_HAS_RESOURCE`
+
+### Verification
+```bash
+# Test both databases work correctly
+curl -s http://localhost:5001/api/admin/v1/config/system \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+
+# Should return valid JSON on both MariaDB and PostgreSQL
+```
+
+### Notes
+- POST/PATCH endpoints still have schema validation issues (separate bug)
+- GET endpoints for `/config/system` and `/config/domain-default` are fully fixed
+
+---
+
 ## Quick Diagnostic Commands
 
 ### Check all container statuses
