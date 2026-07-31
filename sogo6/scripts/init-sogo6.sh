@@ -127,7 +127,17 @@ api_call() {
      local curl_args=(-s -k --connect-timeout 5 --max-time 10)
      while [[ $attempt -le $max_retries ]]; do
          if [[ -n "$data" ]]; then
-             response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" -d "$data" 2>&1 || true)
+             # Use --data-urlencode to hide sensitive data from process list
+             # For extra security, use a temp file for sensitive payloads
+             if [[ "$endpoint" == *"/auth/login"* || "$endpoint" == *"/login"* ]]; then
+                 local tmpfile
+                 tmpfile=$(mktemp)
+                 echo "$data" > "$tmpfile"
+                 response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" --data-binary @"$tmpfile" 2>&1 || true)
+                 rm -f "$tmpfile"
+             else
+                 response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" -d "$data" 2>&1 || true)
+             fi
          else
              response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" 2>&1 || true)
          fi
@@ -214,14 +224,20 @@ wait_for_dependencies() {
 
     log_info "  Waiting for LDAP (optional)..."
     local ldap_found=false
+    # Create temp file for LDAP password to avoid command line exposure
+    local ldap_pwd_file
+    ldap_pwd_file=$(mktemp)
+    echo "admin" > "$ldap_pwd_file"
     for i in {1..10}; do
         local ldap_container=$(docker ps --format '{{.Names}}' | grep -E '^sogo6-ldap' | head -1)
-        if [ -n "$ldap_container" ] && docker exec "$ldap_container" ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null | grep -q "dc=example"; then
+        if [ -n "$ldap_container" ] && docker exec "$ldap_container" ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -y "$ldap_pwd_file" -s base 2>/dev/null | grep -q "dc=example"; then
             log_success "LDAP is ready"
             ldap_found=true
             break
         fi
         sleep 2
+    done
+    rm -f "$ldap_pwd_file"
     done
     if [ "$ldap_found" = false ]; then
         log_warning "LDAP not available (skipping - optional dependency)"

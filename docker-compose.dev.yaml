@@ -29,7 +29,7 @@ services:
       NODE_OPTIONS: "--max-old-space-size=6144"
       SSE_ENABLED: "true"
       LOGIN_PREFILL_EMAIL: testuser@example.org
-      LOGIN_PREFILL_PASSWORD: password123
+      LOGIN_PREFILL_PASSWORD: dev_password_change_me
     ports:
       - "3000:3000"
       - "24678:24678"
@@ -68,7 +68,7 @@ services:
     container_name: sogo6-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: dev@example.org
-      PGADMIN_DEFAULT_PASSWORD: password123
+      PGADMIN_DEFAULT_PASSWORD: pgadmin_password_change_me
     ports:
       - "5050:80"
     networks:
