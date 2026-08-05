@@ -145,5 +145,5 @@ OpenSpec will provide:
 
 - [OpenSpec Documentation](https://openspec.dev)
 - [OpenSpec GitHub](https://github.com/openspecrc/openspec)
-- [Current ROADMAP.md](../ROADMAP.md)
-- [Current SUMMARY.md](../SUMMARY.md)
+- [Current ROADMAP.md](../../ROADMAP.md)
+- [Current SUMMARY.md](../../SUMMARY.md)

@@ -19,6 +19,7 @@ DEV_COMPOSE     := -f docker-compose.dev.yaml
 .PHONY: setup build start stop restart status logs clean reset init
 .PHONY: dev dev-stop dev-status dev-logs dev-clean dev-reset dev-debug
 .PHONY: test test-smoke test-full test-e2e test-load
+.PHONY: validate-specs validate-links spec-check spec-validate
 .PHONY: shell shell-ui shell-db shell-redis shell-ldap
 .PHONY: help
 
@@ -187,6 +188,20 @@ test-load-k6:
 test-contract:
 	cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x 2>/dev/null || \
 	  echo "Install hypothesis: pip install hypothesis"
+
+# ── OpenSpec Validation ────────────────────────────────────────
+validate-specs:
+	@echo "Validating OpenSpec structure..."
+	./scripts/validate-specs.sh
+
+validate-links:
+	@echo "Validating OpenSpec links..."
+	./scripts/validate-links.sh || true
+
+spec-validate: validate-specs validate-links
+
+spec-check: validate-specs
+	@echo "OpenSpec validation complete."
 
 # ── Info ────────────────────────────────────────────────────────
 help:

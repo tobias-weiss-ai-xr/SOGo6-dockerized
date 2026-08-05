@@ -364,9 +364,9 @@ nubusintercom:8001   # OpenCloud bridge
 
 ## References
 
-- [ROADMAP.md](ROADMAP.md) - Original roadmap document
-- [SUMMARY.md](SUMMARY.md) - Implementation summary
-- [DEVELOPMENT.md](DEVELOPMENT.md) - Development guide
+- [ROADMAP.md](../../ROADMAP.md) - Original roadmap document
+- [SUMMARY.md](../../SUMMARY.md) - Implementation summary
+- [DEVELOPMENT.md](../../DEVELOPMENT.md) - Development guide
 - [OpenSpec Documentation](https://openspec.dev)
 - [SOGo 6 Backend](https://github.com/Alinto/SOGo6-Backend)
 - [SOGo 6 UI](https://github.com/Alinto/SOGo6-UI)

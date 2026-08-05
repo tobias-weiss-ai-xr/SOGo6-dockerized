@@ -342,7 +342,7 @@ Check that all internal links are valid:
 
 find .openspec/ sogo6-server/.openspec/ -name "*.md" -type f | while read file; do
     # Extract all markdown links
-    grep -o '\\[.*\\]([^)]*)' "$file" | grep -o '([^)]*)' | tr -d '()' | while read link; do
+    grep -o '\[.*\]([^)]*)' "$file" | grep -o '([^)]*)' | tr -d '()' | while read link; do
         # Skip external links
         if [[ $link =~ ^https?:// ]] || [[ $link =~ ^# ]]; then
             continue
@@ -417,13 +417,13 @@ mkdir -p .openspec/specs .openspec/changes
 ```markdown
 ## In large-spec.md
 
-See [Sub specification](sub-spec.md) for details.
+See [Sub specification](./sub-spec.md) for details.
 
 ## In sub-spec.md
 
 # Sub Specification
 
-Parent: [Large Specification](large-spec.md)
+Parent: [Large Specification](./large-spec.md)
 ```
 
 ### Validation Errors

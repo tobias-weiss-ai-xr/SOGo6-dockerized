@@ -85,7 +85,7 @@ services:
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
       - ./sogo6/config/init:/etc/sogo/init:ro
-      - ./sogo6-server:/app:cached
+      - ./sogo6-server:/app:cached  # macOS Docker Desktop uses :cached; on Linux this is ignored
       - sogo6-logs:/var/log/sogo
     ports:
       - "${API_PORT:-5001}:5000"
@@ -205,8 +205,9 @@ services:
     environment:
       POSTGRES_USER: ${PG_USER:-sogo}
       POSTGRES_PASSWORD: ${PG_PASSWORD:-}
-      POSTGRES_DB: ${PG_DATABASE:-sogo},stalwart
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: ${PG_DATABASE:-sogo}
+      # Stalwart database will be created by init script below
+      POSTGRES_HOST_AUTH_METHOD: ${PG_AUTH_METHOD:-scram-sha-256}
     volumes:
       - sogo6-postgres-data:/var/lib/postgresql/data
     ports:

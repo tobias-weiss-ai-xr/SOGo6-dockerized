@@ -986,7 +986,7 @@ graph TD
 
 ## References
 
-- [OpenSpec Project Spec](../project.spec.md)
+- [OpenSpec Project Spec](project.spec.md)
 - [ROADMAP.md](ROADMAP.md)
 - [SUMMARY.md](SUMMARY.md)
 - [SOGo 6 Backend Architecture](https://github.com/Alinto/SOGo6-Backend)

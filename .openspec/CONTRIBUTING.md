@@ -98,9 +98,9 @@ Brief description of the feature.
 ### Module Structure
 
 ```
-path/to/module/
-├── Feature.tsx
-├── components/
+sogo6-server/
+├── Feature.py
+├── models/
 │   └── ...
 ├── hooks/
 ├── types/
@@ -139,9 +139,10 @@ Consumes the following endpoints:
 
 ## References
 
-- [Related Spec 1](path/to/spec.md)
-- [Related Spec 2](path/to/spec.md)
-- [External Documentation](https://...)
+- [Project Specification](project.spec.md)
+- [Roadmap](specs/roadmap.spec.md)
+- [Architecture](specs/architecture.spec.md)
+- [OpenSpec Documentation](https://openspec.dev)
 
 ---
 
@@ -209,7 +210,7 @@ What was created/changed.
 
 ### New Artifacts
 
-1. **File 1** (`path/to/file.md`)
+1. **File 1** (`specs/my-feature.spec.md`)
    - Description
 
 ### What's Next
@@ -322,9 +323,9 @@ When your spec references another spec:
 ```markdown
 ## References
 
-- [Parent Project Spec](../../project.spec.md)
-- [Related Module Spec](../related-module.spec.md)
-- [Backend API Spec](../../sogo6-server/.openspec/specs/api-module.spec.md)
+- [Parent Project Spec](project.spec.md)
+- [Related Module Spec](specs/roadmap.spec.md)
+- [Backend API Spec](../sogo6-server/.openspec/specs/mail.spec.md)
 ```
 
 ### Feature Mapping
@@ -333,8 +334,8 @@ Keep track of feature relationships:
 
 | Feature | Root Spec | Server Spec | UI Spec |
 |---------|-----------|-------------|---------|
-| Mail | [Architecture](architecture.spec.md) | [Mail API](../sogo6-server/.openspec/specs/mail.spec.md) | [Mail UI](../sogo6-ui/.openspec/specs/mail.spec.md) |
-| Calendar | [Architecture](architecture.spec.md) | [Calendar API](../sogo6-server/.openspec/specs/calendar.spec.md) | [Calendar UI](../sogo6-ui/.openspec/specs/calendar.spec.md) |
+| Mail | [Architecture](specs/architecture.spec.md) | [Mail API](../sogo6-server/.openspec/specs/mail.spec.md) | [Mail UI](../sogo6-ui/.openspec/specs/mail.spec.md) |
+| Calendar | [Architecture](specs/architecture.spec.md) | [Calendar API](../sogo6-server/.openspec/specs/calendar.spec.md) | [Calendar UI](../sogo6-ui/.openspec/specs/calendar.spec.md) |
 
 ---
 
@@ -376,10 +377,10 @@ npm install -g @openspec-dev/openspec
 
 ```bash
 # Run all validations
-./validate-all-specs.sh
+./scripts/validate-specs.sh
 
 # Check specific file
-markdownlint path/to/spec.md
+markdownlint .openspec/specs/roadmap.spec.md
 
 # Find all spec files
 find .openspec sogo6-server/.openspec sogo6-ui/.openspec -name "*.spec.md"
