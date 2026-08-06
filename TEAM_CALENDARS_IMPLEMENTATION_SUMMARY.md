@@ -56,6 +56,8 @@ lifecycle** for joining teams.
 | `src/features/team-calendars/team-calendars-types.ts` | `TeamCalendar`, `TeamCalendarMember`, `TeamCalendarInvite`, request/response bodies |
 | `src/app/[locale]/(loggedin)/calendars/team/page.tsx` | Team calendar management page: list, create, edit, delete; member panel; invite panel with accept/reject |
 | `src/features/team-calendars/__tests__/team-calendars-api.test.ts` | 22 Jest tests — endpoint query builders, provides/invalidates tags, exported hooks |
+| `src/app/fakeApi/calendars/teams/**` | 8 fake API route files (cookie-backed demo storage): teams CRUD, members, invites + accept/reject |
+| `src/app/fakeApi/utils/team-calendar-seed.ts` | Demo seed: 2 teams, 3 members, 1 pending invite |
 
 ## 2. Verification
 
@@ -141,6 +143,7 @@ backend import:
 |---|---|---|
 | sogo6-server | `eb78a21` | feat(team-calendars): Complete Team Calendars backend + fix latent import blockers |
 | sogo6-ui | `a53e96f` | feat(team-calendars): Team Calendar management UI + RTK API store |
+| sogo6-ui | `246466b` | feat(team-calendars): fake API routes for team calendars |
 
 ## 6. Next Steps (Tier 0 remaining: 3/9)
 
