@@ -205,48 +205,107 @@ sequenceDiagram
 
 ### 3. SAML2 Authentication
 
-**Status**: ✅ Complete
-**Implementation**: `app/auth/UserSourceSaml2.py`
+**Status**: ✅ Complete (Federation SP — pysaml2-backed)
+**Implementation**: `app/module/auth/ModuleSAML2.py`, `app/module/auth/Saml2Keypair.py`, `app/module/auth/Saml2Metadata.py`, `app/module/auth/ModuleSaml2Provider.py`, `app/interface/auth/InterfaceAuthSSO.py`
 
 #### Features
-- ✅ SAML2.0 Web SSO Profile
-- ✅ HTTP-Redirect binding
-- ✅ HTTP-POST binding
-- ✅ SP metadata generation
-- ✅ AuthnRequest generation
-- ✅ Assertion validation
-- ✅ XML signature validation
-- ✅ Multiple IdPs
-- ✅ Attribute mapping
+- ✅ SAML2.0 Web SSO Profile (SP-initiated)
+- ✅ HTTP-Redirect binding (AuthnRequest)
+- ✅ HTTP-POST binding (Assertion Consumer Service)
+- ✅ SP metadata generation (with signing certificate)
+- ✅ AuthnRequest generation (signed when SP keypair configured)
+- ✅ XML signature verification (via pysaml2 / xmlsec1)
+- ✅ Encrypted assertion decryption (when SP keypair configured)
+- ✅ Conditions validation (NotBefore / NotOnOrAfter with clock skew)
+- ✅ Audience restriction check
+- ✅ InResponseTo replay protection (Redis-backed)
+- ✅ Multiple IdPs (admin-managed provider DB + federation metadata)
+- ✅ Federation metadata fetching (IdP + aggregate, Redis-cached)
+- ✅ Discovery service (built-in WAYF + external WAYF redirect)
+- ✅ Attribute mapping (eduPerson OIDs + friendly names)
+- ✅ Admin provider CRUD API
 
 #### Configuration
 
 ```python
-# .env
-SOGO_SAML2_IDP_METADATA_URL=https://idp.example.com/metadata.xml
-SOGO_SAML2_SP_ENTITY_ID=https://sogo.example.com/saml2/sp
-SOGO_SAML2_SP_ACS_URL=https://sogo.example.com/api/user/v1/auth/saml2/acs
-SOGO_SAML2_NAMEID_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
-SOGO_SAML2_ATTRIBUTE_MAP={"email": "mail", "name": "displayName"}
+# .env (global)
+SOGO_SAML2_SP_CERT_FILE=/etc/sogo/saml/sp-cert.pem
+SOGO_SAML2_SP_KEY_FILE=/etc/sogo/saml/sp-key.pem
+SOGO_SAML2_METADATA_CACHE_TTL=21600
+SOGO_SAML2_FEDERATION_METADATA_CERT=
+SOGO_SAML2_CLOCK_SKEW=60
+
+# Domain settings (per-domain)
+SOGO_D_AUTH_TYPE=saml2
+SOGO_D_SAML2_URL=https://idp.example.org/idp/profile/SAML2/Redirect/SSO
+SOGO_D_SAML2_IDP_METADATA_URL=https://idp.example.org/idp/shibboleth/metadata
+SOGO_D_SAML2_IDP_ENTITY_ID=https://idp.example.org/idp/shibboleth
+SOGO_D_SAML2_FEDERATION_METADATA_URL=https://www.aai.dfn.de/metadata/dfn-aai-basic-metadata.xml
+SOGO_D_SAML2_DISCOVERY_SERVICE_URL=
+SOGO_D_SAML2_ATTRIBUTE_MAP={"email": "mail", "display_name": "displayName", "eppn": "eppn"}
+SOGO_D_SAML2_WANT_ENCRYPTED_ASSERTIONS=false
+SOGO_D_SAML2_AUTHN_REQUESTS_SIGNED=true
+SOGO_D_SAML2_SP_ENTITY_ID=https://sogo.example.org/saml2/metadata
+SOGO_D_SAML2_PROVIDER_ID=
+```
+
+#### SP Keypair Generation
+
+```bash
+openssl req -x509 -newkey rsa:2048 -keyout sp-key.pem -out sp-cert.pem -days 3650 -nodes -subj "/CN=sogo-sp"
 ```
 
 #### SP Metadata
 
 ```bash
-# Generate SP metadata
+# Get SP metadata for IdP import
 GET /api/user/v1/auth/saml2/metadata
+GET /api/user/v1/auth/saml2/metadata/<domain>
 ```
 
 Response:
 ```xml
-<md:EntityDescriptor entityID="https://sogo.example.com/saml2/sp">
-  <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://sogo.example.com/api/user/v1/auth/saml2/acs"/>
+<md:EntityDescriptor entityID="https://sogo.example.org/saml2/metadata">
+  <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"
+                      AuthnRequestsSigned="true"
+                      WantAssertionsSigned="true">
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>...</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
     <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
-    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://sogo.example.com/api/user/v1/auth/saml2/acs" index="0"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                                  Location="https://sogo.example.org/api/user/v1/auth/saml2/acs"
+                                  index="0" isDefault="true"/>
   </md:SPSSODescriptor>
 </md:EntityDescriptor>
 ```
+
+#### SAML2 Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/user/v1/auth/saml2/metadata` | SP metadata XML |
+| GET | `/api/user/v1/auth/saml2/metadata/<domain>` | Per-domain SP metadata |
+| GET | `/api/user/v1/auth/saml2/start` | Initiate SP-initiated SSO |
+| POST | `/api/user/v1/auth/saml2/acs` | Assertion Consumer Service |
+| GET | `/api/user/v1/auth/saml2/discovery` | Discovery service (WAYF) — list IdPs |
+| POST | `/api/user/v1/auth/saml2/discovery` | Select IdP and get AuthnRequest URL |
+| POST | `/api/user/v1/auth/callback/<domain>` | Legacy callback (backward compatible) |
+
+#### Admin Provider Management
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/v1/auth/saml2/providers` | List all SAML2 providers |
+| GET | `/api/admin/v1/auth/saml2/providers/<id>` | Get a single provider |
+| POST | `/api/admin/v1/auth/saml2/providers` | Create a provider |
+| PUT | `/api/admin/v1/auth/saml2/providers/<id>` | Update a provider |
+| DELETE | `/api/admin/v1/auth/saml2/providers/<id>` | Delete a provider |
+| POST | `/api/admin/v1/auth/saml2/providers/<id>/refresh` | Refresh provider metadata |
 
 #### Flow
 
@@ -258,19 +317,24 @@ sequenceDiagram
     participant IdP as SAML2 IdP
     
     User->>UI: Navigate to login
-    UI->>Server: GET /api/user/v1/auth/saml2/start?provider=idp
-    Server->>Server: Generate AuthnRequest
-    Server-->>UI: {auth_request_url}
+    UI->>Server: GET /api/user/v1/auth/saml2/start?domain=example.com
+    Server->>Server: Build AuthnRequest (signed)
+    Server->>Server: Store request ID in Redis (replay protection)
+    Server-->>UI: 302 Redirect to IdP
     UI->>User: Redirect to IdP
-    User->>IdP: POST AuthnRequest
+    User->>IdP: AuthnRequest
     IdP->>User: Authenticate
     User->>IdP: Submit credentials
     IdP->>User: POST SAMLResponse
     User->>Server: POST /api/user/v1/auth/saml2/acs
-    Server->>Server: Validate SAMLResponse
-    Server->>Server: Extract attributes
-    Server->>Server: Create user session
-    Server-->>UI: {token, user}
+    Server->>Server: Verify XML signature (pysaml2/xmlsec1)
+    Server->>Server: Validate conditions (NotBefore/NotOnOrAfter)
+    Server->>Server: Check audience restriction
+    Server->>Server: Consume InResponseTo (Redis replay protection)
+    Server->>Server: Decrypt encrypted assertions (if encrypted)
+    Server->>Server: Map attributes (eduPerson OIDs → email, eppn, etc.)
+    Server->>Server: Create/find user, generate JWT
+    Server-->>UI: Redirect to frontend with JWT
     UI->>User: Redirect to dashboard
 ```
 

@@ -2,33 +2,47 @@
 
 ## Overview
 
-This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 groupware suite as a production-ready Docker stack alongside Stalwart mail server and OpenLDAP. It implements **all** major features from the SOGo 6 roadmap and adds significant new capability.
+This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 groupware suite as a production-ready Docker stack alongside Stalwart mail server and OpenLDAP. It implements **76 of 81** roadmap features (Tiers 0–6 complete; Tier 7 partially complete) and adds significant new capability.
 
 **GitHub:** https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
-**Branch:** `dev` (multi-repo: parent + sogo6-server + sogo6-ui submodules, 5-language i18n)
+**Branch:** `dev` (multi-repo: parent + sogo6-server + sogo6-ui submodules, 26-language i18n)
 
-## Architecture (7 Docker Services + 2 Optional Profiles)
+## Architecture (16 Docker Services — 3 Core + 13 Profile-Based)
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
 │  SOGo6 UI   │────▶│SOGo6 Server │────▶│ PostgreSQL  │
-│ Next.js 16  │     │ Flask/Python │     │             │
-│ :3000       │     │ :5000        │     │             │
+│ Next.js 16  │     │ Flask/Python │     │  / MariaDB  │
+│ :3000       │     │ :5000        │     │ (profile db)│
 ├─────────────┤     ├──────────────┤     ├─────────────┤
 │ NGINX       │     │              │     │   Redis     │
-│ :80 / :443  │     │              │     │             │
+│ :80 / :443  │     │              │     │  (always-on)│
 ├─────────────┤     ├──────────────┤     ├─────────────┤
 │   Stalwart  │◀────│              │     │  OpenLDAP   │
-│ IMAP/SMTP   │     │              │     │             │
+│ IMAP/SMTP   │     │              │     │ (profile ldap)│
 └─────────────┘     └──────────────┘     └─────────────┘
 
-Optional profiles:
-  ┌──────────────┐     ┌──────────────┐
-  │  Keycloak    │     │ nubusintercom│
-  │ OIDC/SAML IdP│     │ Flask relay  │
-  │ --profile idp│     │ --profile nub│
-  └──────────────┘     └──────────────┘
+Core (always-on): sogo6-ui, sogo6-server, sogo6-redis
+Profile-based: Stalwart, OpenLDAP, PostgreSQL/MariaDB, NGINX, Agent, MinIO,
+               Prometheus, Grafana, Loki, Promtail, Keycloak, Collabora
+
+Optional profile services:
+  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+  │  Stalwart    │  │  OpenLDAP    │  │ PostgreSQL/  │
+  │ IMAP/SMTP    │  │              │  │ MariaDB      │
+  │ --profile mail│ │ --profile ldap│ │ --profile db │
+  ├──────────────┤  ├──────────────┤  ├──────────────┤
+  │  NGINX       │  │  Agent       │  │  MinIO       │
+  │ --profile ngx│  │ --profile agt│  │ --profile s3 │
+  ├──────────────┤  ├──────────────┤  ├──────────────┤
+  │  Prometheus  │  │  Grafana     │  │  Loki        │
+  │  --profile monitoring ─────────────────────────────┤
+  │  Promtail    │  │  Keycloak    │  │  Collabora   │
+  │              │  │ --profile idp│  │ --profile doc│
+  └──────────────┘  └──────────────┘  └──────────────┘
 ```
+
+**Profiles:** `mail-stalwart`, `auth-ldap`, `db-postgres`, `db-mariadb`, `nginx`, `agent`, `minio`, `monitoring` (Prometheus + Grafana + Loki + Promtail), `keycloak`, `collabora`
 
 ## Features Implemented
 
@@ -66,7 +80,7 @@ Optional profiles:
 
 ---
 
-## ✅ Full Roadmap Completion (76/76 Features)
+## ✅ Roadmap Completion (76/81 Features)
 
 ### Tier 0 — Foundation (8/8)
 
@@ -88,84 +102,90 @@ Optional profiles:
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **Helm Chart** | Kubernetes Helm chart (Chart, templates: deploy, svc, ingress, HPA, PVC, ConfigMap, helpers) |
-| — | **Audit Log** | Redis-backed activity log with filtering, admin API + UI |
-| — | **Backup Automation** | Backup model, retention policies, optional S3 upload, admin API + UI |
-| — | **Grafana Dashboard** | Pre-built SOGo overview dashboard with service health, mail stats, DB metrics |
-| — | **Multi-Tenant Branding** | Per-domain logo/colors/CSS/headers, admin API + UI |
-| — | **API Tokens** | CRUD token management, admin API + UI |
-| — | **WebSocket Live Updates** | Real-time admin notifications via WebSocket |
-| — | **Migration Tools** | G Suite/M365/Dovecot/Cyrus import, admin API + UI |
-| — | **Bulk Users** | CSV import/export with drag-and-drop, admin API + UI |
-| — | **Usage Quotas** | Per-user mailbox/calendar/contact limits, admin API + UI |
-| — | **Health Dashboard** | Real-time service status (PostgreSQL, LDAP, Redis, Stalwart), admin API + UI |
-| — | **Database Migration** | Schema version tracking + migration runner, admin API + UI |
-| — | **Mailbox Debug** | Raw email source viewer, parsed headers, admin API + UI |
-| — | **Config as Code** | JSON export/import of system config, admin API + UI |
+| 23 | **Helm Chart** | Kubernetes Helm chart (Chart, templates: deploy, svc, ingress, HPA, PVC, ConfigMap, helpers) |
+| 24 | **Audit Log** | Redis-backed activity log with filtering, admin API + UI |
+| 25 | **Backup Automation** | Backup model, retention policies, optional S3 upload, admin API + UI |
+| 26 | **Grafana Dashboard** | Pre-built SOGo overview dashboard with service health, mail stats, DB metrics |
+| 27 | **Multi-Tenant Branding** | Per-domain logo/colors/CSS/headers, admin API + UI |
+| 28 | **API Tokens** | CRUD token management, user API (scoped, expiring bearer tokens) |
+| 29 | **WebSocket Live Updates** | SSE endpoint for real-time UI updates (new mail, calendar changes) |
+| 30 | **Migration Tools** | G Suite/M365/Dovecot/Cyrus import, admin API + UI |
+| 31 | **Bulk Users** | CSV import/export with drag-and-drop, admin API + UI |
+| 32 | **Usage Quotas** | Per-user mailbox/calendar/contact limits, admin API + UI |
+| 33 | **Health Dashboard** | Real-time service status (PostgreSQL, LDAP, Redis, Stalwart), admin API + UI |
+| 34 | **Database Migration** | Schema version tracking + migration runner, admin API + UI |
+| 35 | **Mailbox Debug** | Raw email source viewer, parsed headers, admin API + UI |
+| 36 | **Config as Code** | JSON export/import of system config, admin API + UI |
 
 ### Tier 3 — Ecosystem (9/9)
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **OpenCloud Integration** | Nextcloud/ownCloud file picker for compose attachments, user API + UI |
-| — | **Nubusintercom Service** | Flask app: HMAC token exchange, WebDAV proxy, replay protection, user provisioning relay, docker-compose profile |
-| — | **Keycloak Co-deployment** | Realm import with SOGo client, docker-compose `--profile idp-keycloak` |
-| — | **Univention Portal** | Portal config endpoint for UCS integration |
-| — | **Webhooks** | Outbound HTTP POST webhooks with HMAC signing, admin API + UI |
-| — | **Document Preview** | PDF/image/Office preview for attachments, admin API + UI |
-| — | **File Picker Widget** | Reusable file picker component for admin pages |
-| — | **OIDC/OAuth2 Provider** | Client registration, authorization server endpoints, admin API + UI |
+| 37 | **OpenCloud Integration** | Nextcloud/ownCloud file browsing via nubusintercom WebDAV, HMAC token exchange, user API |
+| 38 | **nubusintercom Service** | Flask app: HMAC token exchange, WebDAV proxy, replay protection, user provisioning relay, docker-compose profile |
+| 39 | **Keycloak Co-deployment** | Realm import with SOGo client, docker-compose `--profile keycloak` |
+| 40 | **Univention Portal** | Portal config endpoint for UCS integration, UI page |
+| 41 | **Webhooks** | Outbound HTTP POST webhooks with HMAC signing, admin API + UI |
+| 42 | **Document Preview** | PDF/image/Office preview via Collabora (`--profile collabora`), admin UI page |
+| 43 | **File Picker Widget** | OpenCloud file browsing integrated into compose (via ApiOpenCloud WebDAV endpoints) |
+| 44 | **OIDC Provider** | Client registration, authorization server endpoints, user API + admin UI |
+| 45 | **OAuth2 Provider** | Token issuance and validation, user API + admin UI (shared with OIDC) |
 
 ### Tier 4 — Team & Productivity (10/10)
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **Scheduling Polls** | Multi-option time slot polls with voting, calendar API + admin UI |
-| — | **Appointment Slots** | Bookable time slot management, calendar API + admin UI |
-| — | **Free/Busy Lookup** | Cross-user availability queries, calendar API + admin UI |
-| — | **Collaborative Drafts** | Shared draft editing with conflict detection, mail API + admin UI |
-| — | **Approval Workflows** | State machine (pending → in_review → approved/rejected), admin API + UI |
-| — | **Helpdesk/Ticketing** | Ticket CRUD with SLA tracking, assignment, response history, admin API + UI |
-| — | **File Sharing** | File/folder sharing with link generation, admin API + UI |
-| — | **CRM-light** | Contact enrichment, interaction tracking, deal pipeline, admin API + UI |
-| — | **Workflow Builder** | JSON rule definitions (trigger → conditions → actions), admin API + UI |
-| — | **Quick Actions** | Step pipeline (label/move/forward/tag/archive/snooze), admin API + UI |
+| 46 | **Scheduling Polls** | Multi-option time slot polls with voting, calendar API + admin UI |
+| 47 | **Appointment Slots** | Bookable time slot management, calendar API + admin UI |
+| 48 | **Free/Busy Lookup** | Cross-user availability queries, calendar API + admin UI |
+| 49 | **Collaborative Drafts** | Shared draft editing with conflict detection, mail API + admin UI |
+| 50 | **Approval Workflows** | State machine (pending → in_review → approved/rejected), admin API + UI |
+| 51 | **Helpdesk/Ticketing** | Ticket CRUD with SLA tracking, assignment, response history, admin API + UI |
+| 52 | **File Sharing** | File/folder sharing with link generation, admin API + UI |
+| 53 | **CRM-light** | Contact enrichment, interaction tracking, deal pipeline, admin API + UI |
+| 54 | **Workflow Builder** | JSON rule definitions (trigger → conditions → actions), admin API + UI |
+| 55 | **Quick Actions** | Step pipeline (label/move/forward/tag/archive/snooze), admin API + UI |
 
 ### Tier 5 — AI & Intelligence (10/10)
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **Email Summarization** | Conversation thread summarization, user API + admin UI |
-| — | **Smart Classification** | Inbox categorization (primary/social/promotions), user API + admin UI |
-| — | **AI Draft Assistant** | Tone-adjustable reply suggestions, user API + admin UI |
-| — | **Natural Language Search** | NL query → structured filters, user API + admin UI |
-| — | **Smart Calendar** | Meeting time suggestions, scheduling conflicts, user API + admin UI |
-| — | **Anomaly Detection** | Sending pattern analysis with risk scoring, user API + admin UI |
-| — | **Contact Enrichment** | Auto-fill contact details from email signatures, user API + admin UI |
-| — | **Smart Attachments** | File categorization + suggested actions, user API + admin UI |
-| — | **AI Spam Filter** | ML-based spam classification with training feedback, user API + admin UI |
-| — | **Meeting Transcripts** | Meeting notes from calendar events with action items, user API + admin UI |
+| 56 | **Email Summarization** | Conversation thread summarization, user API + admin UI |
+| 57 | **Smart Classification** | Inbox categorization (primary/social/promotions), user API + admin UI |
+| 58 | **AI Draft Assistant** | Tone-adjustable reply suggestions, user API + admin UI |
+| 59 | **Natural Language Search** | NL query → structured filters, user API + admin UI |
+| 60 | **Smart Calendar** | Meeting time suggestions, scheduling conflicts, user API + admin UI |
+| 61 | **Anomaly Detection** | Sending pattern analysis with risk scoring, user API + admin UI |
+| 62 | **Contact Enrichment** | Auto-fill contact details from email signatures, user API + admin UI |
+| 63 | **Smart Attachments** | File categorization + suggested actions, user API + admin UI |
+| 64 | **AI Spam Filter** | ML-based spam classification with training feedback, user API + admin UI |
+| 65 | **Meeting Transcripts** | Meeting notes from calendar events with action items, user API + admin UI |
 
 ### Tier 6 — Vertical Markets (6/6)
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **SCIM Provisioning** | SCIM 2.0 user/group provisioning (application/scim+json), admin API + UI |
-| — | **Student Groups** | Academic institution group management, admin API + UI |
-| — | **HIPAA Compliance** | Audit trail, encryption (XOR-KDF demo), access logging, admin API + UI |
-| — | **eIDAS Signatures** | QSCD signing simulation, document hash chain, admin API + UI |
-| — | **Donor Management** | Non-profit donor communication tracking, admin API + UI |
-| — | **Volunteer Scheduling** | Shift management, availability matching, admin API + UI |
+| 66 | **SCIM Provisioning** | SCIM 2.0 user/group provisioning (application/scim+json), admin API + UI |
+| 67 | **Student Groups** | Academic institution group management, admin API + UI |
+| 68 | **HIPAA Compliance** | Audit trail, encryption (XOR-KDF demo), access logging, admin API + UI |
+| 69 | **eIDAS Signatures** | QSCD signing simulation, document hash chain, admin API + UI |
+| 70 | **Donor Management** | Non-profit donor communication tracking, admin API + UI |
+| 71 | **Volunteer Scheduling** | Shift management, availability matching, admin API + UI |
 
-### Tier 7 — Advanced / Long-Term (5/5)
+### Tier 7 — Advanced / Long-Term (5/10)
 
 | # | Feature | Implementation |
 |---|---------|---------------|
-| — | **PST/M365 Import** | Bulk import from PST files and Microsoft 365, admin API + UI |
-| — | **Matrix Chat** | Matrix.org bridging, room management, admin API + UI |
-| — | **JMAP Protocol** | JMAP batch processing (getMailboxes, Email/query, Email/get, Mailbox/set, Echo), admin API + UI |
-| — | **ActiveSync** | ActiveSync diagnostics + JSON protocol adapter, admin API + UI |
-| — | **Mobile App** | Push notification config (APNS/FCM), device management, admin API + UI |
+| 72 | **PST/M365 Import** | Bulk import from PST files and Microsoft 365, admin API + UI |
+| 73 | **Matrix Chat** | Matrix.org bridging, room management, admin API + UI |
+| 74 | **JMAP Protocol** | JMAP batch processing (getMailboxes, Email/query, Email/get, Mailbox/set, Echo), admin API + UI |
+| 75 | **ActiveSync** | ActiveSync diagnostics + JSON protocol adapter, admin API + UI |
+| 76 | **Mobile App** | Push notification config (APNS/FCM), device management, admin API + UI |
+| 77 | **Geo-Redundancy** | ❌ Not implemented — active-passive across data centers |
+| 78 | **Post-Quantum Cryptography** | ❌ Not implemented — hybrid PQ/Traditional encryption |
+| 79 | **ActivityPub / Fediverse** | ❌ Not implemented — decentralized calendar/contact sharing |
+| 80 | **AR/VR Calendar** | ❌ Not implemented — spatial calendar in WebXR |
+| 81 | **Brain-Computer Interface** | ❌ Not implemented — compose email via EEG |
 
 ---
 
@@ -173,33 +193,33 @@ Optional profiles:
 
 | Component | Count |
 |-----------|-------|
-| **Backend Admin API Blueprints** | 35 |
-| **Backend User API Endpoints** | 15 |
-| **Frontend Admin Pages** | 54 |
-| **Admin Sidebar Entries** | 54 (with icons) |
-| **RTK Query Endpoints** | 60+ |
-| **i18n Admin-Panel Files** | 46 pages × 5 languages = 230 |
-| **Error Codes** | S000000–S000391 |
-| **Docker Services** | 7 (core) + 2 (optional profiles) |
+| **Backend Admin API Blueprints** | 36 |
+| **Backend User API Endpoints** | 38 (user 18, mail 8, calendar 4, contact 1, auth 3, system 1, health 1, jobs 1, caldav 1) |
+| **Frontend Admin Pages** | 53 feature directories (56 page.tsx files) |
+| **Admin Sidebar Entries** | 56 (with icons) |
+| **RTK Query Endpoints** | 315 |
+| **i18n Admin-Panel Files** | 54 pages × 26 languages = 1,404 (+ 2 en-only = 1,406) |
+| **Error Codes** | S000000–S001509 (283 unique) |
+| **Docker Services** | 16 total (3 always-on + 13 profile-based across 10 profiles) |
 
 ## Test Suite Results
 
 | Suite | Pass | Notes |
 |-------|------|-------|
-| Backend Python | **1,728** | 1 pre-existing env-var failure |
-| UI Jest | **5,734** | 10 pre-existing failures (5 a11y, 2 vitest, 3 locale/date) |
-| Admin API (bash) | **29** | 0 failures |
-| Playwright E2E | **24** | 0 failures |
+| Backend Python | **2,111** test functions (159 files) | Admin API, user API, calendar, contact, mail, agent, manager, module, service, utils, integration, properties |
+| UI Jest | **5,810** test blocks (556 files) | Component, integration, a11y, locale/date tests |
+| Admin API (bash) | **40** assertions (3 scripts) | api-test.sh (14), api-write-test.sh (4), admin-api-test.sh (22) |
+| Playwright E2E | **28** tests (5 spec files) | navigation (7), auth (6), admin-panel (6), schedule-send (5), user-settings (4) |
 | Contract (hypothesis) | **6** | API envelope + error code format properties |
-| k6 Load Tests | **100%** | 3 suites, 0% errors |
-| **Total** | **>7,500** | |
+| **Total** | **~8,000** | |
 
 ## Remaining Items (Non-Blocking)
 
-- **~30 backend design-level TODOs** — genuine enhancement notes (none blocking)
-- **3 deprecated functions** — still in active use, replacements available (cosmetic)
-- **74 fakeApi mock routes** — all dev-only testing infrastructure
-- **8 pre-existing upstream zh i18n files** — not roadmap features (admin-data-table, domain-configuration, domain, sessions, system, theme, users, rule)
+- **~184 backend TODOs** — design-level enhancement notes in `app/` (none blocking)
+- **10 deprecated functions** — still in active use, replacements available (cosmetic)
+- **103 fakeApi mock routes** — all dev-only testing infrastructure (controlled by `NEXT_PUBLIC_ENABLE_FAKE_API`)
+- **5 unimplemented Tier 7 features** — Geo-Redundancy, Post-Quantum Crypto, ActivityPub/Fediverse, AR/VR Calendar, Brain-Computer Interface (speculative / long-term)
+- **26 languages** — full i18n coverage (ar, cs, da, de, el, en, es, fi, fr, hi, hu, id, it, ja, ko, nl, no, pl, pt, ro, ru, sv, th, tr, vi, zh)
 
 ## How to Run
 
@@ -215,12 +235,17 @@ Then visit http://localhost:3000 (login: `testuser@example.org` / `password123`)
 
 ```bash
 # Keycloak identity provider
-docker compose --profile idp-keycloak up -d
+ docker compose --profile keycloak up -d
 
-# Nubus intercom relay
-docker compose --profile nubus up -d
+# Nubus intercom relay (separate compose file)
+docker compose -f docker-compose.nubus.yaml --profile nubus up -d
+
+# Full stack with all services
+docker compose --profile mail-stalwart --profile auth-ldap --profile db-postgres \
+  --profile nginx --profile agent --profile minio --profile monitoring \
+  --profile keycloak --profile collabora up -d
 ```
 
 ---
 
-*Generated 2026-07-28 from `dev` branch. Stalwart pinned to v0.16.0.*
+*Updated 2026-08-06 from `dev` branch. Stalwart pinned to v0.16.0.*
