@@ -20,7 +20,7 @@
 | 5 | HIPAA encryption — replace XOR with real AES-256-GCM (cryptography lib) | `ApiHipaaCompliance._encrypt_message_at_rest` | Key from settings, not hardcoded |
 | 6 | eIDAS signatures — replace `_simulate_qes_signature` | `ApiEidasSignatures` | Needs real cert handling or mark beta |
 | 7 | JMAP — implement Email/get, Mailbox/get against real mail store | `ApiJmapProtocol` | ✅ DONE (2026-08-08): real RFC 8620/8621 envelope + methods (/session, POST /jmap, /upload, /download, /status) backed by new `JmapMailGateway` (wraps `ModuleMail` real IMAP store); Mailbox/get rows, Mailbox/set create/destroy, Email/get, Email/query, Email/set destroy/move; unknownCapability/unknownMethod/accountNotFound semantics; upload stores real bytes; 22 new tests — suite 2240 green |
-| 8 | ActiveSync — real WBXML encoding (pywbxml) | `ApiActiveSync._eas_wbxml_response` | |
+| 8 | ActiveSync — real WBXML encoding (pywbxml) | `ApiActiveSync` | ✅ DONE (2026-08-08): real WBXML 1.3 engine (`app/service/activesync/Wbxml.py` — no pywbxml dep) + store-backed commands via new `ActiveSyncGateway`; FolderSync real folders, Sync real UID change log w/ raw MIME in AirSyncBase Body, Provision policy keys, Ping change detection, GetAttachment real MIME-part bytes, SendMail via SMTP client; honest status 6/7/9/449 errors; routes opt out of the JSON content-type gate; 22 new tests — suite 2262 green |
 | 9 | SCIM provisioning — real user source integration | `ApiScimProvisioning` | Currently Redis cache only |
 | 10 | Student Groups — real LDAP/SIS sync | `ApiStudentGroups` | |
 | 11 | Donor Management — real EIN/donor store | `ApiDonorManagement` | Replace placeholder EIN |
