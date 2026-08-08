@@ -19,7 +19,7 @@
 |---|---------|-------|-------|
 | 5 | HIPAA encryption — replace XOR with real AES-256-GCM (cryptography lib) | `ApiHipaaCompliance._encrypt_message_at_rest` | Key from settings, not hardcoded |
 | 6 | eIDAS signatures — replace `_simulate_qes_signature` | `ApiEidasSignatures` | Needs real cert handling or mark beta |
-| 7 | JMAP — implement Email/get, Mailbox/get against real mail store | `ApiJmapProtocol` | Protocol-level; larger effort |
+| 7 | JMAP — implement Email/get, Mailbox/get against real mail store | `ApiJmapProtocol` | ✅ DONE (2026-08-08): real RFC 8620/8621 envelope + methods (/session, POST /jmap, /upload, /download, /status) backed by new `JmapMailGateway` (wraps `ModuleMail` real IMAP store); Mailbox/get rows, Mailbox/set create/destroy, Email/get, Email/query, Email/set destroy/move; unknownCapability/unknownMethod/accountNotFound semantics; upload stores real bytes; 22 new tests — suite 2240 green |
 | 8 | ActiveSync — real WBXML encoding (pywbxml) | `ApiActiveSync._eas_wbxml_response` | |
 | 9 | SCIM provisioning — real user source integration | `ApiScimProvisioning` | Currently Redis cache only |
 | 10 | Student Groups — real LDAP/SIS sync | `ApiStudentGroups` | |
