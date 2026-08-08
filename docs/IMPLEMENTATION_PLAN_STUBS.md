@@ -29,7 +29,7 @@
 | 14 | Audit log — real tamper-proof log + SIEM export | `ApiAuditLog` | |
 | 15 | Usage quotas — real quota enforcement | `ApiUsageQuotas` | |
 | 16 | Health dashboard — real service checks | `ApiHealthDashboard` | |
-| 17 | Webhooks — verify delivery (retry, HMAC, dispatch loop) | `WebhookService` (125 lines) | Check if dispatcher exists |
+| 17 | Webhooks — verify delivery (retry, HMAC, dispatch loop) | `WebhookService` | ✅ DONE (2026-08-08): sync `dispatch` + non-blocking `dispatch_event` (daemon threads), per-hook delivery stats, real emission from ModuleCalendar / ModuleContact / ModuleAdminUser, API detail/PATCH/toggle/test endpoints, URL-scheme gate; 10 new tests |
 | 18 | `orm.py` placeholders (`Acl`, `db_session`) | `app/orm.py` | Remove once imports cleaned |
 
 ## Priority 3 — Missing spec items
