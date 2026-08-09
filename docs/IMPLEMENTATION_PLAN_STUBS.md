@@ -28,7 +28,7 @@
 | 13 | Backup automation — real DB dump + retention + S3 | `ApiBackup` | |
 | 14 | Audit log — real tamper-proof log + SIEM export | `ApiAuditLog` | |
 | 15 | Usage quotas — real quota enforcement | `ApiUsageQuotas` | |
-| 16 | Health dashboard — real service checks | `ApiHealthDashboard` | |
+| 16 | Health dashboard — real service checks | `ApiHealthDashboard` + `/api/user/v1/health` | ✅ DONE (2026-08-09): probes moved to shared `app/service/monitoring/HealthChecks.py` (live PG SELECT 1, anonymous LDAP bind, Redis PING, Stalwart TCP, Celery `control.ping`); dashboard no longer hardcodes "ok" (was all fake) — every row reports real status+latency, per-row `healthy_count`; probes feed new `sogo_dependency_up`/`sogo_dependency_latency_seconds` Prometheus gauges; access log now severity-mapped (5xx ERROR / 4xx WARNING) with `slow_request` flag (>`SOGO_SLOW_REQUEST_MS`); `sogo_db_query_duration_seconds` + `sogo_cache_operation_duration_seconds` histograms wired (previously declared-but-dead) via `@db_op`/`@cache_op` in ClientRedis + both SQL clients; 17 new tests — suite 2293 green |
 | 17 | Webhooks — verify delivery (retry, HMAC, dispatch loop) | `WebhookService` | ✅ DONE (2026-08-08): sync `dispatch` + non-blocking `dispatch_event` (daemon threads), per-hook delivery stats, real emission from ModuleCalendar / ModuleContact / ModuleAdminUser, API detail/PATCH/toggle/test endpoints, URL-scheme gate; 10 new tests |
 | 18 | `orm.py` placeholders (`Acl`, `db_session`) | `app/orm.py` | Remove once imports cleaned |
 
