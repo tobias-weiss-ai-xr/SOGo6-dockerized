@@ -154,10 +154,10 @@ make test-load
 - `/sogo6-ui/docs/` - Frontend documentation
 
 ### Key Documents
-- [ROADMAP.md](../ROADMAP.md) - Complete feature roadmap
-- [SUMMARY.md](../SUMMARY.md) - Implementation summary
-- [DEVELOPMENT.md](../DEVELOPMENT.md) - Development guide
-- [DATABASE_SWITCH.md](../DATABASE_SWITCH.md) - DB migration guide
+- [docs/guides/ROADMAP.md](../docs/guides/ROADMAP.md) - Complete feature roadmap
+- [docs/reports/SUMMARY.md](../docs/reports/SUMMARY.md) - Implementation summary
+- [docs/development/DEVELOPMENT.md](../docs/development/DEVELOPMENT.md) - Development guide
+- [docs/guides/DATABASE_SWITCH.md](../docs/guides/DATABASE_SWITCH.md) - DB migration guide
 
 ## Contribution Guidelines
 

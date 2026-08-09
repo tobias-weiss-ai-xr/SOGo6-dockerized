@@ -74,7 +74,7 @@ docker compose up -d
 docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap up -d
 ```
 
-📖 **Database Switch Guide**: See [`DATABASE_SWITCH.md`](DATABASE_SWITCH.md) for detailed instructions on switching between PostgreSQL and MariaDB.
+📖 **Database Switch Guide**: See [`docs/guides/DATABASE_SWITCH.md`](docs/guides/DATABASE_SWITCH.md) for detailed instructions on switching between PostgreSQL and MariaDB.
 
 ## Profiles
 
