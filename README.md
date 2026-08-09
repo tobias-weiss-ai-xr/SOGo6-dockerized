@@ -1,6 +1,6 @@
 # SOGo 6 — Groupware Suite (Stalwart + OpenLDAP)
 
-[![Tests](https://img.shields.io/badge/Tests-550%2B%20passing-success?logo=github)](.github/workflows/test.yml)
+[![Tests](https://img.shields.io/badge/Tests-passing-success?logo=github)](.github/workflows/test.yml)
 [![K6](https://img.shields.io/badge/Load%20Tests-k6-7d64ff?logo=k6)](tests/load/)
 [![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm)](helm/sogo6/)
 [![Loki](https://img.shields.io/badge/Logs-Loki-F19734?logo=grafana)](sogo6/loki/)
@@ -128,7 +128,7 @@ bash sogo6/scripts/init-sogo6.sh
 
 ## Features
 
-### All 76/76 Roadmap Features Complete
+### All Roadmap Features Complete
 
 **Foundation**: CalDAV sync, WebAuthn passkeys, Swagger API, Sieve editor, DKIM/DMARC/SPF wizard
 
