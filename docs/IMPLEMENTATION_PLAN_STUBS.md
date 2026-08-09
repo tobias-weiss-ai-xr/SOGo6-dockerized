@@ -23,7 +23,7 @@
 | 8 | ActiveSync — real WBXML encoding (pywbxml) | `ApiActiveSync` | ✅ DONE (2026-08-08): real WBXML 1.3 engine (`app/service/activesync/Wbxml.py` — no pywbxml dep) + store-backed commands via new `ActiveSyncGateway`; FolderSync real folders, Sync real UID change log w/ raw MIME in AirSyncBase Body, Provision policy keys, Ping change detection, GetAttachment real MIME-part bytes, SendMail via SMTP client; honest status 6/7/9/449 errors; routes opt out of the JSON content-type gate; 22 new tests — suite 2262 green |
 | 9 | SCIM provisioning — real user source integration | `ApiScimProvisioning` | ✅ DONE (2026-08-08): real LDAP lifecycle via new `ScimIdentityGateway` (ModuleAdminUser); create w/ uniqueness 409, list/get, PATCH attribute + active via shadowExpire, delete; Redis only as sidecar for externalId/groups/meta; routes are public_access so SCIM_BEARER_TOKEN is the gate; 14 new tests — suite 2276 green |
 | 10 | Student Groups — real LDAP/SIS sync | `ApiStudentGroups` | |
-| 11 | Donor Management — real EIN/donor store | `ApiDonorManagement` | Replace placeholder EIN |
+| 11 | Donor Management — real EIN/donor store | `ApiDonorManagement` | ✅ DONE (2026-08-09): no hardcoded EIN — receipts valid only w/ `SOGO_DONOR_ORG_EIN` (format-validated, else unconfigured/invalid + disclaimer); donor EIN format validation (corporate/foundation); ISO 4217 currency validation; SHA-256 receipt integrity + verify endpoint detects tampering; 18 new tests — suite 2311 green |
 | 12 | Matrix Chat — real homeserver federation | `ApiMatrixChat` | `_sign_matrix_event` is fake |
 | 13 | Backup automation — real DB dump + retention + S3 | `ApiBackup` | |
 | 14 | Audit log — real tamper-proof log + SIEM export | `ApiAuditLog` | |
