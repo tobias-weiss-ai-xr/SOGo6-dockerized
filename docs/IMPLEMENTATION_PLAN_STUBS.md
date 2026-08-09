@@ -37,7 +37,7 @@
 | # | Spec | Gap | Effort |
 |---|------|-----|--------|
 | 19 | api-playground | Serve `/docs` + `/docs/openapi.json` (spec names) with JWT auto-populate, dark mode, version selector | Medium |
-| 20 | caldav-server | 95 unchecked requirements (draft spec) — full RFC 4791 server | Large |
+| 20 | caldav-server | 95 unchecked requirements (draft spec) — full RFC 4791 server | Large | ✅ DONE (already implemented: RFC 4791/4918/6578 CalDAV server via ModuleCalDAV + ApiCalDAV blueprint; OPTIONS/PROPFIND/PROPPATCH/MKCALENDAR/MKCOL/GET/PUT/DELETE/HEAD/REPORT with sync-collection/calendar-query/multiget/free-busy; .well-known/caldav redirect; 50 dedicated tests; UI page — see CALDAV_IMPLEMENTATION_SUMMARY.md) |
 | 21 | webauthn-passkeys | Acceptance criteria: browser matrix tests, rate limiting, audit logging, RP ID validation | Small-Medium |
 
 ## Priority 4 — Verification/cleanup
