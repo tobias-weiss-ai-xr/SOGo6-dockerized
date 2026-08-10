@@ -33,6 +33,7 @@ KEYS=(
   "LDAP_ADMIN_PASSWORD|OpenLDAP admin password|24"
   "LDAP_CONFIG_PASSWORD|OpenLDAP config password|24"
   "SOGO_SECRET_KEY|Flask session / JWT fallback|64"
+  "STALWART_SECRET|Stalwart mail recovery admin secret|24"
 )
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

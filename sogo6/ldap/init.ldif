@@ -3,6 +3,49 @@ dn: ou=users,dc=example,dc=org
 objectClass: organizationalUnit
 ou: users
 
+# ── CI Test Users ──
+dn: uid=testuser@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testuser@example.org
+cn: Test User
+sn: User
+givenName: Test
+mail: testuser@example.org
+uidNumber: 5001
+gidNumber: 5001
+homeDirectory: /home/testuser
+userPassword: password123
+
+dn: uid=testadmin@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testadmin@example.org
+cn: Test Admin
+sn: Admin
+givenName: TestAdmin
+mail: testadmin@example.org
+uidNumber: 5002
+gidNumber: 5002
+homeDirectory: /home/testadmin
+userPassword: password123
+
+dn: uid=testuser2@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testuser2@example.org
+cn: Test User 2
+sn: User2
+givenName: Test2
+mail: testuser2@example.org
+uidNumber: 5003
+gidNumber: 5003
+homeDirectory: /home/testuser2
+userPassword: password123
+
 # ── Students ──
 dn: uid=maxmustermann@example.org,ou=users,dc=example,dc=org
 objectClass: inetOrgPerson

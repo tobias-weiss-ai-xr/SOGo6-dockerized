@@ -27,7 +27,7 @@ else
 fi
 
 echo "2. Check Docker containers not running as root"
-for c in sogo6-postgres sogo6-redis; do
+for c in sogo6-mariadb sogo6-redis; do
     USER_INFO=$($DOCKER_CMD inspect --format '{{.Config.User}}' "$c" 2>/dev/null || true)
     if [ -z "$USER_INFO" ] || [ "$USER_INFO" = "" ]; then
         warn "$c runs as default user (check Dockerfile)"

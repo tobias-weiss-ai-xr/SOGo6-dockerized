@@ -14,11 +14,10 @@ fi
 EXPECTED_CONTAINERS=(
     "sogo6-ui"
     "sogo6-server"
-    "sogo6-postgres"
+    "sogo6-mariadb"
     "sogo6-redis"
     "sogo6-ldap"
     "sogo6-stalwart"
-    "sogo6-smtp"
 )
 
 echo "1. Docker daemon reachable"

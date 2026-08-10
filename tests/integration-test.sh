@@ -87,7 +87,7 @@ except: print('')
 done
 
 echo "5. Container DNS resolution and inter-container connectivity"
-for HOST in sogo6-postgres sogo6-redis sogo6-ldap sogo6-stalwart; do
+for HOST in sogo6-mariadb sogo6-redis sogo6-ldap sogo6-stalwart; do
     set +e
     PING_RESULT=$($DOCKER_CMD exec sogo6-server ping -c 1 -W 2 "$HOST" 2>&1 || true)
     set -e
@@ -132,7 +132,7 @@ done
 
 echo "8. Cross-service health check"
 ALL_HEALTHY=true
-for svc in sogo6-server sogo6-postgres sogo6-redis sogo6-ldap; do
+for svc in sogo6-server sogo6-mariadb sogo6-redis sogo6-ldap; do
     STATUS=$($DOCKER_CMD inspect --format '{{.State.Health.Status}}' "$svc" 2>/dev/null || echo "unknown")
     if [ "$STATUS" != "healthy" ]; then
         ALL_HEALTHY=false
@@ -143,12 +143,12 @@ if $ALL_HEALTHY; then
     pass "All core services report healthy status"
 fi
 
-echo "9. PostgreSQL stores API settings"
-PG_CMD="$DOCKER_CMD exec sogo6-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -t -c"
-if $DOCKER_CMD ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-postgres; then
-    SETTING_COUNT=$($PG_CMD "SELECT count(*) FROM sogo6_sogo_settings;" 2>/dev/null | tr -d ' ' || echo "0")
+echo "9. MariaDB stores API settings"
+MDB_CMD="$DOCKER_CMD exec sogo6-mariadb mariadb -u$POSTGRES_USER -p$MARIADB_PASSWORD $POSTGRES_DB -N -e"
+if $DOCKER_CMD ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-mariadb; then
+    SETTING_COUNT=$($MDB_CMD "SELECT count(*) FROM sogo6_sogo_settings;" 2>/dev/null | tr -d ' ' || echo "0")
     if [ "$SETTING_COUNT" -gt 0 ] 2>/dev/null; then
-        pass "PostgreSQL has $SETTING_COUNT settings stored"
+        pass "MariaDB has $SETTING_COUNT settings stored"
     else
         warn "No settings found in sogo6_sogo_settings table"
     fi
