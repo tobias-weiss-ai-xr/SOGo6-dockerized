@@ -125,6 +125,19 @@ jobs:
       - name: Generate TLS certs
         run: bash sogo6/scripts/gen-certs.sh
 
+      - name: Export vault secrets to environment
+        run: |
+          grep -v '^#' secrets/sogo6.vault.env | grep -v '^$' | while IFS='=' read -r key val; do
+            echo "$key=$val" >> "$GITHUB_ENV"
+          done
+          # Map vault keys to compose/server env var names
+          source <(grep MARIADB_PASSWORD secrets/sogo6.vault.env | grep -v MARIADB_ROOT)
+          echo "SOGO_P_DB_PASS=$MARIADB_PASSWORD" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_USER=sogo" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_TYPE=MySQL" >> "$GITHUB_ENV"
+          source <(grep LDAP_ADMIN_PASSWORD secrets/sogo6.vault.env)
+          echo "SOGO_LDAP_BIND_PASSWORD=$LDAP_ADMIN_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Build Docker images
         run: |
           docker compose build --parallel
@@ -220,6 +233,18 @@ jobs:
 
       - name: Generate TLS certs
         run: bash sogo6/scripts/gen-certs.sh
+
+      - name: Export vault secrets to environment
+        run: |
+          grep -v '^#' secrets/sogo6.vault.env | grep -v '^$' | while IFS='=' read -r key val; do
+            echo "$key=$val" >> "$GITHUB_ENV"
+          done
+          source <(grep MARIADB_PASSWORD secrets/sogo6.vault.env | grep -v MARIADB_ROOT)
+          echo "SOGO_P_DB_PASS=$MARIADB_PASSWORD" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_USER=sogo" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_TYPE=MySQL" >> "$GITHUB_ENV"
+          source <(grep LDAP_ADMIN_PASSWORD secrets/sogo6.vault.env)
+          echo "SOGO_LDAP_BIND_PASSWORD=$LDAP_ADMIN_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |

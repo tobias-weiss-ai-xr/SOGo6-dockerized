@@ -66,8 +66,10 @@ services:
       target: development
     environment:
       FLASK_ENV: ${FLASK_ENV:-development}
-      # ⚠️ Database config is in sogo6/config/process.conf (SOGO_P_DB_* settings)
-      # Switch: edit process.conf → uncomment MySQL or PostgreSQL section
+      # Database credentials — override process.conf when set via environment
+      SOGO_P_DB_PASS: ${SOGO_P_DB_PASS:-}
+      SOGO_P_DB_USER: ${SOGO_P_DB_USER:-sogo}
+      SOGO_P_DB_TYPE: ${SOGO_P_DB_TYPE:-MySQL}
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
       SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
