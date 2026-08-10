@@ -192,6 +192,14 @@ jobs:
             sleep 2
           done
 
+      - name: Print container logs (diagnostic)
+        run: |
+          echo "=== sogo6-server logs ==="
+          docker compose logs --tail=20 sogo6-server 2>/dev/null || true
+          echo "=== env check ==="
+          echo "SOGO_P_VOUCHER_SECRET length: ${#SOGO_P_VOUCHER_SECRET}"
+          echo "SOGO_AES_ENC_KEY length: ${#SOGO_AES_ENC_KEY}"
+
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
 
