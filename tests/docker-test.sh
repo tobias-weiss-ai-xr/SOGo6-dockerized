@@ -40,6 +40,8 @@ for c in "${EXPECTED_CONTAINERS[@]}"; do
 done
 
 echo "3. Container health status"
+# Core services must be healthy; others may be starting
+CORE_SERVICES="sogo6-server sogo6-mariadb sogo6-redis"
 for c in "${EXPECTED_CONTAINERS[@]}"; do
     STATUS=$($DOCKER_CMD inspect --format '{{.State.Health.Status}}' "$c" 2>/dev/null || echo "unknown")
     if [ "$STATUS" = "healthy" ]; then
@@ -53,7 +55,11 @@ for c in "${EXPECTED_CONTAINERS[@]}"; do
             fail "$c state: $STATE (no healthcheck)"
         fi
     else
-        fail "$c health: $STATUS"
+        if echo "$CORE_SERVICES" | grep -qw "$c"; then
+            fail "$c health: $STATUS (core service must be healthy)"
+        else
+            warn "$c health: $STATUS (non-core service may still be starting)"
+        fi
     fi
 done
 

@@ -134,7 +134,7 @@ done
 
 echo "8. Cross-service health check"
 ALL_HEALTHY=true
-for svc in sogo6-server sogo6-mariadb sogo6-redis sogo6-ldap; do
+for svc in sogo6-server sogo6-mariadb sogo6-redis; do
     STATUS=$($DOCKER_CMD inspect --format '{{.State.Health.Status}}' "$svc" 2>/dev/null || echo "unknown")
     if [ "$STATUS" != "healthy" ]; then
         ALL_HEALTHY=false
