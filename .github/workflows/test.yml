@@ -132,8 +132,24 @@ jobs:
 
       - name: Start stack
         run: |
-          docker compose --profile db-mariadb up -d --wait --wait-timeout 300
+          docker compose --profile db-mariadb up -d
+          echo "Waiting for all services to be healthy..."
+          timeout 300 bash -c '
+          for i in $(seq 1 60); do
+            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -v healthy | grep -v -E "^[a-z]+ starting" || true)
+            if [ -z "$UNHEALTHY" ]; then
+              echo "All services healthy after ${i} checks"
+              docker compose ps
+              exit 0
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 5
+          done
+          echo "Timeout waiting for services"
           docker compose ps
+          docker compose logs --tail=20 sogo6-server
+          exit 1
+          '
 
       - name: Print container logs on failure
         if: failure()
@@ -211,8 +227,24 @@ jobs:
 
       - name: Start Docker stack (for API backend)
         run: |
-          docker compose --profile db-mariadb up -d --wait --wait-timeout 300 sogo6-redis sogo6-mariadb sogo6-server
+          docker compose --profile db-mariadb up -d sogo6-redis sogo6-mariadb sogo6-server
+          echo "Waiting for services..."
+          timeout 300 bash -c '
+          for i in $(seq 1 60); do
+            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(server|mariadb|redis)" | grep -v healthy || true)
+            if [ -z "$UNHEALTHY" ]; then
+              echo "All services healthy after ${i} checks"
+              docker compose ps
+              exit 0
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 5
+          done
+          echo "Timeout waiting for services"
           docker compose ps
+          docker compose logs --tail=20 sogo6-server
+          exit 1
+          '
 
       - name: Print container logs on failure
         if: failure()
