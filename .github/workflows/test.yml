@@ -93,7 +93,6 @@ jobs:
           npm ci || npm install
 
       - name: Run UI unit tests
-        continue-on-error: true
         run: |
           cd sogo6-ui
           npx jest --passWithNoTests --maxWorkers=2
@@ -146,29 +145,29 @@ jobs:
 
       - name: Start stack
         run: |
-          docker compose --profile db-mariadb up -d
-          echo "Waiting for core services (redis, mariadb, server)..."
-          timeout 300 bash -c '
-          for i in $(seq 1 60); do
-            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(redis|mariadb|server)" | grep -v healthy | grep -v -E "starting" || true)
+          docker compose --profile db-mariadb --profile auth-ldap --profile mail-stalwart up -d
+          echo "Waiting for all services (redis, mariadb, ldap, stalwart, server)..."
+          timeout 360 bash -c '
+          for i in $(seq 1 72); do
+            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(redis|mariadb|ldap|stalwart|server)" | grep -v healthy | grep -v -E "starting" || true)
             if [ -z "$UNHEALTHY" ]; then
-              echo "Core services healthy after ${i} checks"
+              echo "All services healthy after ${i} checks"
               docker compose ps
               exit 0
             fi
-            echo "Waiting... ($i/60)"
+            echo "Waiting... ($i/72)"
             sleep 5
           done
-          echo "Timeout waiting for core services"
+          echo "Timeout waiting for services"
           docker compose ps
-          docker compose logs --tail=20 sogo6-server
+          docker compose logs --tail=20 sogo6-server sogo6-ldap sogo6-stalwart
           exit 1
           '
 
       - name: Print container logs on failure
         if: failure()
         run: |
-          for svc in sogo6-server sogo6-mariadb sogo6-redis sogo6-ui; do
+          for svc in sogo6-server sogo6-mariadb sogo6-redis sogo6-ldap sogo6-stalwart sogo6-ui; do
             echo "=== $svc logs ==="
             docker compose logs --tail=30 "$svc" 2>/dev/null || true
           done
@@ -188,21 +187,17 @@ jobs:
           done
 
       - name: Run shell test suite
-        continue-on-error: true
         run: bash tests/run-all-tests.sh
 
       - name: Run Admin API CRUD E2E tests
-        continue-on-error: true
         run: bash tests/admin-api-test.sh
 
       - name: Run Python integration tests
-        continue-on-error: true
         run: |
           pip3 install -q pytest requests
           SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x
 
       - name: Run contract/property-based tests
-        continue-on-error: true
         run: |
           pip3 install -q hypothesis
           cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x
@@ -258,20 +253,20 @@ jobs:
 
       - name: Start Docker stack (for API backend)
         run: |
-          docker compose --profile db-mariadb up -d sogo6-redis sogo6-mariadb sogo6-server
-          echo "Waiting for core services..."
-          timeout 300 bash -c '
-          for i in $(seq 1 60); do
-            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(redis|mariadb|server)" | grep -v healthy | grep -v -E "starting" || true)
+          docker compose --profile db-mariadb --profile auth-ldap --profile mail-stalwart up -d sogo6-redis sogo6-mariadb sogo6-ldap sogo6-stalwart sogo6-server
+          echo "Waiting for all services..."
+          timeout 360 bash -c '
+          for i in $(seq 1 72); do
+            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(redis|mariadb|ldap|stalwart|server)" | grep -v healthy | grep -v -E "starting" || true)
             if [ -z "$UNHEALTHY" ]; then
-              echo "Core services healthy after ${i} checks"
+              echo "All services healthy after ${i} checks"
               docker compose ps
               exit 0
             fi
-            echo "Waiting... ($i/60)"
+            echo "Waiting... ($i/72)"
             sleep 5
           done
-          echo "Timeout waiting for core services"
+          echo "Timeout waiting for services"
           docker compose ps
           docker compose logs --tail=20 sogo6-server
           exit 1
@@ -286,7 +281,6 @@ jobs:
           done
 
       - name: Initialize SOGo6
-        continue-on-error: true
         run: bash sogo6/scripts/init-sogo6.sh
 
       - name: Wait for API
@@ -307,7 +301,6 @@ jobs:
           npx playwright install chromium
 
       - name: Run Playwright E2E tests
-        continue-on-error: true
         run: |
           # Stop the containerized UI (Next.js standalone doesn't hydrate in CI)
           docker compose stop sogo6-ui 2>/dev/null || true
