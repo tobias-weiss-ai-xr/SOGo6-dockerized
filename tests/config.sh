@@ -3,7 +3,7 @@
 # Sources lib/common.sh for colors, logging, and utility functions
 
 # Load shared library
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}") " && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 UI_URL="${SOGO_UI_URL:-http://localhost:3000}"

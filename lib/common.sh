@@ -30,6 +30,10 @@ log_step()  { echo -e "\n${CYAN}════════════════
 log_success() { echo -e "${GREEN}  ✓${NC}${BOLD} $*${NC}" >&2; }
 log_failure() { echo -e "${RED}  ✗${NC}${BOLD} $*${NC}" >&2; }
 
+# Test pass/fail counters (used by test scripts)
+fail()   { echo -e "${RED}  [FAIL]${NC} $*"; }
+pass()   { echo -e "${GREEN}  [PASS]${NC} $*"; }
+
 # ── Error handling ─────────────────────────────────────────────────────────
 # Usage: trap err_handler ERR
 err_handler() {
