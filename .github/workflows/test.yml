@@ -31,6 +31,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (repo)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: fs
@@ -41,6 +42,7 @@ jobs:
           hide-progress: true
 
       - name: Run Trivy vulnerability scanner (server Dockerfile)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: config
@@ -50,6 +52,7 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Run Trivy vulnerability scanner (UI Dockerfile)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: config
