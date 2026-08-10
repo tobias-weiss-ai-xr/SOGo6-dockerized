@@ -64,7 +64,6 @@ elif echo "$THEME_PATCH" | grep -qi "AttributeError"; then
 else
     fail "PATCH theme failed: $THEME_ERR"
 fi
-fi
 
 echo "3. PATCH theme (revert)"
 curl -sk -X PATCH "$API_URL/api/admin/v1/config/theme" \
@@ -236,7 +235,6 @@ elif echo "$USERS_GET" | grep -qi "doctype\|html"; then
     fail "GET users list server error (500): $USERS_ERR"
 else
     fail "GET users list failed: $USERS_ERR"
-fi
 fi
 
 echo "17. POST create user"
