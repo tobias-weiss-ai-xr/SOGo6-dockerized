@@ -27,11 +27,10 @@ for path in /swagger-basic /swagger-admin; do
 done
 
 echo "3. Admin login"
-ADMIN_RESP=$(curl -sk "$API_URL/api/admin/v1/auth/login" \
+ADMIN_TOKEN=$(curl -sk "$API_URL/api/admin/v1/auth/login" \
     -H 'Content-Type: application/json' \
-    -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASSWORD\"}" 2>/dev/null || true)
-echo "  DEBUG admin login response: $(echo "$ADMIN_RESP" | head -c 300)"
-ADMIN_TOKEN=$(echo "$ADMIN_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('jwt_token',''))" 2>/dev/null || true)
+    -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASSWORD\"}" 2>/dev/null | \
+    python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('jwt_token',''))" 2>/dev/null || true)
 if [ -n "$ADMIN_TOKEN" ]; then
     pass "Admin login returned JWT token"
 else

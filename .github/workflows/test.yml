@@ -192,30 +192,8 @@ jobs:
             sleep 2
           done
 
-      - name: Print container logs (diagnostic)
-        if: always()
-        run: |
-          echo "=== Checking process.conf inside container ==="
-          docker compose exec sogo6-server cat /etc/sogo/process.conf 2>/dev/null | grep -E "SOGO_P_ADMIN|SOGO_P_VOUCHER|SOGO_AES" || echo "No matches found in container process.conf"
-          echo "=== Full process.conf from host ==="
-          cat sogo6/config/process.conf | grep -E "SOGO_P_ADMIN|SOGO_P_VOUCHER|SOGO_AES"
-          echo "=== Checking env vars inside container ==="
-          docker compose exec sogo6-server env 2>/dev/null | grep SOGO_P_ADMIN || echo "SOGO_P_ADMIN not in container env"
-          echo "=== env check ==="
-          echo "SOGO_P_VOUCHER_SECRET length: ${#SOGO_P_VOUCHER_SECRET}"
-
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
-
-      - name: Collect server logs after tests
-        if: always()
-        run: |
-          echo "=== sogo6-server logs (after tests) ==="
-          docker compose logs --tail=50 sogo6-server 2>/dev/null | grep -E "POST|ERROR|Traceback|500|Exception|Internal" | tail -20 || true
-          echo "=== Test admin login manually ==="
-          curl -sk http://localhost:5001/api/admin/v1/auth/login \
-            -H 'Content-Type: application/json' \
-            -d '{"username":"admin","password":"admin"}' 2>/dev/null | head -c 500
 
       - name: Run Admin API CRUD E2E tests
         run: bash tests/admin-api-test.sh
