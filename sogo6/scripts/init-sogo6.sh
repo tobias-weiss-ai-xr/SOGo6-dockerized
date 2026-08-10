@@ -4,17 +4,22 @@
 # Usage: ./init-sogo6.sh [options]
 #
 # Options:
-#   -s, --server URL    SOGo server URL (default: http://localhost:5001)
-#   -a, --admin PASS    Admin password (default: from env SOGO_ADMIN_PASSWORD or 'admin')
-#   -d, --domain DOM    Domain name (default: from env SOGO_DOMAIN or 'example.org')
-#   -f, --force          Force re-configuration (skip idempotency checks)
-#   --skip-domain        Skip domain creation (domain-default only)
-#   -h, --help           Show this help message
+#   -s, --server URL     SOGo server URL (default: http://localhost:5001)
+#   -a, --admin PASS     Admin password (default: from env SOGO_ADMIN_PASSWORD or 'admin')
+#   -d, --domain DOM     Domain name (default: from env SOGO_DOMAIN or 'example.org')
+#   -b, --db-type TYPE   Database type: 'postgres' or 'mariadb' (default: auto-detect)
+#   -f, --force           Force re-configuration (skip idempotency checks)
+#   --skip-domain         Skip domain creation (domain-default only)
+#   -h, --help            Show this help message
 
 set -euo pipefail
 
 # Auto-detect server URL
-if docker ps --format '{{.Names}}' 2>/dev/null | grep -q sogo6-server; then
+
+# Load shared library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../../lib/common.sh"
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE 'sogo6-server(-dev)?'; then
     DEFAULT_SERVER="http://localhost:5001"
 else
     DEFAULT_SERVER="http://sogo6-server:5000"
@@ -24,6 +29,7 @@ fi
 SERVER_URL="${SOGO_SERVER_URL:-$DEFAULT_SERVER}"
 ADMIN_PASSWORD="${SOGO_ADMIN_PASSWORD:-admin}"
 DOMAIN="${SOGO_DOMAIN:-example.org}"
+DB_TYPE="${SOGO_DB_TYPE:-auto}"
 FORCE=false
 SKIP_DOMAIN=false
 
@@ -41,6 +47,10 @@ while [[ $# -gt 0 ]]; do
             DOMAIN="$2"
             shift 2
             ;;
+        -b|--db-type)
+            DB_TYPE="$2"
+            shift 2
+            ;;
         -f|--force)
             FORCE=true
             shift
@@ -53,12 +63,13 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [options]"
             echo ""
             echo "Options:"
-            echo "  -s, --server URL    SOGo server URL (default: http://localhost:5001)"
-            echo "  -a, --admin PASS    Admin password (default: from env SOGO_ADMIN_PASSWORD or 'admin')"
-            echo "  -d, --domain DOM    Domain name (default: from env SOGO_DOMAIN or 'example.org')"
-            echo "  -f, --force          Force re-configuration (skip idempotency checks)"
-            echo "  --skip-domain        Skip domain creation (domain-default only)"
-            echo "  -h, --help           Show this help message"
+            echo "  -s, --server URL     SOGo server URL (default: http://localhost:5001)"
+            echo "  -a, --admin PASS     Admin password (default: from env SOGO_ADMIN_PASSWORD or 'admin')"
+            echo "  -d, --domain DOM     Domain name (default: from env SOGO_DOMAIN or 'example.org')"
+            echo "  -b, --db-type TYPE   Database type: 'postgres' or 'mariadb' (default: auto-detect)"
+            echo "  -f, --force           Force re-configuration (skip idempotency checks)"
+            echo "  --skip-domain         Skip domain creation (domain-default only)"
+            echo "  -h, --help            Show this help message"
             exit 0
             ;;
         *)
@@ -75,26 +86,27 @@ echo "Force: $FORCE"
 echo "Skip domain: $SKIP_DOMAIN"
 echo ""
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-log_success() {
-    echo -e "${GREEN}[OK]${NC} $*"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $*"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*" >&2
-}
+# Logging aliases (colors and functions provided by lib/common.sh)
+log_success() { echo -e "${GREEN}[OK]${NC} $*"; }
+log_warning() { log_warn "$@"; }
 
 log_info() {
     echo "[INFO] $*"
+}
+
+# Convert a domain name (e.g. "example.org") to LDAP DC format (e.g. "dc=example,dc=org")
+domain_to_dc() {
+    local domain="$1"
+    local IFS='.'
+    local result=""
+    for part in $domain; do
+        if [ -z "$result" ]; then
+            result="dc=$part"
+        else
+            result="$result,dc=$part"
+        fi
+    done
+    echo "$result"
 }
 
 api_call() {
@@ -115,7 +127,17 @@ api_call() {
      local curl_args=(-s -k --connect-timeout 5 --max-time 10)
      while [[ $attempt -le $max_retries ]]; do
          if [[ -n "$data" ]]; then
-             response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" -d "$data" 2>&1 || true)
+             # Use --data-urlencode to hide sensitive data from process list
+             # For extra security, use a temp file for sensitive payloads
+             if [[ "$endpoint" == *"/auth/login"* || "$endpoint" == *"/login"* ]]; then
+                 local tmpfile
+                 tmpfile=$(mktemp)
+                 echo "$data" > "$tmpfile"
+                 response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" --data-binary @"$tmpfile" 2>&1 || true)
+                 rm -f "$tmpfile"
+             else
+                 response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" -d "$data" 2>&1 || true)
+             fi
          else
              response=$(curl "${curl_args[@]}" -X "$method" "${SERVER_URL}${endpoint}" "${headers[@]}" 2>&1 || true)
          fi
@@ -144,53 +166,103 @@ extract_jwt() {
     echo "$response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('jwt_token',''))" 2>/dev/null || echo ""
 }
 
+_detect_db_type() {
+    # Auto-detect which database container is running
+    if [ "$DB_TYPE" != "auto" ]; then
+        echo "$DB_TYPE"
+        return
+    fi
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE '^sogo6-postgres'; then
+        echo "postgres"
+    elif docker ps --format '{{.Names}}' 2>/dev/null | grep -qE '^sogo6-mariadb'; then
+        echo "mariadb"
+    else
+        # Fall back to checking process.conf
+        if grep -qi "SOGO_P_DB_TYPE=PostgreSQL" "${SCRIPT_DIR}/../../sogo6/config/process.conf" 2>/dev/null; then
+            echo "postgres"
+        else
+            echo "mariadb"
+        fi
+    fi
+}
+
 wait_for_dependencies() {
     log_info "Checking dependencies..."
 
-    log_info "  Waiting for PostgreSQL..."
-    for i in {1..30}; do
-        if docker exec sogo6-postgres pg_isready -U sogo 2>/dev/null; then
-            log_success "PostgreSQL is ready"
-            break
-        fi
-        sleep 2
-        if [[ $i -eq 30 ]]; then
-            log_error "PostgreSQL not responding after 60 seconds"
-            return 1
-        fi
-    done
+    local detected_db
+    detected_db="$(_detect_db_type)"
+    log_info "  Database type detected: ${detected_db}"
 
-    log_info "  Waiting for LDAP..."
-    for i in {1..30}; do
-        if docker exec sogo6-ldap ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w admin -s base 2>/dev/null | grep -q "dc=example"; then
+    if [ "$detected_db" = "postgres" ]; then
+        log_info "  Waiting for PostgreSQL..."
+        for i in {1..30}; do
+            local pg_container=$(docker ps --format '{{.Names}}' | grep -E '^sogo6-postgres' | head -1)
+            if [ -n "$pg_container" ] && docker exec "$pg_container" pg_isready -U sogo 2>/dev/null; then
+                log_success "PostgreSQL is ready"
+                break
+            fi
+            sleep 2
+            if [[ $i -eq 30 ]]; then
+                log_error "PostgreSQL not responding after 60 seconds"
+                return 1
+            fi
+        done
+    else
+        log_info "  Waiting for MariaDB..."
+        for i in {1..30}; do
+            if docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep -E 'sogo6-mariadb.*healthy' | grep -q .; then
+                log_success "MariaDB is ready"
+                break
+            fi
+            sleep 2
+            if [[ $i -eq 30 ]]; then
+                log_error "MariaDB not responding after 60 seconds"
+                return 1
+            fi
+        done
+    fi
+
+    log_info "  Waiting for LDAP (optional)..."
+    local ldap_found=false
+    # Create temp file for LDAP password to avoid command line exposure
+    local ldap_pwd_file
+    ldap_pwd_file=$(mktemp)
+    echo "admin" > "$ldap_pwd_file"
+    for i in {1..10}; do
+        local ldap_container=$(docker ps --format '{{.Names}}' | grep -E '^sogo6-ldap' | head -1)
+        if [ -n "$ldap_container" ] && docker exec "$ldap_container" ldapsearch -x -H ldap://localhost:389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -y "$ldap_pwd_file" -s base 2>/dev/null | grep -q "dc=example"; then
             log_success "LDAP is ready"
+            ldap_found=true
             break
         fi
         sleep 2
-        if [[ $i -eq 30 ]]; then
-            log_error "LDAP not responding after 60 seconds"
-            return 1
-        fi
     done
+    rm -f "$ldap_pwd_file"
+    done
+    if [ "$ldap_found" = false ]; then
+        log_warning "LDAP not available (skipping - optional dependency)"
+    fi
 
-    log_info "  Waiting for Stalwart..."
-    for i in {1..30}; do
+    log_info "  Waiting for Stalwart (optional)..."
+    for i in {1..10}; do
         if timeout 2 bash -c 'echo > /dev/tcp/localhost/20993' 2>/dev/null || \
-           docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep 'sogo6-stalwart.*healthy' | grep -q .; then
+           docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep -E 'sogo6-stalwart.*healthy' | grep -q .; then
             log_success "Stalwart is ready"
             break
         fi
         sleep 2
-        if [[ $i -eq 30 ]]; then
-            log_warning "Stalwart health check timed out, continuing..."
-            break
+        if [[ $i -eq 10 ]]; then
+            log_warning "Stalwart not available (skipping - optional dependency)"
         fi
     done
 
      log_info "  Waiting for SOGo server..."
      for i in {1..30}; do
-         if curl -sk --connect-timeout 2 --max-time 3 "${SERVER_URL}/api/user/v1/system" > /dev/null 2>&1; then
-             log_success "SOGo server is ready"
+         # Use health endpoint - server is ready even if degraded (503 means dependencies missing)
+         local http_code
+         http_code=$(curl -sk --connect-timeout 2 --max-time 3 -o /dev/null -w '%{http_code}' "${SERVER_URL}/api/user/v1/health" 2>/dev/null || echo "000")
+         if [ "$http_code" = "200" ] || [ "$http_code" = "503" ]; then
+             log_success "SOGo server is ready (status: ${http_code})"
              break
          fi
          sleep 2
@@ -210,21 +282,24 @@ check_already_initialized() {
 
     log_info "Checking if already initialized..."
 
-    local response
-    response=$(api_call "GET" "/api/admin/v1/config/domain-default" "" "" 1)
-    local error_code
-    error_code=$(extract_error_code "$response")
+    # Health returns 412 when not configured, 200/503 when configured
+    local http_code
+    http_code=$(curl -sk --connect-timeout 2 --max-time 3 -o /dev/null -w '%{http_code}' "${SERVER_URL}/api/user/v1/health" 2>/dev/null || true)
+    http_code="${http_code:-000}"
+    # Trim any whitespace
+    http_code="$(echo "$http_code" | tr -d '[:space:]')"
 
-    if [[ "$error_code" == "S000000" ]]; then
-        local settings_status
-        settings_status=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); settings=d.get('data',{}); print('YES' if (settings.get('SOGO_D_MAIL_SERVER_TYPE') or settings.get('SOGO_D_IMAP_SERVER')) else 'NO')" 2>/dev/null || echo "NO")
-
-        if [[ "$settings_status" == "YES" ]]; then
-            log_success "Already initialized. Use -f/--force to re-configure."
-            return 0
-        fi
+    if [ "$http_code" = "200" ] || [ "$http_code" = "503" ]; then
+        log_success "Already initialized (health: ${http_code}). Use -f/--force to re-configure."
+        return 0
     fi
 
+    if [ "$http_code" = "412" ]; then
+        log_info "System not yet initialized (health: 412 - needs configuration)"
+        return 1
+    fi
+
+    log_warning "Health check returned code '${http_code}', proceeding..."
     return 1
 }
 
@@ -259,8 +334,73 @@ admin_login() {
     return 1
 }
 
+_run_db_migration_postgres() {
+    local db_container="sogo6-postgres"
+    local db_user="${SOGO_PG_USER:-sogo}"
+    local db_name="${SOGO_PG_DATABASE:-sogo}"
+    local table_settings="${SOGO_P_TABLE_SETTINGS:-sogo6_sogo_settings}"
+    local table_rules="${SOGO_P_TABLE_RULES:-sogo6_sogo_settings_rules}"
+
+    log_info "Running PostgreSQL DB migrations..."
+    docker compose exec -T "$db_container" psql -U "$db_user" -d "$db_name" -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='${table_settings}' AND column_name='settings_theme'
+        ) THEN
+          ALTER TABLE ${table_settings} ADD COLUMN settings_theme JSONB DEFAULT '{}'::jsonb;
+        END IF;
+      END
+      \$\$;
+    " 2>&1 | tee -a "${LOG_FILE:-/dev/null}" || log_warning "Migration: settings_theme column may already exist"
+
+    docker compose exec -T "$db_container" psql -U "$db_user" -d "$db_name" -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='${table_rules}' AND column_name='rule_description'
+        ) THEN
+          ALTER TABLE ${table_rules} ADD COLUMN rule_description TEXT DEFAULT '';
+        END IF;
+      END
+      \$\$;
+    " 2>&1 | tee -a "${LOG_FILE:-/dev/null}" || log_warning "Migration: rule_description column may already exist"
+}
+
+_run_db_migration_mariadb() {
+    local db_container="sogo6-mariadb"
+    local db_user="${SOGO_MDB_USER:-sogo}"
+    local db_pass="${SOGO_MDB_PASS:-sogo_password_change_me}"
+    local db_name="${SOGO_MDB_DATABASE:-sogo}"
+    local table_settings="${SOGO_P_TABLE_SETTINGS:-sogo6_sogo_settings}"
+    local table_rules="${SOGO_P_TABLE_RULES:-sogo6_sogo_settings_rules}"
+
+    log_info "Running MariaDB DB migrations..."
+    # MariaDB doesn't support IF outside stored procs, so use try-and-ignore pattern
+    docker compose exec -T "$db_container" mariadb -u"$db_user" -p"$db_pass" "$db_name" -e \
+      "ALTER TABLE ${table_settings} ADD COLUMN settings_theme JSON DEFAULT NULL;" 2>&1 | \
+      grep -v "Duplicate column" | tee -a "${LOG_FILE:-/dev/null}" || \
+      log_info "  settings_theme column already exists"
+
+    docker compose exec -T "$db_container" mariadb -u"$db_user" -p"$db_pass" "$db_name" -e \
+      "ALTER TABLE ${table_rules} ADD COLUMN rule_description TEXT DEFAULT NULL;" 2>&1 | \
+      grep -v "Duplicate column" | tee -a "${LOG_FILE:-/dev/null}" || \
+      log_info "  rule_description column already exists"
+}
+
 configure_system_settings() {
     local jwt_token="$1"
+    local detected_db
+    detected_db="$(_detect_db_type)"
+
+    # Run DB migrations for the detected database type
+    if [ "$detected_db" = "postgres" ]; then
+        _run_db_migration_postgres
+    else
+        _run_db_migration_mariadb
+    fi
 
     log_info "Configuring system settings..."
 
@@ -286,6 +426,7 @@ configure_domain_default() {
 
     log_info "Configuring domain-default settings..."
 
+    local ldap_dc="$(domain_to_dc "$DOMAIN")"
     local domain_default_data='{
       "settings": {
         "AUTH_SETTINGS": {
@@ -301,9 +442,9 @@ configure_domain_default() {
             "US_TYPE": "ldap",
             "US_LDAP_HOSTNAME": "sogo6-ldap",
             "US_LDAP_PORT": 389,
-            "US_LDAP_BIND_DN": "cn=admin,dc='"$DOMAIN"',dc=org",
+            "US_LDAP_BIND_DN": "cn=admin,'"$ldap_dc"'",
             "US_LDAP_BIND_DN_PWD": "admin",
-            "US_LDAP_BASE_DN": "ou=users,dc='"$DOMAIN"',dc=org",
+            "US_LDAP_BASE_DN": "ou=users,'"$ldap_dc"'",
             "US_LDAP_UID": "uid",
             "US_LDAP_CN": "cn",
             "US_LDAP_ID": "uid",
@@ -389,6 +530,7 @@ create_domain() {
 
     log_info "Creating domain: $DOMAIN..."
 
+    local ldap_dc="$(domain_to_dc "$DOMAIN")"
     local settings_json
     settings_json=$(echo '{
       "domain_description": "Default domain for SOGo 6 evaluation",
@@ -407,9 +549,9 @@ create_domain() {
             "US_TYPE": "ldap",
             "US_LDAP_HOSTNAME": "sogo6-ldap",
             "US_LDAP_PORT": 389,
-            "US_LDAP_BIND_DN": "cn=admin,dc=EXAMPLE,dc=org",
+            "US_LDAP_BIND_DN": "cn=admin,'"$ldap_dc"'",
             "US_LDAP_BIND_DN_PWD": "admin",
-            "US_LDAP_BASE_DN": "ou=users,dc=EXAMPLE,dc=org",
+            "US_LDAP_BASE_DN": "ou=users,'"$ldap_dc"'",
             "US_LDAP_UID": "uid",
             "US_CAN_AUTH": true,
             "US_MAIL": ["mail"],
@@ -433,7 +575,7 @@ create_domain() {
           "SOGO_D_SMTP_ENCRYPTION": "SSL/TLS"
         }
       }
-    }' | python3 -c "import sys,json; d=json.load(sys.stdin); d['domain_info']['user_source']='ldap'; d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BIND_DN'].replace('EXAMPLE','$DOMAIN'); d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN']=d['settings']['USER_SOURCE']['ldap_main']['US_LDAP_BASE_DN'].replace('EXAMPLE','$DOMAIN'); print(json.dumps(d))")
+    }' | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d))")
 
     local response
     response=$(api_call "POST" "/api/admin/v1/config/domains" "$settings_json" "$jwt_token" 3)
@@ -519,12 +661,16 @@ main() {
 }
 
 print_summary() {
+    local detected_db
+    detected_db="$(_detect_db_type)"
+
     echo "=========================================="
     echo "  SOGo 6 Initialization Complete"
     echo "=========================================="
     echo ""
     echo "Server:     ${SERVER_URL}"
     echo "Domain:     ${DOMAIN}"
+    echo "Database:   ${detected_db}"
     echo ""
     echo "UI:         ${SERVER_URL//:5001/:3000}"
     echo "Admin API:  ${SERVER_URL}"
@@ -537,6 +683,12 @@ print_summary() {
     echo "LDAP Services:"
     echo "  Host:      sogo6-ldap:389"
     echo "  Base DN:   dc=${DOMAIN//./,dc=}"
+    echo ""
+    if [ "$detected_db" = "postgres" ]; then
+        echo "PostgreSQL: sogo6-postgres:5432 (user: sogo)"
+    else
+        echo "MariaDB:    sogo6-mariadb:3306 (user: sogo)"
+    fi
     echo ""
     echo "Test users: testuser@${DOMAIN}, testadmin@${DOMAIN}, testuser2@${DOMAIN}"
     echo "Password:   See init.ldif and README.md"

@@ -1,6 +1,10 @@
 #!/bin/bash
 # Shared configuration for test scripts
-set -euo pipefail
+# Sources lib/common.sh for colors, logging, and utility functions
+
+# Load shared library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}") " && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
 
 UI_URL="${SOGO_UI_URL:-http://localhost:3000}"
 API_URL="${SOGO_API_URL:-http://localhost:5001}"
@@ -35,34 +39,16 @@ TEST_USERS[testuser@example.org]=password123
 TEST_USERS[testadmin@example.org]=password123
 TEST_USERS[testuser2@example.org]=password123
 
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
+# Test counters (colors and base logging from lib/common.sh)
 PASS=0
 FAIL=0
 ERRORS=()
 
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
-}
-
-info() {
-    echo -e "${CYAN}[INFO]${NC} $*"
-}
-
-pass() {
-    PASS=$((PASS + 1))
-    echo "  [PASS] $*"
-}
-
-fail() {
-    FAIL=$((FAIL + 1))
-    echo "  [FAIL] $*"
-    ERRORS+=("$*")
-}
+# Legacy aliases for test scripts that use the old function names
+warn()   { log_warn "$@"; }
+info()   { log_info "$@"; }
+pass()   { PASS=$((PASS + 1)); echo "  [PASS] $*"; }
+fail()   { FAIL=$((FAIL + 1)); echo "  [FAIL] $*"; ERRORS+=("$*"); }
 
 print_summary() {
     local label="${1:-Tests}"

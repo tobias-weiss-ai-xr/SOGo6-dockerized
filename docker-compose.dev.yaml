@@ -1,0 +1,154 @@
+# SOGo 6 Development Stack (extends main compose)
+# =================================================
+# Extends docker-compose.yaml with dev settings and extra tools.
+# For a lightweight alternative, use docker-compose.override.yaml instead.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yaml up -d
+#   docker compose -f docker-compose.dev.yaml exec sogo6-server /bin/sh
+#
+# If you just need hot-reload without extra tools, use:
+#   docker compose -f docker-compose.yaml -f docker-compose.override.yaml up
+# =================================================
+
+include:
+  - docker-compose.yaml
+
+services:
+  # ── Override: SOGo UI (dev mode with hot reload) ───────────
+  sogo6-ui:
+    image: sogo6-ui:dev
+    build:
+      context: ./sogo6-ui
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      DEBUG: "true"
+      WDS_SOCKET_PORT: "3000"
+      NODE_OPTIONS: "--max-old-space-size=6144"
+      SSE_ENABLED: "true"
+      LOGIN_PREFILL_EMAIL: testuser@example.org
+      LOGIN_PREFILL_PASSWORD: dev_password_change_me
+    ports:
+      - "3000:3000"
+      - "24678:24678"
+    volumes:
+      - ./sogo6-ui:/app:cached
+      - /app/node_modules
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+
+  # ── Override: SOGo Server (dev mode with debugger) ─────────
+  sogo6-server:
+    image: sogo6-server:dev
+    build:
+      context: ./sogo6-server
+      dockerfile: deploy/local/Dockerfile.local
+      target: development
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+      PYTHONUNBUFFERED: "1"
+      LOG_LEVEL: debug
+    volumes:
+      - ./sogo6-server:/app:cached
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "2.0"
+
+  # ── Extra: PgAdmin (PostgreSQL admin UI) ───────────────────
+  sogo6-pgadmin:
+    image: dpage/pgadmin4:8.14
+    container_name: sogo6-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@example.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin_password_change_me
+    ports:
+      - "5050:80"
+    networks:
+      - sogo6-net
+    profiles: ["pgadmin"]
+    depends_on:
+      sogo6-postgres:
+        condition: service_healthy
+
+  # ── Extra: Redis Insight (Redis admin UI) ───────────────────
+  sogo6-redisinsight:
+    image: redis/redisinsight:2.66
+    container_name: sogo6-redisinsight
+    ports:
+      - "5540:5540"
+    networks:
+      - sogo6-net
+    profiles: ["redisinsight"]
+
+  # ── Extra: Mailhog (SMTP test server) ──────────────────────
+  sogo6-mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: sogo6-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - sogo6-net
+    profiles: ["mailhog"]
+
+  # ── Extra: LDAP Admin UI ───────────────────────────────────
+  sogo6-ldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: sogo6-ldapadmin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: sogo6-ldap
+    ports:
+      - "8081:80"
+    networks:
+      - sogo6-net
+    profiles: ["ldap-tools"]
+    depends_on:
+      sogo6-ldap:
+        condition: service_healthy
+
+  # ── Extra: LDAP Account Manager ────────────────────────────
+  sogo6-lam:
+    image: ldapaccountmanager/lam:9.0
+    container_name: sogo6-lam
+    ports:
+      - "8082:80"
+    networks:
+      - sogo6-net
+    profiles: ["ldap-tools"]
+    depends_on:
+      sogo6-ldap:
+        condition: service_healthy
+
+  # ── Extra: LDAP browser (Ladon) ────────────────────────────
+  sogo6-ladon:
+    image: mirhej/ladon:latest
+    container_name: sogo6-ladon
+    ports:
+      - "8083:80"
+    networks:
+      - sogo6-net
+    profiles: ["ldap-tools"]
+    depends_on:
+      sogo6-ldap:
+        condition: service_healthy
+
+  # ── Extra: Web-based LDAP browser ──────────────────────────
+  sogo6-wd-ldap:
+    image: wheezil/ldapjs-webui:latest
+    container_name: sogo6-wd-ldap
+    ports:
+      - "8084:80"
+    networks:
+      - sogo6-net
+    profiles: ["ldap-tools"]
+    depends_on:
+      sogo6-ldap:
+        condition: service_healthy

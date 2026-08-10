@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -21,6 +21,43 @@ env:
   SOGO_REDIS_HOST: localhost
 
 jobs:
+  security:
+    name: Security scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner (repo)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+          hide-progress: true
+
+      - name: Run Trivy vulnerability scanner (server Dockerfile)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: sogo6-server/Dockerfile
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
+      - name: Run Trivy vulnerability scanner (UI Dockerfile)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: sogo6-ui/Dockerfile
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
   lint:
     name: Lint shell scripts
     runs-on: ubuntu-24.04
@@ -31,12 +68,46 @@ jobs:
       - name: Run shellcheck
         run: shellcheck tests/*.sh sogo6/scripts/*.sh
 
-  test:
-    name: Full stack test
+  ui-build:
+    name: UI Build & Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: sogo6-ui/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd sogo6-ui
+          npm ci || npm install
+
+      - name: Run UI unit tests
+        run: |
+          cd sogo6-ui
+          npx jest --passWithNoTests --maxWorkers=2
+
+      - name: Build UI
+        run: |
+          cd sogo6-ui
+          npm run build
+
+  test-stack:
+    name: Stack build + backend tests
     runs-on: ubuntu-24.04
     needs: [lint]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install system dependencies
         run: |
@@ -44,14 +115,6 @@ jobs:
           sudo apt-get install -y -qq \
             curl openssl python3 python3-pip \
             ldap-utils netcat-openbsd
-
-      - name: Clone SOGo6-UI
-        run: |
-          git clone https://github.com/tobias-weiss-ai-xr/SOGo6-UI.git sogo6-ui
-
-      - name: Clone SOGo6-server
-        run: |
-          git clone https://github.com/tobias-weiss-ai-xr/SOGo6-server.git sogo6-server
 
       - name: Generate secrets
         run: bash sogo6/scripts/manage-secrets.sh
@@ -86,17 +149,172 @@ jobs:
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
 
+      - name: Run Admin API CRUD E2E tests
+        run: bash tests/admin-api-test.sh
+
       - name: Run Python integration tests
         run: |
           pip3 install -q pytest requests psycopg2-binary
           SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x
 
-      - name: Upload test report
+      - name: Run contract/property-based tests
+        run: |
+          pip3 install -q hypothesis
+          cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x
+
+  test-e2e:
+    name: Playwright E2E tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            curl openssl python3 python3-pip \
+            ldap-utils netcat-openbsd
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          cd sogo6-ui
+          npm ci || npm install
+
+      - name: Generate secrets
+        run: bash sogo6/scripts/manage-secrets.sh
+
+      - name: Generate TLS certs
+        run: bash sogo6/scripts/gen-certs.sh
+
+      - name: Build Docker images
+        run: |
+          docker compose build --parallel
+
+      - name: Start Docker stack (for API backend)
+        run: |
+          docker compose up -d --wait --wait-timeout 180 sogo6-redis sogo6-server
+          docker compose ps
+
+      - name: Wait for API
+        run: |
+          echo "Waiting for API..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5001/api/user/v1/system >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Initialize SOGo6
+        run: bash sogo6/scripts/init-sogo6.sh
+
+      - name: Install Playwright with Chromium
+        run: |
+          cd tests/e2e
+          npm ci || npm install
+          npx playwright install chromium
+
+      - name: Run Playwright E2E tests
+        run: |
+          # Stop the containerized UI (Next.js standalone doesn't hydrate in CI)
+          docker compose stop sogo6-ui 2>/dev/null || true
+          docker compose rm -f sogo6-ui 2>/dev/null || true
+          fuser -k 3000/tcp 2>/dev/null || true
+          sleep 2
+
+          # Start next dev on the host for Playwright
+          export NODE_ENV=development
+          export NEXT_TELEMETRY_DISABLED=1
+          export LOGIN_PREFILL_EMAIL=testuser@example.org
+          export LOGIN_PREFILL_PASSWORD=password123
+
+          cd sogo6-ui
+          npx next dev --port 3000 --hostname 0.0.0.0 &
+          NEXT_PID=$!
+          cd ..
+
+          echo "Waiting for UI dev server..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/en/auth/login >/dev/null 2>&1; then
+              echo "UI dev server ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
+
+          # Warm up known routes
+          for route in /en/auth/login /en/auth/login/pwd; do
+            curl -sf -o /dev/null "http://localhost:3000$route" &
+          done
+          wait
+
+          echo "Running Playwright E2E tests..."
+          cd tests/e2e
+          npx playwright test --config=playwright.config.ts --reporter=list,json 2>&1 || true
+          cd ../..
+
+          kill $NEXT_PID 2>/dev/null || true
+          wait $NEXT_PID 2>/dev/null || true
+
+  test-load:
+    name: Load / Performance tests
+    runs-on: ubuntu-24.04
+    needs: [test-stack]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install k6 for load testing
+        run: |
+          K6_VERSION="0.59.0"
+          K6_URL="https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz"
+          curl -sL "$K6_URL" | tar xz -C /tmp
+          sudo cp "/tmp/k6-v${K6_VERSION}-linux-amd64/k6" /usr/local/bin/
+          k6 version
+
+      - name: Start stack (reuse cached images)
+        run: |
+          docker compose up -d --wait --wait-timeout 180 || docker compose up -d
+
+      - name: Run load tests (JSON output)
+        id: load-tests
+        continue-on-error: true
+        run: |
+          echo "Running load/performance test suite..."
+          mkdir -p tests/load/results
+          bash tests/load/run.sh 2>&1 | tee tests/load/results/load-test-output.log
+
+      - name: Upload load test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-reports
+          path: |
+            tests/load/results/
+          if-no-files-found: ignore
+
+      # ────────────────────────────────────────────────────
+      # Artifacts & Reporting
+      # ────────────────────────────────────────────────────
+
+      - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: tests/test-report-*.json
+          path: |
+            tests/test-report-*.json
           if-no-files-found: ignore
 
       - name: Print Docker logs

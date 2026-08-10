@@ -3,47 +3,103 @@ dn: ou=users,dc=example,dc=org
 objectClass: organizationalUnit
 ou: users
 
-# Test user 1
-dn: uid=testuser@example.org,ou=users,dc=example,dc=org
+# ── Students ──
+dn: uid=maxmustermann@example.org,ou=users,dc=example,dc=org
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
-uid: testuser@example.org
-cn: Test User
-sn: User
-givenName: Test
-mail: testuser@example.org
-uidNumber: 1000
-gidNumber: 1000
-homeDirectory: /home/testuser
-userPassword: password123
+uid: maxmustermann@example.org
+cn: Max Mustermann
+sn: Mustermann
+givenName: Max
+mail: maxmustermann@example.org
+uidNumber: 2001
+gidNumber: 2001
+homeDirectory: /home/maxmustermann
+userPassword: UniMarburg2026!
 
-# Test admin
-dn: uid=testadmin@example.org,ou=users,dc=example,dc=org
+dn: uid=lisa.mayer@example.org,ou=users,dc=example,dc=org
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
-uid: testadmin@example.org
-cn: Test Admin
-sn: Admin
-givenName: Test
-mail: testadmin@example.org
-uidNumber: 1001
-gidNumber: 1001
-homeDirectory: /home/testadmin
-userPassword: password123
+uid: lisa.mayer@example.org
+cn: Lisa Mayer
+sn: Mayer
+givenName: Lisa
+mail: lisa.mayer@example.org
+uidNumber: 2002
+gidNumber: 2002
+homeDirectory: /home/lisa.mayer
+userPassword: UniMarburg2026!
 
-# Test user 2
-dn: uid=testuser2@example.org,ou=users,dc=example,dc=org
+# ── Professors ──
+dn: uid=klaus.schmidt@example.org,ou=users,dc=example,dc=org
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
-uid: testuser2@example.org
-cn: Test User 2
-sn: User2
-givenName: Test
-mail: testuser2@example.org
-uidNumber: 1002
-gidNumber: 1002
-homeDirectory: /home/testuser2
-userPassword: password123
+uid: klaus.schmidt@example.org
+cn: Prof. Dr. Klaus Schmidt
+sn: Schmidt
+givenName: Klaus
+mail: klaus.schmidt@example.org
+uidNumber: 3001
+gidNumber: 3001
+homeDirectory: /home/klaus.schmidt
+userPassword: ProfessorUni2026!
+
+dn: uid=sabine.weber@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: sabine.weber@example.org
+cn: Dean Sabine Weber
+sn: Weber
+givenName: Sabine
+mail: sabine.weber@example.org
+uidNumber: 3002
+gidNumber: 3002
+homeDirectory: /home/sabine.weber
+userPassword: DeanUni2026!Secure
+
+# ── Staff ──
+dn: uid=sekretariat@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: sekretariat@example.org
+cn: Sekretariat
+sn: Sekretariat
+givenName: Admin
+mail: sekretariat@example.org
+uidNumber: 4001
+gidNumber: 4001
+homeDirectory: /home/sekretariat
+userPassword: Sekretariat2026!
+
+dn: uid=bibliothek@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: bibliothek@example.org
+cn: Bibliothek
+sn: Bibliothek
+givenName: Bib
+mail: bibliothek@example.org
+uidNumber: 4002
+gidNumber: 4002
+homeDirectory: /home/bibliothek
+userPassword: LibraryUni2026!
+
+dn: uid=rektorat@example.org,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: rektorat@example.org
+cn: Rektorat
+sn: Rektorat
+givenName: Uni
+mail: rektorat@example.org
+uidNumber: 4003
+gidNumber: 4003
+homeDirectory: /home/rektorat
+userPassword: Rektorat2026!Admin

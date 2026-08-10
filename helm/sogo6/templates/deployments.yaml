@@ -1,0 +1,330 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-server
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{ include "sogo6.selectorLabels" . | nindent 6 }}
+      component: server
+  template:
+    metadata:
+      labels:
+        {{ include "sogo6.selectorLabels" . | nindent 8 }}
+        component: server
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: server
+          image: {{ include "sogo6.image" (dict "repository" .Values.image.server.repository "tag" .Values.image.server.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.server.pullPolicy }}
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: SOGO_P_DB_TYPE
+              value: "PostgreSQL"
+            - name: SOGO_P_DB_USER
+              value: "sogo"
+            - name: SOGO_P_DB_HOST
+              value: {{ include "sogo6.fullname" . }}-postgres
+            - name: SOGO_P_DB_PORT
+              value: "5432"
+            - name: SOGO_P_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: SOGO_P_DB_PASS
+            - name: SOGO_P_REDIS_URL
+              value: {{ include "sogo6.redisURI" . }}
+            - name: SOGO_DB_URI
+              value: {{ include "sogo6.postgresURI" . }}
+            - name: SOGO_REDIS_URI
+              value: {{ include "sogo6.redisURI" . }}
+            - name: SOGO_LDAP_URI
+              value: {{ include "sogo6.ldapURI" . }}
+            - name: SOGO_LDAP_BASE_DN
+              value: {{ include "sogo6.ldapBaseDN" . }}
+            - name: SOGO_LDAP_BIND_DN
+              value: {{ include "sogo6.ldapBindDN" . }}
+            - name: SOGO_LDAP_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: SOGO_P_LDAP_BIND_PASSWORD
+            - name: SCIM_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: SCIM_BEARER_TOKEN
+            - name: INTERCOM_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: INTERCOM_SHARED_SECRET
+            - name: SOGO_AES_ENC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: SOGO_AES_ENC_KEY
+            - name: SOGO_P_VOUCHER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: SOGO_P_VOUCHER_SECRET
+            - name: SOGO_LOG_LEVEL
+              value: {{ .Values.env.SOGO_LOG_LEVEL | quote }}
+            - name: SOGO_JSON_LOG
+              value: {{ .Values.env.SOGO_JSON_LOG | quote }}
+            - name: SOGO_LOG_DIR
+              value: /var/log/sogo
+            - name: FLASK_ENV
+              value: production
+            {{- if .Values.monitoring.enabled }}
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: /tmp/prometheus
+            {{- end }}
+            {{- with .Values.env.serverExtraEnv }}
+            {{ toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/sogo/process.conf
+              subPath: process.conf
+            - name: logs
+              mountPath: /var/log/sogo
+          livenessProbe: {{ include "sogo6.serverProbe" . | nindent 12 }}
+          readinessProbe: {{ include "sogo6.serverProbe" . | nindent 12 }}
+          resources: {{ toYaml .Values.resources.server | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "sogo6.configmap" . }}
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ include "sogo6.fullname" . }}-logs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-ui
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: ui
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{ include "sogo6.selectorLabels" . | nindent 6 }}
+      component: ui
+  template:
+    metadata:
+      labels:
+        {{ include "sogo6.selectorLabels" . | nindent 8 }}
+        component: ui
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: ui
+          image: {{ include "sogo6.image" (dict "repository" .Values.image.ui.repository "tag" .Values.image.ui.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.ui.pullPolicy }}
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: REACT_APP_API_BASE_URL
+              value: "http://{{ include "sogo6.fullname" . }}-server:5000/api/user/v1"
+            - name: NEXT_PUBLIC_ADMIN_DOMAINS
+              value: admin.{{ include "sogo6.domain" . }}
+          livenessProbe: {{ include "sogo6.uiProbe" . | nindent 12 }}
+          readinessProbe: {{ include "sogo6.uiProbe" . | nindent 12 }}
+          resources: {{ toYaml .Values.resources.ui | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-stalwart
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: stalwart
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{ include "sogo6.selectorLabels" . | nindent 6 }}
+      component: stalwart
+  template:
+    metadata:
+      labels:
+        {{ include "sogo6.selectorLabels" . | nindent 8 }}
+        component: stalwart
+    spec:
+      containers:
+        - name: stalwart
+          image: {{ include "sogo6.image" (dict "repository" .Values.image.stalwart.repository "tag" .Values.image.stalwart.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.stalwart.pullPolicy }}
+          ports:
+            - containerPort: 25
+              name: smtp
+            - containerPort: 465
+              name: smtps
+            - containerPort: 587
+              name: submission
+            - containerPort: 143
+              name: imap
+            - containerPort: 993
+              name: imaps
+          volumeMounts:
+            - name: mailstore
+              mountPath: /opt/stalwart/mail
+          resources: {{ toYaml .Values.resources.stalwart | nindent 12 }}
+      volumes:
+        - name: mailstore
+          persistentVolumeClaim:
+            claimName: {{ include "sogo6.fullname" . }}-mailstore
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-redis
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "sogo6.selectorLabels" . | nindent 6 }}
+      component: redis
+  template:
+    metadata:
+      labels:
+        {{ include "sogo6.selectorLabels" . | nindent 8 }}
+        component: redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ include "sogo6.image" (dict "repository" .Values.image.redis.repository "tag" .Values.image.redis.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.redis.pullPolicy }}
+          ports:
+            - containerPort: 6379
+          args: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb"]
+          livenessProbe:
+            exec:
+              command: [redis-cli, ping]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: [redis-cli, ping]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources: {{ toYaml .Values.resources.redis | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sogo6.fullname" . }}-openldap
+  labels: {{ include "sogo6.labels" . | nindent 4 }}
+    component: openldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "sogo6.selectorLabels" . | nindent 6 }}
+      component: openldap
+  template:
+    metadata:
+      labels:
+        {{ include "sogo6.selectorLabels" . | nindent 8 }}
+        component: openldap
+    spec:
+      containers:
+        - name: openldap
+          image: {{ include "sogo6.image" (dict "repository" .Values.image.openldap.repository "tag" .Values.image.openldap.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.openldap.pullPolicy }}
+          ports:
+            - containerPort: 389
+              name: ldap
+            - containerPort: 636
+              name: ldaps
+          env:
+            - name: LDAP_ORGANISATION
+              value: {{ include "sogo6.domain" . | quote }}
+            - name: LDAP_DOMAIN
+              value: {{ include "sogo6.domain" . }}
+            - name: LDAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sogo6.secret" . }}
+                  key: ldap-admin-password
+            - name: LDAP_BASE_DN
+              value: {{ include "sogo6.ldapBaseDN" . }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/ldap
+            - name: config
+              mountPath: /etc/ldap/slapd.d
+          livenessProbe:
+            exec:
+              command:
+                - ldapsearch
+                - -x
+                - -H
+                - ldap://localhost:389
+                - -b
+                - {{ include "sogo6.ldapBaseDN" . }}
+                - -D
+                - {{ include "sogo6.ldapBindDN" . }}
+                - -w
+                - $(LDAP_ADMIN_PASSWORD)
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            exec:
+              command:
+                - ldapsearch
+                - -x
+                - -H
+                - ldap://localhost:389
+                - -b
+                - {{ include "sogo6.ldapBaseDN" . }}
+                - -D
+                - {{ include "sogo6.ldapBindDN" . }}
+                - -w
+                - $(LDAP_ADMIN_PASSWORD)
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources: {{ toYaml .Values.resources.openldap | nindent 12 }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sogo6.fullname" . }}-ldap
+        - name: config
+          persistentVolumeClaim:
+            claimName: {{ include "sogo6.fullname" . }}-ldap-config

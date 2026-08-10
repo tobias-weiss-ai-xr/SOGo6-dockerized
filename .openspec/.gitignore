@@ -1,0 +1,50 @@
+# OpenSpec ignore patterns
+# https://openspec.dev/docs/environment-variables
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+ target/
+*.pyc
+__pycache__/
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+.jest/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Local development
+.local/
+
+# Docker
+.docker/
+
+# Git
+git*
+.git/
+.gitmodules

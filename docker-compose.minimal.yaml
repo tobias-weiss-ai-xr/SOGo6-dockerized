@@ -1,0 +1,113 @@
+# Minimal SOGo6 Stack — SOGo + UI only
+# No Nginx, no optional services
+#
+# Usage:
+#   docker compose -f docker-compose.minimal.yaml up -d
+#
+# Access:
+#   API:   http://localhost:5001
+#   UI:    http://localhost:3000
+
+
+services:
+  # ── Core Dependencies ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sogo6-redis-minimal
+    networks:
+      - sogo6-minimal-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sogo6-postgres-minimal
+    environment:
+      POSTGRES_USER: ${PG_USER:-sogo}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-sogo}
+      POSTGRES_DB: ${PG_DATABASE:-sogo}
+    networks:
+      - sogo6-minimal-net
+    volumes:
+      - sogo6-minimal-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-sogo}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: sogo6-ldap-minimal
+    environment:
+      LDAP_ORGANISATION: "Example"
+      LDAP_DOMAIN: "example.org"
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
+    networks:
+      - sogo6-minimal-net
+    volumes:
+      - sogo6-minimal-ldap-data:/var/lib/ldap
+      - sogo6-minimal-ldap-config:/etc/ldap/slapd.d
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost", "-b", "dc=example,dc=org", "-D", "cn=admin,dc=example,dc=org", "-w", "${LDAP_ADMIN_PASSWORD:-admin}", "(objectClass=*)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── SOGo Backend ──────────────────────────────────────────────
+  server:
+    build:
+      context: ./sogo6-server
+      dockerfile: deploy/local/Dockerfile.local
+      target: development
+    container_name: sogo6-server-minimal
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development}
+      SOGO_DB_URI: postgresql://${PG_USER:-sogo}:${PG_PASSWORD:-sogo}@postgres:5432/${PG_DATABASE:-sogo}
+      SOGO_REDIS_URI: redis://redis:6379/0
+      SOGO_LDAP_URI: ldap://ldap:389
+      SOGO_LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=example,dc=org}
+      SOGO_LDAP_BIND_DN: ${LDAP_BIND_DN:-cn=admin,dc=example,dc=org}
+      SOGO_LDAP_BIND_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
+      SCIM_BEARER_TOKEN: ${SCIM_BEARER_TOKEN:-}
+      INTERCOM_SHARED_SECRET: ${INTERCOM_SHARED_SECRET:-}
+    networks:
+      - sogo6-minimal-net
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ldap:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-5001}:5000"
+
+  # ── SOGo Frontend ─────────────────────────────────────────────
+  ui:
+    build:
+      context: ./sogo6-ui
+      dockerfile: Dockerfile
+    container_name: sogo6-ui-minimal
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_TELEMETRY_DISABLED: 1
+    networks:
+      - sogo6-minimal-net
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+networks:
+  sogo6-minimal-net:
+    driver: bridge
+
+volumes:
+  sogo6-minimal-db:
+  sogo6-minimal-ldap-data:
+  sogo6-minimal-ldap-config:

@@ -1,0 +1,65 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "SOGo 6 Overview",
+  "uid": "sogo6-overview",
+  "version": 2,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "API Request Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(sogo_http_requests_total[5m])", "legendFormat": "{{method}} {{endpoint}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "API Error Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "rate(sogo_http_errors_total[5m])", "legendFormat": "{{method}} {{endpoint}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "API Latency (p95)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(sogo_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "DB Query Duration (p95)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(sogo_db_query_duration_seconds_bucket[5m])) by (le))", "legendFormat": "{{operation}}", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "In-flight Requests",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        { "expr": "sogo_http_requests_in_flight", "datasource": "Prometheus" }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "title": "Recent Logs (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "{job=\"sogo6-server\"} |= \"ERROR\"", "datasource": "Loki" }
+      ],
+      "datasource": "Loki"
+    }
+  ],
+  "schemaVersion": 39
+}

@@ -5,18 +5,32 @@ postgres-*/
 screenshots/
 *.log
 .env
-.env.*
+.env.local
+.env.production
+.env.development
 .vscode/
 .idea/
 *.code-workspace
 .DS_Store
 *.swp
 evidence/
-sogo6-ui/
-sogo6-server/
 secrets/
+
+# VS Code - allow shared dev config
+!.vscode/
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Dev Container config
+!.devcontainer.json
 sogo6/nginx/certs/
 backups/
+
+# Sub-repo source code (managed as git submodules)
 __pycache__/
 .pytest_cache/
 *.pyc
+sogo6/nginx/certs/
+.next/
+*.tsbuildinfo

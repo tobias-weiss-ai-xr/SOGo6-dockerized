@@ -1,0 +1,8 @@
+[submodule "sogo6-ui"]
+	path = sogo6-ui
+	url = https://github.com/tobias-weiss-ai-xr/SOGo6-UI.git
+	branch = dev
+[submodule "sogo6-server"]
+	path = sogo6-server
+	url = https://github.com/tobias-weiss-ai-xr/SOGo6-server.git
+	branch = dev

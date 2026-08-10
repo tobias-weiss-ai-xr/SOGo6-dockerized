@@ -1,0 +1,22 @@
+# SOGo 6 — Code Owners
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @tobias-weiss-ai-xr
+
+# CI/CD
+.github/ @tobias-weiss-ai-xr
+
+# Docker & Deployment
+docker-compose*.yaml @tobias-weiss-ai-xr
+helm/ @tobias-weiss-ai-xr
+deploy/ @tobias-weiss-ai-xr
+
+# Backend (SOGo6-server)
+sogo6-server/ @tobias-weiss-ai-xr
+
+# Frontend (SOGo6-UI)
+sogo6-ui/ @tobias-weiss-ai-xr
+
+# Documentation
+docs/ @tobias-weiss-ai-xr
+*.md @tobias-weiss-ai-xr

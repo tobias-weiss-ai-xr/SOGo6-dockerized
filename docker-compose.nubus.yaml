@@ -1,0 +1,40 @@
+# nubusintercom — OIDC token exchange proxy between SOGo and OpenCloud
+#
+# Usage:
+#   docker compose --profile nubus up -d
+#
+# Endpoints:
+#   http://localhost:8100/health                    — health check
+#   http://localhost:8100/api/v1/token/exchange      — exchange SOGo token → intercom token
+#   http://localhost:8100/api/v1/token/validate       — validate intercom token
+#   http://localhost:8100/api/v1/files/browse        — browse OpenCloud files
+#   http://localhost:8100/api/v1/files/select        — select file for attachment
+#   http://localhost:8100/api/v1/users/provision     — provision user in OpenCloud
+#   http://localhost:8100/api/v1/webhooks/relay      — relay events to OpenCloud
+#   http://localhost:8100/api/v1/portal/config       — Univention portal config
+
+services:
+  sogo6-nubusintercom:
+    build: ./sogo6/nubusintercom
+    container_name: sogo6-nubusintercom
+    profiles: ["nubus"]
+    depends_on:
+      sogo6-redis:
+        condition: service_healthy
+    environment:
+      OPENCLOUD_BASE_URL: ${OPENCLOUD_BASE_URL:-http://localhost:9100}
+      SOGO_BASE_URL: ${SOGO_BASE_URL:-http://sogo6-server:5000}
+      INTERCOM_SHARED_SECRET: ${INTERCOM_SHARED_SECRET:-}
+      INTERCOM_PORT: 8100
+      INTERCOM_DEBUG: ${INTERCOM_DEBUG:-0}
+    ports:
+      - "8100:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - sogo6-net

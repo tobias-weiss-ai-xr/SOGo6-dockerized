@@ -1,0 +1,142 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev: Verify Setup",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/verify-dev.sh"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start All",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-debug"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Build",
+      "type": "shell",
+      "command": "make",
+      "args": ["build-dev"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start Core Services",
+      "type": "shell",
+      "command": "make",
+      "args": ["start-dev"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Stop",
+      "type": "shell",
+      "command": "make",
+      "args": ["stop-dev"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Clean",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-clean"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: View Logs",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-logs"],
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Shell - Server",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-shell-server"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Shell - UI",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-shell-ui"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Shell - Postgres",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-shell-postgres"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Shell - Redis",
+      "type": "shell",
+      "command": "make",
+      "args": ["dev-shell-redis"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Run All",
+      "type": "shell",
+      "command": "make",
+      "args": ["test"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Run Dev Tests",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-dev"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Smoke Tests",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-smoke"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint: Ruff",
+      "type": "shell",
+      "command": "ruff",
+      "args": ["check", "."],
+      "group": "lint",
+      "problemMatcher": ["$ruff"]
+    },
+    {
+      "label": "Lint: Ruff Fix",
+      "type": "shell",
+      "command": "ruff",
+      "args": ["check", "--fix", "."],
+      "group": "lint",
+      "problemMatcher": []
+    },
+    {
+      "label": "Type: MyPy",
+      "type": "shell",
+      "command": "mypy",
+      "args": ["."],
+      "group": "lint",
+      "problemMatcher": ["$mypy"]
+    }
+  ]
+}

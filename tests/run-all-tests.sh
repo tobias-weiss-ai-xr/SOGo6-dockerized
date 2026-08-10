@@ -1,16 +1,14 @@
 #!/bin/bash
 # SOGo 6 Test Suite Runner
-set -euo pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Load shared library
+source "${SCRIPT_DIR}/../lib/common.sh"
 
-log()    { echo -e "${GREEN}[RUN]${NC} $*"; }
-warn()   { echo -e "${YELLOW}[WARN]${NC} $*"; }
-fail()   { echo -e "${RED}[FAIL]${NC} $*"; }
+TOTAL_PASS=0
+TOTAL_FAIL=0
+REPORT_FILE="$SCRIPT_DIR/test-report-$(date +%Y%m%d-%H%M%S).json"
 
 TOTAL_PASS=0
 TOTAL_FAIL=0
@@ -127,6 +125,7 @@ run_test "Nginx Proxy Tests" "$SCRIPT_DIR/nginx-test.sh"
 run_test "JMAP Email Tests" "$SCRIPT_DIR/jmap-email-test.sh" 120
 run_test "Concurrent Connection Tests" "$SCRIPT_DIR/concurrent-test.sh" 120
 run_test "Integration Flow Tests" "$SCRIPT_DIR/integration-test.sh" 180
+run_test "Admin API CRUD Tests" "$SCRIPT_DIR/admin-api-test.sh" 180
 run_test "Security Tests" "$SCRIPT_DIR/security-test.sh" 120
 run_test "Configuration & Script Validation Tests" "$SCRIPT_DIR/script-test.sh"
 run_python_tests

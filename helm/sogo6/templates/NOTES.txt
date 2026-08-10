@@ -1,0 +1,48 @@
+Thank you for installing {{ .Chart.Name }} {{ .Chart.Version }}.
+
+══════════════════════════════════════════════════════════════════
+ SOGo 6 has been deployed to your cluster!
+══════════════════════════════════════════════════════════════════
+
+📋 Release:        {{ .Release.Name }}
+📅 Namespace:      {{ .Release.Namespace }}
+🌐 Domain:         {{ include "sogo6.domain" . }}
+
+Services:
+  - UI:       {{ include "sogo6.fullname" . }}-ui:3000
+  - API:      {{ include "sogo6.fullname" . }}-server:5000
+  - SMTP:     {{ include "sogo6.fullname" . }}-stalwart:25
+  - IMAP:     {{ include "sogo6.fullname" . }}-stalwart:143
+  - LDAP:     {{ include "sogo6.fullname" . }}-openldap:389
+  - Redis:    {{ include "sogo6.fullname" . }}-redis:6379
+  - Postgres: {{ include "sogo6.fullname" . }}-postgres:5432
+
+{{- if .Values.ingress.enabled }}
+Ingress:
+  URL: https://{{ .Values.ingress.host }}
+{{- end }}
+
+{{- if .Values.monitoring.enabled }}
+Monitoring:
+  Prometheus metrics available on /metrics (server:5000, ui:3000)
+{{- end }}
+
+To check deployment status:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+To view logs:
+  kubectl logs -n {{ .Release.Namespace }} -l component=server
+  kubectl logs -n {{ .Release.Namespace }} -l component=ui
+
+To update secrets after install:
+  kubectl edit secret {{ include "sogo6.secret" . }} -n {{ .Release.Namespace }}
+  kubectl rollout restart deployment -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Important:
+  ⚠ Set all required secrets before using in production:
+    helm upgrade {{ .Release.Name }} . \
+      --set secrets.postgresPassword=... \
+      --set secrets.ldapAdminPassword=... \
+      --set secrets.scimBearerToken=... \
+      --set secrets.intercomSharedSecret=... \
+      --set secrets.aesEncKey=...

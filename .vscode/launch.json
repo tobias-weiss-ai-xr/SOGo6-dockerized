@@ -1,0 +1,143 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Flask Remote Debug",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/sogo6-server",
+          "remoteRoot": "/app"
+        }
+      ],
+      "justMyCode": false,
+      "subProcess": false
+    },
+    {
+      "name": "Python: Flask Local Debug",
+      "type": "python",
+      "request": "launch",
+      "module": "flask",
+      "args": [
+        "run",
+        "--host=0.0.0.0",
+        "--port=5000",
+        "--reload",
+        "--with-threads"
+      ],
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1",
+        "FLASK_APP": "app",
+        "PYTHONUNBUFFERED": "1"
+      },
+      "cwd": "${workspaceFolder}/sogo6-server",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Node: Launch UI",
+      "type": "node",
+      "request": "launch",
+      "name": "Launch SOGo UI",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/sogo6-ui",
+      "console": "integratedTerminal",
+      "port": 3000,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Node: Attach to UI",
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to UI Process",
+      "port": 9229,
+      "restart": true
+    },
+    {
+      "name": "Python: Run Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/",
+        "-v",
+        "--tb=short",
+        "--no-header"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/sogo6-server"
+      }
+    },
+    {
+      "name": "Python: Run Unit Tests Only",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/unit/",
+        "-v",
+        "--tb=short"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Run Integration Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/integration/",
+        "-v",
+        "--tb=short"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Docker: Compose Dev Up",
+      "type": "python",
+      "request": "launch",
+      "program": "${home}/.vscode-server/binlinux-x64/a4661859e51006626438cf745b7b264298db9016/bin/code",
+      "args": [
+        "--command=docker-compose",
+        "-f",
+        "docker-compose.dev.yaml",
+        "up",
+        "-d",
+        "--wait"
+      ],
+      "problemMatcher": [],
+      "internalConsoleOptions": "neverOpen"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Dev Setup",
+      "configurations": [
+        "Docker: Compose Dev Up",
+        "Python: Flask Remote Debug"
+      ],
+      "stopAll": true
+    }
+  ]
+}
