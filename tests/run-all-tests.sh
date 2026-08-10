@@ -99,17 +99,23 @@ run_playwright_test() {
         return
     fi
 
-    set +e
-    cd "$SCRIPT_DIR"
-    if [ ! -d "node_modules" ]; then
-        npm install --no-fund --no-audit 2>/dev/null || true
-    fi
-    timeout 120 npm test 2>&1
-    local rc=$?
-    set -e
+    # Avoid recursion: npm test runs run-all-tests.sh, so only run
+    # the dedicated E2E script if it exists (not via npm test)
+    if [ -f "$SCRIPT_DIR/sogo6-e2e-test.js" ]; then
+        set +e
+        cd "$SCRIPT_DIR"
+        if [ ! -d "node_modules" ]; then
+            npm install --no-fund --no-audit 2>/dev/null || true
+        fi
+        timeout 120 node sogo6-e2e-test.js 2>&1
+        local rc=$?
+        set -e
 
-    if [ "$rc" -eq 124 ]; then
-        fail "Playwright test timed out"
+        if [ "$rc" -eq 124 ]; then
+            fail "Playwright E2E test timed out"
+        fi
+    else
+        warn "No Playwright E2E test script found"
     fi
     echo ""
 }

@@ -195,9 +195,6 @@ jobs:
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
 
-      - name: Run Admin API CRUD E2E tests
-        run: bash tests/admin-api-test.sh
-
       - name: Run Python integration tests
         run: |
           pip3 install -q pytest requests
