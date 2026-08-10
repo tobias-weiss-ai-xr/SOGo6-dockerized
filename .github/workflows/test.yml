@@ -211,8 +211,7 @@ jobs:
   test-e2e:
     name: Playwright E2E tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    continue-on-error: true
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
@@ -313,6 +312,13 @@ jobs:
           npm ci || npm install
           npx playwright install chromium
 
+      - name: Compile i18n messages
+        run: |
+          cd sogo6-ui
+          npm run prebuild
+          echo "Compiled messages:"
+          ls src/compiled-messages/ | head -5
+
       - name: Run Playwright E2E tests
         run: |
           # Stop the containerized UI (Next.js standalone doesn't hydrate in CI)
@@ -341,11 +347,16 @@ jobs:
             sleep 2
           done
 
-          # Warm up known routes
-          for route in /en/auth/login /en/auth/login/pwd; do
-            curl -sf -o /dev/null "http://localhost:3000$route" &
+          # Pre-compile routes that tests will visit
+          echo "Warming up routes..."
+          for route in /en/auth/login /en/auth/login/pwd \
+                      /de/auth/login /fr/auth/login /es/auth/login \
+                      /en/nonexistent-page /en/admin_panel \
+                      /en/user_settings; do
+            curl -sf -o /dev/null "http://localhost:3000$route" 2>/dev/null &
           done
           wait
+          echo "Routes warmed up"
 
           echo "Running Playwright E2E tests..."
           cd tests/e2e
