@@ -56,10 +56,14 @@ THEME_PATCH=$(curl -sk -X PATCH "$API_URL/api/admin/v1/config/theme" \
     -H "Authorization: Bearer $ADMIN_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"settings":{"primary_color":"#ff0000","logo_url":"https://example.com/logo.png"}}' 2>/dev/null)
+THEME_ERR=$(echo "$THEME_PATCH" | head -c 200)
 if echo "$THEME_PATCH" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "PATCH theme returned S000000"
+elif echo "$THEME_PATCH" | grep -qi "AttributeError"; then
+    fail "PATCH theme server error (submodule bug): $THEME_ERR"
 else
-    fail "PATCH theme failed: $(echo "$THEME_PATCH" | head -c 150)"
+    fail "PATCH theme failed: $THEME_ERR"
+fi
 fi
 
 echo "3. PATCH theme (revert)"
@@ -224,11 +228,15 @@ echo "--- Users CRUD ---"
 echo "16. GET users list"
 USERS_GET=$(curl -sk "$API_URL/api/admin/v1/users/list" \
     -H "Authorization: Bearer $ADMIN_TOKEN" 2>/dev/null)
+USERS_ERR=$(echo "$USERS_GET" | head -c 200)
 if echo "$USERS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     USER_COUNT=$(echo "$USERS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',[])))" 2>/dev/null || echo "0")
     pass "GET users list returned S000000 ($USER_COUNT users)"
+elif echo "$USERS_GET" | grep -qi "doctype\|html"; then
+    fail "GET users list server error (500): $USERS_ERR"
 else
-    fail "GET users list failed: $(echo "$USERS_GET" | head -c 150)"
+    fail "GET users list failed: $USERS_ERR"
+fi
 fi
 
 echo "17. POST create user"

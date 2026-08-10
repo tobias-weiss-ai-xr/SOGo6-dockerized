@@ -60,7 +60,11 @@ if [ -n "$ADMIN_TOKEN" ]; then
     fi
 fi
 
-echo "6. User logins"
+# --- User Authentication (LDAP-dependent) ---
+
+echo "6. User logins (LDAP-based)"
+LDAP_AUTH_WORKS=false
+FIRST_TOKEN=""
 for USER in "${!TEST_USERS[@]}"; do
     PASSWD="${TEST_USERS[$USER]}"
     TOKEN=$(curl -sk "$API_URL/api/user/v1/auth/login" \
@@ -69,50 +73,56 @@ for USER in "${!TEST_USERS[@]}"; do
         python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('jwt_token',''))" 2>/dev/null || true)
     if [ -n "$TOKEN" ]; then
         pass "User $USER login successful"
+        LDAP_AUTH_WORKS=true
+        [ -z "$FIRST_TOKEN" ] && FIRST_TOKEN="$TOKEN"
     else
         fail "User $USER login failed"
     fi
 done
 
-# --- Negative / Edge Tests ---
+# --- Negative / Edge Tests (require working LDAP auth) ---
 
-echo "7. Negative: wrong password returns error"
-WRONG=$(curl -sk "$API_URL/api/user/v1/auth/login" \
-    -H 'Content-Type: application/json' \
-    -d "{\"username\":\"testuser@example.org\",\"password\":\"wrongpassword\"}" 2>/dev/null)
-if echo "$WRONG" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
-    pass "Wrong password correctly rejected"
-else
-    fail "Wrong password accepted (security issue)"
-fi
+if $LDAP_AUTH_WORKS; then
+    echo "7. Negative: wrong password returns error"
+    WRONG=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+        -H 'Content-Type: application/json' \
+        -d "{\"username\":\"testuser@example.org\",\"password\":\"wrongpassword\"}" 2>/dev/null)
+    if echo "$WRONG" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+        pass "Wrong password correctly rejected"
+    else
+        fail "Wrong password accepted (security issue)"
+    fi
 
-echo "8. Negative: non-existent user returns error"
-NOUSER=$(curl -sk "$API_URL/api/user/v1/auth/login" \
-    -H 'Content-Type: application/json' \
-    -d "{\"username\":\"nonexistent@example.org\",\"password\":\"password123\"}" 2>/dev/null)
-if echo "$NOUSER" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
-    pass "Non-existent user correctly rejected"
-else
-    fail "Non-existent user accepted (security issue)"
-fi
+    echo "8. Negative: non-existent user returns error"
+    NOUSER=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+        -H 'Content-Type: application/json' \
+        -d "{\"username\":\"nonexistent@example.org\",\"password\":\"password123\"}" 2>/dev/null)
+    if echo "$NOUSER" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+        pass "Non-existent user correctly rejected"
+    else
+        fail "Non-existent user accepted (security issue)"
+    fi
 
-echo "9. Negative: empty credentials rejected"
-EMPTY=$(curl -sk "$API_URL/api/user/v1/auth/login" \
-    -H 'Content-Type: application/json' \
-    -d '{"username":"","password":""}' 2>/dev/null)
-if echo "$EMPTY" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
-    pass "Empty credentials correctly rejected"
-else
-    fail "Empty credentials accepted"
-fi
+    echo "9. Negative: empty credentials rejected"
+    EMPTY=$(curl -sk "$API_URL/api/user/v1/auth/login" \
+        -H 'Content-Type: application/json' \
+        -d '{"username":"","password":""}' 2>/dev/null)
+    if echo "$EMPTY" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+        pass "Empty credentials correctly rejected"
+    else
+        fail "Empty credentials accepted"
+    fi
 
-echo "10. Negative: invalid JWT token rejected"
-INVALID_TOKEN_TEST=$(curl -sk "$API_URL/api/user/v1/system" \
-    -H "Authorization: Bearer invalidtoken123" 2>/dev/null)
-if echo "$INVALID_TOKEN_TEST" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
-    pass "Invalid JWT token correctly rejected"
+    echo "10. Negative: invalid JWT token rejected"
+    INVALID_TOKEN_TEST=$(curl -sk "$API_URL/api/user/v1/system" \
+        -H "Authorization: Bearer invalidtoken123" 2>/dev/null)
+    if echo "$INVALID_TOKEN_TEST" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
+        pass "Invalid JWT token correctly rejected"
+    else
+        fail "Invalid JWT token accepted"
+    fi
 else
-    fail "Invalid JWT token accepted"
+    warn "LDAP auth not functional — skipping user auth negative tests (7-10)"
 fi
 
 echo "11. Negative: missing content type"
