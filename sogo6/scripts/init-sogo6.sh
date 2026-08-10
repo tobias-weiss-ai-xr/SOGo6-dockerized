@@ -238,7 +238,6 @@ wait_for_dependencies() {
         sleep 2
     done
     rm -f "$ldap_pwd_file"
-    done
     if [ "$ldap_found" = false ]; then
         log_warning "LDAP not available (skipping - optional dependency)"
     fi

@@ -31,7 +31,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (repo)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -41,7 +41,7 @@ jobs:
           hide-progress: true
 
       - name: Run Trivy vulnerability scanner (server Dockerfile)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: config
           scan-ref: sogo6-server/Dockerfile
@@ -50,7 +50,7 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Run Trivy vulnerability scanner (UI Dockerfile)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: config
           scan-ref: sogo6-ui/Dockerfile
@@ -129,7 +129,7 @@ jobs:
 
       - name: Start stack
         run: |
-          docker compose up -d --wait --wait-timeout 180
+          docker compose --profile db-mariadb up -d --wait --wait-timeout 180
           docker compose ps
 
       - name: Initialize SOGo6
@@ -154,7 +154,7 @@ jobs:
 
       - name: Run Python integration tests
         run: |
-          pip3 install -q pytest requests psycopg2-binary
+          pip3 install -q pytest requests
           SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x
 
       - name: Run contract/property-based tests
@@ -200,7 +200,7 @@ jobs:
 
       - name: Start Docker stack (for API backend)
         run: |
-          docker compose up -d --wait --wait-timeout 180 sogo6-redis sogo6-server
+          docker compose --profile db-mariadb up -d --wait --wait-timeout 180 sogo6-redis sogo6-mariadb sogo6-server
           docker compose ps
 
       - name: Wait for API
@@ -285,7 +285,7 @@ jobs:
 
       - name: Start stack (reuse cached images)
         run: |
-          docker compose up -d --wait --wait-timeout 180 || docker compose up -d
+          docker compose --profile db-mariadb up -d --wait --wait-timeout 180 || docker compose --profile db-mariadb up -d
 
       - name: Run load tests (JSON output)
         id: load-tests
@@ -320,7 +320,7 @@ jobs:
       - name: Print Docker logs
         if: failure()
         run: |
-          for svc in sogo6-ui sogo6-server sogo6-ldap sogo6-stalwart sogo6-postgres sogo6-redis; do
+          for svc in sogo6-ui sogo6-server sogo6-ldap sogo6-stalwart sogo6-mariadb sogo6-redis; do
             echo "=== $svc logs ==="
             docker compose logs --tail=50 "$svc" 2>/dev/null || true
           done

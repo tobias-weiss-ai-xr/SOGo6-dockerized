@@ -92,7 +92,7 @@ jobs:
           
           # Parse results to get metrics
           cat compliance_results.json | python3 -c "
-import json, sys
+import json, os, sys
 
 data = json.load(sys.stdin)
 
@@ -104,11 +104,12 @@ features_100 = sum(1 for r in data if r['compliance_percentage'] >= 100)
 features_total = len(data)
 
 # Output for GitHub
-print(f'::set-output name=compliance::{total_compliance:.2f}')
-print(f'::set-output name=dpmo::{total_dpmo:.0f}')
-print(f'::set-output name=sigma::{total_sigma:.2f}')
-print(f'::set-output name=features_100::{features_100}')
-print(f'::set-output name=features_total::{features_total}')
+with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+    f.write(f'compliance={total_compliance:.2f}\n')
+    f.write(f'dpmo={total_dpmo:.0f}\n')
+    f.write(f'sigma={total_sigma:.2f}\n')
+    f.write(f'features_100={features_100}\n')
+    f.write(f'features_total={features_total}\n')
 
 # Output summary
 print(f'\\n========== SIX SIGMA COMPLIANCE SUMMARY ==========')
@@ -257,7 +258,7 @@ EOF
           echo "✅ Badges generated"
       
       - name: 💾 Upload Compliance Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: six-sigma-compliance-report
@@ -352,7 +353,7 @@ EOF
           pip install pyyaml
       
       - name: 📊 Download Compliance Report
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: six-sigma-compliance-report
           path: sogo6-server
