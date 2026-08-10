@@ -132,8 +132,16 @@ jobs:
 
       - name: Start stack
         run: |
-          docker compose --profile db-mariadb up -d --wait --wait-timeout 180
+          docker compose --profile db-mariadb up -d --wait --wait-timeout 300
           docker compose ps
+
+      - name: Print container logs on failure
+        if: failure()
+        run: |
+          for svc in sogo6-server sogo6-mariadb sogo6-redis sogo6-ui; do
+            echo "=== $svc logs ==="
+            docker compose logs --tail=30 "$svc" 2>/dev/null || true
+          done
 
       - name: Initialize SOGo6
         run: bash sogo6/scripts/init-sogo6.sh
@@ -203,8 +211,16 @@ jobs:
 
       - name: Start Docker stack (for API backend)
         run: |
-          docker compose --profile db-mariadb up -d --wait --wait-timeout 180 sogo6-redis sogo6-mariadb sogo6-server
+          docker compose --profile db-mariadb up -d --wait --wait-timeout 300 sogo6-redis sogo6-mariadb sogo6-server
           docker compose ps
+
+      - name: Print container logs on failure
+        if: failure()
+        run: |
+          for svc in sogo6-server sogo6-mariadb sogo6-redis; do
+            echo "=== $svc logs ==="
+            docker compose logs --tail=30 "$svc" 2>/dev/null || true
+          done
 
       - name: Wait for API
         run: |
