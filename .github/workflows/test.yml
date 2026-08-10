@@ -137,6 +137,12 @@ jobs:
           echo "SOGO_P_DB_TYPE=MySQL" >> "$GITHUB_ENV"
           source <(grep LDAP_ADMIN_PASSWORD secrets/sogo6.vault.env)
           echo "SOGO_LDAP_BIND_PASSWORD=$LDAP_ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_VOUCHER_SECRET secrets/sogo6.vault.env)
+          echo "SOGO_P_VOUCHER_SECRET=$SOGO_P_VOUCHER_SECRET" >> "$GITHUB_ENV"
+          source <(grep SOGO_AES_ENC_KEY secrets/sogo6.vault.env)
+          echo "SOGO_AES_ENC_KEY=$SOGO_AES_ENC_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_SECRET_KEY secrets/sogo6.vault.env)
+          echo "SOGO_SECRET_KEY=$SOGO_SECRET_KEY" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |
@@ -246,6 +252,12 @@ jobs:
           echo "SOGO_P_DB_TYPE=MySQL" >> "$GITHUB_ENV"
           source <(grep LDAP_ADMIN_PASSWORD secrets/sogo6.vault.env)
           echo "SOGO_LDAP_BIND_PASSWORD=$LDAP_ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_VOUCHER_SECRET secrets/sogo6.vault.env)
+          echo "SOGO_P_VOUCHER_SECRET=$SOGO_P_VOUCHER_SECRET" >> "$GITHUB_ENV"
+          source <(grep SOGO_AES_ENC_KEY secrets/sogo6.vault.env)
+          echo "SOGO_AES_ENC_KEY=$SOGO_AES_ENC_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_SECRET_KEY secrets/sogo6.vault.env)
+          echo "SOGO_SECRET_KEY=$SOGO_SECRET_KEY" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |

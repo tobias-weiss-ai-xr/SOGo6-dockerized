@@ -84,6 +84,9 @@ services:
       SOGO_PROPAGATE_REQUEST_ID: ${SOGO_PROPAGATE_REQUEST_ID:-0}
       SOGO_INIT_SYSTEM_SETTINGS_PATH: /etc/sogo/init/system_settings.json
       SOGO_INIT_DOMAIN_SETTINGS_PATH: /etc/sogo/init/domain_settings.json
+      SOGO_P_VOUCHER_SECRET: ${SOGO_P_VOUCHER_SECRET:-}
+      SOGO_AES_ENC_KEY: ${SOGO_AES_ENC_KEY:-}
+      SOGO_SECRET_KEY: ${SOGO_SECRET_KEY:-}
       # ── SAML2 SP keypair ───────────────────────────────────────────────────
       # Mount sp-cert.pem and sp-key.pem at /etc/sogo/saml/ for SAML2 SSO.
       # Generate with: openssl req -x509 -newkey rsa:2048 -keyout sp-key.pem \
