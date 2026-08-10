@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-07-26  
 > **Source:** Extracted from `SOGo6Plan.adoc` (2026/06/02) and repository analysis  
-> **Status:** Late Beta — Complete (sogo6-stalwart-openldap-dockerized fork)
+> **Status:** Late Beta — Complete (SOGo6-dockerized fork)
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## 🎯 Overview
 
-SOGo 6 is a complete rebuild of the legacy SOGo groupware suite. This fork (`sogo6-stalwart-openldap-dockerized`) has implemented every major feature from the original roadmap.
+SOGo 6 is a complete rebuild of the legacy SOGo groupware suite. This fork (`SOGo6-dockerized`) has implemented every major feature from the original roadmap.
 
 **Current Phase:** Late Beta — all 7 original feature options + all polish are complete.
 
@@ -257,8 +257,8 @@ Not all files in `sogo6-ui/` are tracked by git. The `.gitignore` excludes `sogo
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
-cd sogo6-stalwart-openldap-dockerized
+git clone https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized.git
+cd SOGo6-dockerized
 make dev
 ```
 

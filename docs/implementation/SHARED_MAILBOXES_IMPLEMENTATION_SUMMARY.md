@@ -386,7 +386,7 @@ All primary functionality is now working:
 
 ## 🔗 Repository Links
 
-- **Root**: https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+- **Root**: https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized
 - **sogo6-server**: https://github.com/tobias-weiss-ai-xr/SOGo6-server
 - **sogo6-ui**: https://github.com/tobias-weiss-ai-xr/SOGo6-UI
 

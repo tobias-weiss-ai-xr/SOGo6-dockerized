@@ -192,7 +192,7 @@ All objectives from VERIFICATION.md have been achieved:
 - ✅ Created local validation automation
 - ✅ Documented development workflow
 
-The OpenSpec implementation for sogo6-stalwart-openldap-dockerized is now **production-ready** with full validation infrastructure.
+The OpenSpec implementation for SOGo6-dockerized is now **production-ready** with full validation infrastructure.
 
 ---
 

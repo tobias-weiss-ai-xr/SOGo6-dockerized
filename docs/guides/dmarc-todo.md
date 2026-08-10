@@ -1,4 +1,4 @@
-# DMARC-TODO: sogo6-stalwart-openldap-dockerized (Dev‑Stack)
+# DMARC-TODO: SOGo6-dockerized (Dev‑Stack)
 
 > **Kontext:** Docker Compose‑Entwicklungsumgebung für SOGo 6 (Next.js + Flask)  
 > mit Stalwart Mail Server, OpenLDAP, MariaDB/MariaDB, Redis, Nginx.  

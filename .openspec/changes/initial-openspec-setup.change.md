@@ -8,7 +8,7 @@ priority: t0
 
 ## Summary
 
-Adopt OpenSpec specification-driven development across the entire sogo6-stalwart-openldap-dockerized project, including its git submodules (sogo6-server and sogo6-ui). This will provide structured feature tracking, implementation status, and change management.
+Adopt OpenSpec specification-driven development across the entire SOGo6-dockerized project, including its git submodules (sogo6-server and sogo6-ui). This will provide structured feature tracking, implementation status, and change management.
 
 ## Motivation
 

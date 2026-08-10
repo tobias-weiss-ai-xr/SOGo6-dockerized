@@ -188,7 +188,7 @@ chore: update sogo6-ui submodule reference for API client implementation
 
 ## 🔗 Repository State
 
-### sogo6-stalwart-openldap-dockerized
+### SOGo6-dockerized
 ```
 Branch: dev
 Commits: 2 new commits pushed

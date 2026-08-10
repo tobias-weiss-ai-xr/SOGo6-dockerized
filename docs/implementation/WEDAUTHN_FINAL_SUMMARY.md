@@ -406,7 +406,7 @@ The frontend components use **existing Redux RTK Query endpoints** from:
 ### Repositories
 - Backend: https://github.com/tobias-weiss-ai-xr/SOGo6-server
 - Frontend: https://github.com/tobias-weiss-ai-xr/SOGo6-UI
-- Root: https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+- Root: https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized
 
 ### Specifications
 - WebAuthn Level 3: https://www.w3.org/TR/webauthn-3/

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This specification defines all features implemented in the **sogo6-stalwart-openldap-dockerized** project. It serves as the authoritative source for feature tracking, implementation status, and future planning.
+This specification defines all features implemented in the **SOGo6-dockerized** project. It serves as the authoritative source for feature tracking, implementation status, and future planning.
 
 **Status**: 100% Complete (76/76 features)
 **Version**: 1.0.0

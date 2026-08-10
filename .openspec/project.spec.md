@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository (`sogo6-stalwart-openldap-dockerized`) is a production-ready Docker deployment of **SOGo 6 Groupware** with **Stalwart Mail Server** and **OpenLDAP** integration. It packages Alinto's SOGo 6 (Python/Flask backend + Next.js/React frontend) as a complete, containerized groupware solution.
+This repository (`SOGo6-dockerized`) is a production-ready Docker deployment of **SOGo 6 Groupware** with **Stalwart Mail Server** and **OpenLDAP** integration. It packages Alinto's SOGo 6 (Python/Flask backend + Next.js/React frontend) as a complete, containerized groupware solution.
 
 **Status**: Production-ready, 100% roadmap complete
 
@@ -10,7 +10,7 @@ This repository (`sogo6-stalwart-openldap-dockerized`) is a production-ready Doc
 
 ```
 ┌─────────────────────────────────────────────────┐
-│          sogo6-stalwart-openldap-dockerized     │
+│          SOGo6-dockerized     │
 │              (Parent Repository)                │
 ├─────────────────────────────────────────────────┤
 │  • docker-compose.yaml (7 core services)       │
@@ -99,8 +99,8 @@ This repository (`sogo6-stalwart-openldap-dockerized`) is a production-ready Doc
 ### Quick Start
 ```bash
 # Clone and start all services
-git clone https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
-cd sogo6-stalwart-openldap-dockerized
+git clone https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized.git
+cd SOGo6-dockerized
 make dev
 
 # Access at http://localhost:3000

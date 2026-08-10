@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document serves as the **central index** for all OpenSpec documentation across the **sogo6-stalwart-openldap-dockerized** project. It provides a comprehensive guide to navigating the specification-driven development artifacts for the entire project, including parent repository and submodules.
+This document serves as the **central index** for all OpenSpec documentation across the **SOGo6-dockerized** project. It provides a comprehensive guide to navigating the specification-driven development artifacts for the entire project, including parent repository and submodules.
 
 **Last Updated**: August 21, 2025  
 **OpenSpec CLI Version**: 1.6.0  
@@ -14,7 +14,7 @@ This document serves as the **central index** for all OpenSpec documentation acr
 ## Project Structure
 
 ```
-sogo6-stalwart-openldap-dockerized/
+SOGo6-dockerized/
 ├── .openspec/                              # Root OpenSpec directory
 │   ├── project.spec.md                    # Parent project specification (5,802 lines)
 │   ├── changes/

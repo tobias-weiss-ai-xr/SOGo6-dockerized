@@ -45,8 +45,8 @@ Docker-based deployment of **SOGo 6** — the next-generation groupware suite (N
 
 ```bash
 # 1. Clone with submodules
-git clone --recurse-submodules https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
-cd sogo6-stalwart-openldap-dockerized
+git clone --recurse-submodules https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized.git
+cd SOGo6-dockerized
 
 # 2. Copy and configure environment
 cp .env.example .env

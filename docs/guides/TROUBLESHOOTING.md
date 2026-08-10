@@ -37,7 +37,7 @@ POSTGRES_DB: ${PG_DATABASE:-sogo},stalwart
 
 3. **Remove old volumes (if starting fresh):**
    ```bash
-   docker volume rm sogo6-stalwart-openldap-dockerized_sogo6-postgres-data
+   docker volume rm SOGo6-dockerized_sogo6-postgres-data
    ```
 
 4. **Start fresh:**

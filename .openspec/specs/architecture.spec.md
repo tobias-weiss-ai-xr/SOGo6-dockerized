@@ -2,7 +2,7 @@
 
 ## Overview
 
-This specification defines the system architecture for the **sogo6-stalwart-openldap-dockerized** project, including component design, data flow, and deployment topology.
+This specification defines the system architecture for the **SOGo6-dockerized** project, including component design, data flow, and deployment topology.
 
 **Status**: Implemented
 **Version**: 1.0.0

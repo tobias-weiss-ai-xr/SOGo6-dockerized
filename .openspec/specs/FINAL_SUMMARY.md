@@ -9,7 +9,7 @@
 ### Repository Coverage: 100%
 All three repositories now have complete OpenSpec documentation:
 
-1. **Root Repository (`sogo6-stalwart-openldap-dockerized/.openspec/`)**
+1. **Root Repository (`SOGo6-dockerized/.openspec/`)**
    - ✅ Project specification (5,802 lines)
    - ✅ System architecture (40,061 lines)
    - ✅ Authentication system (50,035 lines)
@@ -259,7 +259,7 @@ Complete OpenSpec Structure:
 
 **From zero to comprehensive in record time!**
 
-The sogo6-stalwart-openldap-dockerized project now has:
+The SOGo6-dockerized project now has:
 - ✅ **25 documentation files** across 3 repositories
 - ✅ **165,577+ lines** of structured specifications
 - ✅ **786+ features** fully documented

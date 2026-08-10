@@ -2,9 +2,9 @@
 
 ## Overview
 
-This repository (`sogo6-stalwart-openldap-dockerized`) packages Alinto's SOGo 6 groupware suite as a production-ready Docker stack alongside Stalwart mail server and OpenLDAP. It implements **76 of 81** roadmap features (Tiers 0–6 complete; Tier 7 partially complete) and adds significant new capability.
+This repository (`SOGo6-dockerized`) packages Alinto's SOGo 6 groupware suite as a production-ready Docker stack alongside Stalwart mail server and OpenLDAP. It implements **76 of 81** roadmap features (Tiers 0–6 complete; Tier 7 partially complete) and adds significant new capability.
 
-**GitHub:** https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+**GitHub:** https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized
 **Branch:** `dev` (multi-repo: parent + sogo6-server + sogo6-ui submodules, 26-language i18n)
 
 ## Architecture (16 Docker Services — 3 Core + 13 Profile-Based)
@@ -224,8 +224,8 @@ Optional profile services:
 ## How to Run
 
 ```bash
-git clone https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
-cd sogo6-stalwart-openldap-dockerized
+git clone https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized.git
+cd SOGo6-dockerized
 make dev
 ```
 

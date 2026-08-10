@@ -41,7 +41,7 @@
 ## 🗂️ Complete File Structure
 
 ```
-sogo6-stalwart-openldap-dockerized/
+SOGo6-dockerized/
 ├── .openspec/                          # Root specs
 │   ├── project.spec.md                 # ✅ 5,802 lines
 │   ├── CONTRIBUTING.md                 # ✅ 8,462 bytes

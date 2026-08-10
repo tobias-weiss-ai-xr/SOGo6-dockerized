@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides verification steps and validation checks for the OpenSpec implementation in the **sogo6-stalwart-openldap-dockerized** project.
+This document provides verification steps and validation checks for the OpenSpec implementation in the **SOGo6-dockerized** project.
 
 ## Verification Checklist
 

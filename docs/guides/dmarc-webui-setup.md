@@ -1,6 +1,6 @@
 # DMARC/DKIM/SPF Setup via Stalwart Web Admin UI
 
-> **Betrifft:** sogo6-stalwart-openldap-dockerized (Stalwart v0.16.x)  
+> **Betrifft:** SOGo6-dockerized (Stalwart v0.16.x)  
 > **Web-Admin:** http://localhost:8080/admin/  
 > **Credentials:** `admin` / `eval_admin_2026`
 

@@ -4,8 +4,8 @@
 
 ```bash
 # Clone with submodules
-git clone --recurse-submodules git@github.com:tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized.git
-cd sogo6-stalwart-openldap-dockerized
+git clone --recurse-submodules git@github.com:tobias-weiss-ai-xr/SOGo6-dockerized.git
+cd SOGo6-dockerized
 
 # Copy environment template
 cp .env.example .env

@@ -1,5 +1,5 @@
 # Stalwart DMARC/DKIM/SPF/ARC Konfiguration
-# für sogo6-stalwart-openldap-dockerized (v0.16.x)
+# für SOGo6-dockerized (v0.16.x)
 #
 # Anwendung: Config in Stalwart über Web-Admin-UI einspielen
 # oder bei Upgrade auf v0.17+ als config.toml mounten.

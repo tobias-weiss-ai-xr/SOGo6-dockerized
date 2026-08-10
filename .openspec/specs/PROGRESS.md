@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document tracks the progress of OpenSpec specification-driven development adoption across the **sogo6-stalwart-openldap-dockerized** project.
+This document tracks the progress of OpenSpec specification-driven development adoption across the **SOGo6-dockerized** project.
 
 **Last Updated**: August 19, 2025
 **Total Specification Files**: 22 files
@@ -15,7 +15,7 @@ This document tracks the progress of OpenSpec specification-driven development a
 ## Project Structure
 
 ```
-sogo6-stalwart-openldap-dockerized/
+SOGo6-dockerized/
 ├── .openspec/                              # Root OpenSpec directory
 │   ├── project.spec.md                    # ✅ Parent project specification (5,802 lines)
 │   ├── .gitignore

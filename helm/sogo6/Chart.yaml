@@ -16,9 +16,9 @@ keywords:
   - contacts
   - stalwart
   - openldap
-home: https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+home: https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized
 sources:
-  - https://github.com/tobias-weiss-ai-xr/sogo6-stalwart-openldap-dockerized
+  - https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized
   - https://github.com/tobias-weiss-ai-xr/SOGo6-server
   - https://github.com/tobias-weiss-ai-xr/SOGo6-UI
 maintainers:
