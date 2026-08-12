@@ -61,6 +61,39 @@ jobs:
           exit-code: 1
           severity: HIGH,CRITICAL
 
+      # ── CRA Art. 13: SBOM generation (CycloneDX) ──────────────────────
+      - name: Generate SBOM (repo)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: sbom-repo.cdx.json
+          hide-progress: true
+
+      - name: Generate SBOM (server image)
+        continue-on-error: true
+        run: |
+          docker build -q -f sogo6-server/Dockerfile -t sogo6-server:sbom . 2>/dev/null || true
+          trivy image --format cyclonedx --output sbom-server.cdx.json sogo6-server:sbom 2>/dev/null || \
+            echo "::warning::Server SBOM generation skipped"
+
+      - name: Generate SBOM (UI image)
+        continue-on-error: true
+        run: |
+          trivy image --format cyclonedx --output sbom-ui.cdx.json sogo6-ui:latest 2>/dev/null || \
+            echo "::warning::UI SBOM generation skipped (image not built in this job)"
+
+      - name: Upload SBOM artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom-*.cdx.json
+          if-no-files-found: ignore
+
   lint:
     name: Lint shell scripts
     runs-on: ubuntu-24.04
