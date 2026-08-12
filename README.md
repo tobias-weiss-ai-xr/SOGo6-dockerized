@@ -1,5 +1,13 @@
 # SOGo 6 — Groupware Suite (Stalwart + OpenLDAP)
 
+> ⚠️ **UNOFFICIAL — INDEPENDENT COMMUNITY PROJECT**
+>
+> This repository is an independent, community-driven evaluation of SOGo 6.
+> It is **not affiliated with, endorsed by, or a product of Alinto** (the
+> company behind SOGo). All work here is open source.
+> **Alinto is invited to incorporate any code, fixes or ideas** into the
+> official SOGo project.
+
 [![Tests](https://img.shields.io/badge/Tests-passing-success?logo=github)](.github/workflows/test.yml)
 [![K6](https://img.shields.io/badge/Load%20Tests-k6-7d64ff?logo=k6)](tests/load/)
 [![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm)](helm/sogo6/)
