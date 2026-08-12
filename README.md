@@ -193,6 +193,27 @@ bash tests/load/run.sh --k6-only      # HTTP load only
 bash tests/load/run.sh --quick        # Sync benchmark only
 ```
 
+## Security & CRA Readiness
+
+Software used by large organizations and public institutions must soon
+comply with the **EU Cyber Resilience Act (CRA)** — CE marking for software,
+SBOMs, coordinated vulnerability disclosure, and guaranteed security
+updates. This project is built with CRA readiness in mind:
+
+- **Trivy vulnerability scanning** (HIGH/CRITICAL) on every CI run — repo and
+  all container images
+- **Hardened containers** — minimal images, non-root where possible,
+  healthchecks, no debug tooling in production
+- **Tamper-evident audit log** with hash chain + SIEM export (backend)
+- **At-rest encryption** — AES-256-GCM (HIPAA-grade, backend)
+- **Security-focused CI** — shellcheck, secrets in vault (never in git),
+  dependency pinning
+- **Structured JSON logging** + Prometheus metrics for security monitoring
+
+> ⚠️ CRA conformity assessment is a journey, not a destination. We welcome
+> discussion and contributions on SBOM generation, vulnerability disclosure
+> policy, and security update commitments — see `MAILING-LIST-CALL.md`.
+
 ## Project Structure
 
 ```
