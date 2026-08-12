@@ -245,7 +245,13 @@ jobs:
                --ignore=tests/integration \
                --ignore=tests/test_integration \
                --ignore=tests/test_properties \
-               -q --tb=short --maxfail=10" 2>&1 | tail -40 || true
+               -q --tb=line --maxfail=10" 2>&1 | tail -60 || \
+            docker compose exec -T sogo6-server bash -c \
+              "cd /app && python3 -m pytest tests/ \
+                 --ignore=tests/integration \
+                 --ignore=tests/test_integration \
+                 --ignore=tests/test_properties \
+                 --tb=long -q --maxfail=5" 2>&1 | tail -80 || true
 
       - name: Run contract/property-based tests
         continue-on-error: true
