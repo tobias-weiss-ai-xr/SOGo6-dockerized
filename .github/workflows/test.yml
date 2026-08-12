@@ -402,13 +402,19 @@ jobs:
 
           # Pre-compile routes that tests will visit (bounded — never hang)
           echo "Warming up routes..."
+          CURL_PIDS=""
           for route in /en/auth/login /en/auth/login/pwd \
                       /de/auth/login /fr/auth/login /es/auth/login \
                       /en/nonexistent-page /en/admin_panel \
                       /en/user_settings; do
             curl -sf -o /dev/null --max-time 30 "http://localhost:3000$route" 2>/dev/null &
+            CURL_PIDS="$CURL_PIDS $!"
           done
-          wait
+          # Wait ONLY for the warm-up curls — a bare 'wait' would block on the
+          # next dev server background job and hang the step forever.
+          for pid in $CURL_PIDS; do
+            wait "$pid" 2>/dev/null || true
+          done
           echo "Routes warmed up"
 
           echo "Running Playwright E2E tests..."
