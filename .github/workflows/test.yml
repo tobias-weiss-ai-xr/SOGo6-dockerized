@@ -256,10 +256,10 @@ jobs:
       - name: Run contract/property-based tests
         continue-on-error: true
         run: |
-          pip3 install -q hypothesis
-          cd sogo6-server
-          python3 -c "import flask" 2>/dev/null || pip3 install -q -r pyproject.toml 2>/dev/null || true
-          python3 -m pytest tests/test_properties/ -v --tb=short -x
+          # Run inside the container where flask + all deps exist
+          docker compose exec -T sogo6-server bash -c \
+            "cd /app && pip3 install -q hypothesis 2>/dev/null; \
+             python3 -m pytest tests/test_properties/ -v --tb=short -x" 2>&1 | tail -30
 
   test-e2e:
     name: Playwright E2E tests
