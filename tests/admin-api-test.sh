@@ -49,7 +49,7 @@ THEME_GET=$(curl -sk "$API_URL/api/admin/v1/config/theme" \
 if echo "$THEME_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "GET theme returned S000000"
 else
-    fail "GET theme failed: $(echo "$THEME_GET" | head -c 150)"
+    fail "GET theme failed: $(printf '%.150s' "$THEME_GET")"
 fi
 
 echo "2. PATCH theme settings"
@@ -57,10 +57,10 @@ THEME_PATCH=$(curl -sk -X PATCH "$API_URL/api/admin/v1/config/theme" \
     -H "Authorization: Bearer $ADMIN_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"settings":{"primary_color":"#ff0000","logo_url":"https://example.com/logo.png"}}' 2>/dev/null)
-THEME_ERR=$(echo "$THEME_PATCH" | head -c 200 || true)
+THEME_ERR=$(printf '%.200s' "$THEME_PATCH")
 if echo "$THEME_PATCH" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "PATCH theme returned S000000"
-elif echo "$THEME_PATCH" | grep -qi "AttributeError"; then
+elif grep -qi "AttributeError" <<< "$THEME_PATCH"; then
     fail "PATCH theme server error (submodule bug): $THEME_ERR"
 else
     fail "PATCH theme failed: $THEME_ERR"
@@ -75,7 +75,7 @@ pass "PATCH theme revert completed"
 
 echo "4. Public themes endpoint returns CSS"
 PUBLIC_THEME=$(curl -sk "$API_URL/api/user/v1/customization/themes" 2>/dev/null)
-if echo "$PUBLIC_THEME" | grep -q ":root"; then
+if grep -q ":root" <<< "$PUBLIC_THEME"; then
     pass "Public themes endpoint returns CSS with :root"
 else
     fail "Public themes endpoint did not return CSS"
@@ -140,7 +140,7 @@ if [ -n "$RULE_ID" ]; then
         UPDATED_DESC=$(echo "$RULE_PATCH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('rule_description',''))" 2>/dev/null || true)
         pass "PATCH update rule $RULE_ID (description: $UPDATED_DESC)"
     else
-        fail "PATCH update rule $RULE_ID failed: $(echo "$RULE_PATCH" | head -c 150)"
+        fail "PATCH update rule $RULE_ID failed: $(printf '%.150s' "$RULE_PATCH")"
     fi
 fi
 
@@ -190,7 +190,7 @@ if [ -n "$DUP_ID" ] && [ "$DUP_ID" != "0" ]; then
     curl -sk -X DELETE "$API_URL/api/admin/v1/config/rules/$DUP_ID" \
         -H "Authorization: Bearer $ADMIN_TOKEN" > /dev/null 2>/dev/null || true
 else
-    fail "POST first creation failed: $(echo "$DUP_RESP" | head -c 150)"
+    fail "POST first creation failed: $(printf '%.150s' "$DUP_RESP")"
 fi
 
 # ==========================================================
@@ -205,7 +205,7 @@ SYS_GET=$(curl -sk "$API_URL/api/admin/v1/config/system" \
 if echo "$SYS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "GET system returned S000000"
 else
-    fail "GET system failed: $(echo "$SYS_GET" | head -c 150)"
+    fail "GET system failed: $(printf '%.150s' "$SYS_GET")"
 fi
 
 echo "15. PATCH system settings"
@@ -216,7 +216,7 @@ SYS_PATCH=$(curl -sk -X PATCH "$API_URL/api/admin/v1/config/system" \
 if echo "$SYS_PATCH" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "PATCH system returned S000000"
 else
-    fail "PATCH system failed: $(echo "$SYS_PATCH" | head -c 150)"
+    fail "PATCH system failed: $(printf '%.150s' "$SYS_PATCH")"
 fi
 
 # ==========================================================
@@ -228,11 +228,11 @@ echo "--- Users CRUD ---"
 echo "16. GET users list"
 USERS_GET=$(curl -sk "$API_URL/api/admin/v1/users/list" \
     -H "Authorization: Bearer $ADMIN_TOKEN" 2>/dev/null)
-USERS_ERR=$(echo "$USERS_GET" | head -c 200 || true)
+USERS_ERR=$(printf '%.200s' "$USERS_GET")
 if echo "$USERS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     USER_COUNT=$(echo "$USERS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',[])))" 2>/dev/null || echo "0")
     pass "GET users list returned S000000 ($USER_COUNT users)"
-elif echo "$USERS_GET" | grep -qi "doctype\|html"; then
+elif grep -qi "doctype\|html" <<< "$USERS_GET"; then
     warn "GET users list server error 500 (LDAP not functional)"
 else
     fail "GET users list failed: $USERS_ERR"
@@ -265,7 +265,7 @@ if echo "$SESS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); asser
     SESS_COUNT=$(echo "$SESS_GET" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',[])))" 2>/dev/null || echo "0")
     pass "GET users/active returned data ($SESS_COUNT active sessions)"
 else
-    fail "GET users/active failed: $(echo "$SESS_GET" | head -c 150)"
+    fail "GET users/active failed: $(printf '%.150s' "$SESS_GET")"
 fi
 
 # ==========================================================
@@ -280,7 +280,7 @@ DOM_DEF=$(curl -sk "$API_URL/api/admin/v1/config/domain-default" \
 if echo "$DOM_DEF" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "GET domain-default returned S000000"
 else
-    fail "GET domain-default failed: $(echo "$DOM_DEF" | head -c 150)"
+    fail "GET domain-default failed: $(printf '%.150s' "$DOM_DEF")"
 fi
 
 echo "20. GET dynamic-form config"
@@ -289,7 +289,7 @@ DYN_FORM=$(curl -sk "$API_URL/api/admin/v1/config/dynamic-form" \
 if echo "$DYN_FORM" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "GET dynamic-form returned S000000"
 else
-    fail "GET dynamic-form failed: $(echo "$DYN_FORM" | head -c 150)"
+    fail "GET dynamic-form failed: $(printf '%.150s' "$DYN_FORM")"
 fi
 
 # ==========================================================

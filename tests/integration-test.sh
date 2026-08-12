@@ -53,10 +53,10 @@ try:
         print(dom.get('name',''))
 except: pass
 " 2>/dev/null || true)
-if echo "$DOMAIN_NAMES" | grep -qi "example.org\|example"; then
+if grep -qi "example.org\|example" <<< "$DOMAIN_NAMES"; then
     pass "Domain 'example.org' configured in API"
 else
-    warn "No 'example.org' domain found in API: $(echo "$DOMAIN_NAMES" | head -c 100)"
+    warn "No 'example.org' domain found in API: $(printf '%.100s' "$DOMAIN_NAMES")"
 fi
 
 echo "4. User auths via API (LDAP-dependent)"
@@ -93,10 +93,10 @@ for HOST in sogo6-mariadb sogo6-redis sogo6-ldap sogo6-stalwart; do
     set +e
     PING_RESULT=$($DOCKER_CMD exec sogo6-server ping -c 1 -W 2 "$HOST" 2>&1 || true)
     set -e
-    if echo "$PING_RESULT" | grep -q "1 received\|1 packets transmitted, 1 received\|1 packets.*received"; then
+    if grep -q "1 received\|1 packets transmitted, 1 received\|1 packets.*received" <<< "$PING_RESULT"; then
         IP=$(echo "$PING_RESULT" | grep -oP 'from \K[0-9.]+' | head -1 || echo "unknown")
         pass "$HOST reachable from server container ($HOST -> $IP)"
-    elif echo "$PING_RESULT" | grep -q "0 received\|100% packet loss\|Name or service not known\|not found"; then
+    elif grep -q "0 received\|100% packet loss\|Name or service not known\|not found" <<< "$PING_RESULT"; then
         warn "$HOST not reachable via ping"
     else
         # Last resort: try TCP connection test
@@ -115,7 +115,7 @@ pass "Server container IP: $SELF_RESOLVE"
 
 echo "6. CORS headers on API responses"
 CORS_HEADERS=$(curl -sk -D- "$API_URL/api/user/v1/system" 2>/dev/null | head -20 || true)
-if echo "$CORS_HEADERS" | grep -qi "access-control-allow-origin"; then
+if grep -qi "access-control-allow-origin" <<< "$CORS_HEADERS"; then
     CORS_VAL=$(echo "$CORS_HEADERS" | grep -i "access-control-allow-origin" | head -1 | sed 's/.*: //')
     pass "API has CORS header: $CORS_VAL"
 else

@@ -43,7 +43,7 @@ for label in "${!SCRIPTS[@]}"; do
     if [ -f "$REPO_ROOT/$path" ]; then
         if [ -x "$REPO_ROOT/$path" ]; then
             SHEBANG=$(head -1 "$REPO_ROOT/$path" 2>/dev/null || true)
-            if echo "$SHEBANG" | grep -q "^#!"; then
+            if grep -q "^#!" <<< "$SHEBANG"; then
                 pass "$label script executable with shebang: $SHEBANG"
             else
                 warn "$label script missing shebang"

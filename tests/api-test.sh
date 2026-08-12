@@ -13,7 +13,7 @@ HEALTH=$(curl -sf "$API_URL/api/user/v1/system" 2>/dev/null || true)
 if echo "$HEALTH" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')=='S000000'" 2>/dev/null; then
     pass "System health check returned S000000"
 else
-    fail "System health check failed: $(echo "$HEALTH" | head -c 200)"
+    fail "System health check failed: $(printf '%.200s' "$HEALTH")"
 fi
 
 echo "2. Swagger endpoints"
@@ -127,7 +127,7 @@ fi
 
 echo "11. Negative: missing content type"
 MISSING_CT=$(curl -sk -X POST "$API_URL/api/user/v1/auth/login" \
-    -d '{"username":"testuser@example.org","password":"password123"}' 2>/dev/null | head -c 200 || true)
+    -d '{"username":"testuser@example.org","password":"password123"}' 2>/dev/null || true)
 if echo "$MISSING_CT" | python3 -c "import sys,json; print('error_code' in json.load(sys.stdin))" 2>/dev/null | grep -q True; then
     pass "Missing content-type returns structured error"
 else

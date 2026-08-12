@@ -69,7 +69,7 @@ fi
 echo "7. Security headers check"
 if [ "$HTTP_CODE" != "000" ]; then
     SEC_HEADERS=$(curl -sk -I http://localhost:80/ 2>/dev/null || true)
-    if echo "$SEC_HEADERS" | grep -qi "X-Frame-Options\|X-Content-Type-Options\|Strict-Transport-Security"; then
+    if grep -qi "X-Frame-Options\|X-Content-Type-Options\|Strict-Transport-Security" <<< "$SEC_HEADERS"; then
         pass "Security headers detected"
     else
         pass "No security headers (expected for dev setup)"

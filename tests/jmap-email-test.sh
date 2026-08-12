@@ -31,7 +31,7 @@ JMAP_RESULT=$($DOCKER_CMD exec "$ST_CONTAINER" curl -s -X POST http://localhost:
 if echo "$JMAP_RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('methodResponses',[{}])[0].get('1',{}).get('ping',''))" 2>/dev/null | grep -q pong; then
     pass "JMAP Core/echo works"
 else
-    warn "JMAP Core/echo failed: $(echo "$JMAP_RESULT" | head -c 200)"
+    warn "JMAP Core/echo failed: $(printf '%.200s' "$JMAP_RESULT")"
 fi
 
 echo "3. Domain listing via JMAP API"
@@ -66,7 +66,7 @@ SMTP_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$SEND_RESULT" | grep -qi "250\|OK"; then
+    if [ "$rc" -eq 0 ] && grep -qi "250\|OK" <<< "$SEND_RESULT"; then
         pass "Email sent via SMTP"
         SEND_OK=true
     else

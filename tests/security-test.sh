@@ -16,11 +16,11 @@ DOCKER_PORTS=$($DOCKER_CMD port sogo6-stalwart 2>/dev/null || true)
 EXPECTED_PORTS="25 465 587 143 993 4190 20025 20465 20587 20143 20993 24190"
 MISMATCH=false
 for port in 25 465 587 143 993 4190 20025 20465 20587 20143 20993 24190; do
-    if echo "$DOCKER_PORTS" | grep -q "$port"; then
+    if grep -q "$port" <<< "$DOCKER_PORTS"; then
         :
     fi
 done
-if echo "$DOCKER_PORTS" | grep -qE "25|20025"; then
+if grep -qE "25|20025" <<< "$DOCKER_PORTS"; then
     pass "Stalwart exposes SMTP ports as expected"
 else
     warn "Could not verify all Stalwart ports"
@@ -111,7 +111,7 @@ except: print('fail')
 " 2>/dev/null | grep -q "ok"; then
     pass "API error messages don't leak internal paths"
 else
-    warn "API error may contain internal details: $(echo "$WRONG_RESP" | head -c 200)"
+    warn "API error may contain internal details: $(printf '%.200s' "$WRONG_RESP")"
 fi
 
 echo "8. Password fields not returned in API responses"
@@ -147,7 +147,7 @@ fi
 
 echo "10. Docker daemon security settings"
 DOCKER_SEC=$($DOCKER_CMD info --format '{{.SecurityOptions}}' 2>/dev/null || echo "unknown")
-if echo "$DOCKER_SEC" | grep -qi "seccomp\|apparmor\|selinux"; then
+if grep -qi "seccomp\|apparmor\|selinux" <<< "$DOCKER_SEC"; then
     pass "Docker security: $DOCKER_SEC"
 else
     pass "Docker security options: $DOCKER_SEC"

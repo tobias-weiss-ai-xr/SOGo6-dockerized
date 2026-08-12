@@ -37,7 +37,7 @@ try:
 except Exception as e:
     print('ERROR:', e)
 " 2>/dev/null || true)
-    if echo "$EHLO_RESULT" | grep -qiE "250|220"; then
+    if grep -qiE "250|220" <<< "$EHLO_RESULT"; then
         pass "SMTP EHLO received OK"
         EHLO_OK=1
     fi
@@ -74,7 +74,7 @@ SMTP_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$SEND_RESULT" | grep -qi "250\|OK"; then
+    if [ "$rc" -eq 0 ] && grep -qi "250\|OK" <<< "$SEND_RESULT"; then
         pass "SMTP submission accepted via STARTTLS"
         SEND_OK=true
     else
@@ -133,7 +133,7 @@ IMAP_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$IMAP_RESULT" | grep -qi "A1 OK\|A2 LIST"; then
+    if [ "$rc" -eq 0 ] && grep -qi "A1 OK\|A2 LIST" <<< "$IMAP_RESULT"; then
         pass "IMAP login successful"
         INBOX_MSGS=$(echo "$IMAP_RESULT" | grep "A3 OK" | grep -oP '\d+' | head -1 || echo "?")
         pass "IMAP inbox accessible ($INBOX_MSGS messages)"
@@ -144,7 +144,7 @@ IMAP_EOF
     fi
 else
     IMAP_GREETING=$(timeout 5 bash -c "exec 3<>/dev/tcp/$SMTP_HOST/$IMAP_PORT; head -1 <&3" 2>/dev/null || true)
-    if echo "$IMAP_GREETING" | grep -qi "OK"; then
+    if grep -qi "OK" <<< "$IMAP_GREETING"; then
         pass "IMAP greeting received"
     else
         pass "IMAP port confirmed open"
@@ -191,7 +191,7 @@ SIEVE_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$SIEVE_RESULT" | grep -qi "A1 OK\|A2 OK"; then
+    if [ "$rc" -eq 0 ] && grep -qi "A1 OK\|A2 OK" <<< "$SIEVE_RESULT"; then
         pass "Sieve script upload accepted"
     else
         warn "Sieve upload via TLS not available (cert setup)"
@@ -212,7 +212,7 @@ FOLDER_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$FOLDERS" | grep -qi "A1 OK\|INBOX\|Drafts\|Sent\|Trash\|Junk"; then
+    if [ "$rc" -eq 0 ] && grep -qi "A1 OK\|INBOX\|Drafts\|Sent\|Trash\|Junk" <<< "$FOLDERS"; then
         FOLDER_COUNT=$(echo "$FOLDERS" | grep -c '" "' || echo "0")
         pass "IMAP folders accessible ($FOLDER_COUNT folders found)"
     else
@@ -236,7 +236,7 @@ SEARCH_EOF
 )
     rc=$?
     set -e
-    if [ "$rc" -eq 0 ] && echo "$SEARCH_RESULT" | grep -qi "A1 OK\|SEARCH\|Subject"; then
+    if [ "$rc" -eq 0 ] && grep -qi "A1 OK\|SEARCH\|Subject" <<< "$SEARCH_RESULT"; then
         pass "IMAP search and fetch works"
     else
         warn "IMAP search via TLS unavailable"

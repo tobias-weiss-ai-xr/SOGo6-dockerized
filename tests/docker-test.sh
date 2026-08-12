@@ -31,7 +31,7 @@ echo "2. All expected containers exist"
 RUNNING=$($DOCKER_CMD ps --format '{{.Names}}' 2>/dev/null || true)
 ALL_FOUND=true
 for c in "${EXPECTED_CONTAINERS[@]}"; do
-    if echo "$RUNNING" | grep -qx "$c"; then
+    if grep -qx "$c" <<< "$RUNNING"; then
         pass "Container $c is running"
     else
         fail "Container $c is NOT running"
@@ -55,7 +55,7 @@ for c in "${EXPECTED_CONTAINERS[@]}"; do
             fail "$c state: $STATE (no healthcheck)"
         fi
     else
-        if echo "$CORE_SERVICES" | grep -qw "$c"; then
+        if grep -qw "$c" <<< "$CORE_SERVICES"; then
             fail "$c health: $STATUS (core service must be healthy)"
         else
             warn "$c health: $STATUS (non-core service may still be starting)"
