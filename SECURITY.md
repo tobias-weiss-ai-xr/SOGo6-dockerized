@@ -80,5 +80,7 @@ required by applicable law (EU 2024/2847 Art. 14(3)).
 
 ## Contact
 
-- Maintainers: via the GitHub repository (private vulnerability report)
-- PGP key: (to be published — ask via the private report channel)
+- **Primary**: GitHub private vulnerability report
+  https://github.com/tobias-weiss-ai-xr/SOGo6-dockerized/security/advisories/new
+  (recommended — includes automated SBOM/dependency context)
+- **Maintainer**: https://tobias-weiss.org (blog & contact)
