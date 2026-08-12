@@ -237,14 +237,15 @@ jobs:
         run: |
           # Run the full non-integration backend suite inside the container,
           # where all Python deps (flask, redis, ldap3, ...) are installed.
-          # Skip test_properties (needs hypothesis) and test_integration
-          # (already covered in the previous step).
+          # test_integration is covered by the previous step; test_properties
+          # needs hypothesis + host deps and runs in its own step.
           docker compose exec -T sogo6-server bash -c \
-            "cd /app && pip3 install -q hypothesis pytest 2>/dev/null; \
+            "cd /app && pip3 install -q hypothesis pytest pytest-mock 2>/dev/null; \
              python3 -m pytest tests/ \
                --ignore=tests/integration \
+               --ignore=tests/test_integration \
                --ignore=tests/test_properties \
-               -q --tb=short --maxfail=10" 2>&1 | tail -30 || true
+               -q --tb=short --maxfail=10" 2>&1 | tail -40 || true
 
       - name: Run contract/property-based tests
         continue-on-error: true
