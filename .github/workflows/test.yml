@@ -439,9 +439,19 @@ jobs:
         run: |
           K6_VERSION="0.59.0"
           K6_URL="https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz"
-          curl -sL "$K6_URL" | tar xz -C /tmp
-          sudo cp "/tmp/k6-v${K6_VERSION}-linux-amd64/k6" /usr/local/bin/
-          k6 version
+          # Retry loop — GitHub release downloads occasionally fail (empty/corrupt stream)
+          for attempt in 1 2 3; do
+            echo "k6 download attempt $attempt/3..."
+            if curl -fsSL --retry 3 --max-time 120 -o /tmp/k6.tar.gz "$K6_URL" && tar tzf /tmp/k6.tar.gz >/dev/null 2>&1; then
+              tar xzf /tmp/k6.tar.gz -C /tmp
+              sudo cp "/tmp/k6-v${K6_VERSION}-linux-amd64/k6" /usr/local/bin/
+              k6 version
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Failed to download k6 after 3 attempts"
+          exit 1
 
       - name: Start stack (reuse cached images)
         run: |
