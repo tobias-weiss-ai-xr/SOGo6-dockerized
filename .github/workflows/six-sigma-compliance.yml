@@ -66,7 +66,7 @@ jobs:
           echo "::notice title=Six Sigma Update::Compliance: ${COMPLIANCE}%, Sigma: ${{ steps.compliance.outputs.sigma }}"
 
       - name: Upload Compliance Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: six-sigma-compliance-report
