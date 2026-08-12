@@ -400,13 +400,13 @@ jobs:
             sleep 2
           done
 
-          # Pre-compile routes that tests will visit
+          # Pre-compile routes that tests will visit (bounded — never hang)
           echo "Warming up routes..."
           for route in /en/auth/login /en/auth/login/pwd \
                       /de/auth/login /fr/auth/login /es/auth/login \
                       /en/nonexistent-page /en/admin_panel \
                       /en/user_settings; do
-            curl -sf -o /dev/null "http://localhost:3000$route" 2>/dev/null &
+            curl -sf -o /dev/null --max-time 30 "http://localhost:3000$route" 2>/dev/null &
           done
           wait
           echo "Routes warmed up"
