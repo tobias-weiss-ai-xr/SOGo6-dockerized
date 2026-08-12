@@ -62,7 +62,7 @@ export async function setupEnvInterception(page: any) {
     if (!body.LOGIN_PREFILL_PASSWORD) {
       body.LOGIN_PREFILL_PASSWORD = CREDENTIALS.user.password;
     }
-    await route.fulfill({ response, body });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
 }
 
