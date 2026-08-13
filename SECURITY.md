@@ -9,14 +9,16 @@ See `CRA-READINESS.md` for the full requirement mapping.
 
 | Version | Supported | Security updates |
 |---------|-----------|------------------|
-| 6.x (v1.0.0+) | ✅ Active development | ✅ Free security patches |
+| 6.x (v1.0.0+) | ✅ Active development | ✅ Best-effort security patches |
 | < 6.0 | ❌ Not supported | ❌ |
 
-**Security update commitment:** while this is a community project, we
-commit to fixing HIGH/CRITICAL vulnerabilities with a security patch
+**Security update commitment (best-effort):** this is an unpaid community
+project. We aim to fix HIGH/CRITICAL vulnerabilities with a security patch
 release as soon as a fix is available (target: within 30 days of a
-reported, verified vulnerability). There is no end-of-life for the 6.x
-line planned.
+reported, verified vulnerability). This is a best-effort commitment — a
+legally binding multi-year update guarantee can only be given by a
+manufacturer or commercial operator (see `CRA-READINESS.md` for the
+distinction). There is no end-of-life for the 6.x line planned.
 
 ## Reporting a Vulnerability
 

@@ -59,16 +59,29 @@ breaks? What's brilliant?
 **EU Cyber Resilience Act**: by the time the CRA obligations fully apply
 (2027), software used in **big organizations and public institutions** will
 need to be demonstrably secure — think **CE marking for software, SBOMs,
-coordinated vulnerability disclosure, and guaranteed security updates**. Our
-deployment already includes Trivy vulnerability scanning, hardened
-containers, audit logging and tamper-evident audit chains, but we want to
-discuss with you:
+coordinated vulnerability disclosure, and guaranteed security updates**.
+
+To be clear about what we do and don't claim: **CRA conformity is not a
+technical feature.** It is a formal assessment that only the manufacturer
+or operating organization can carry out (conformity assessment, technical
+file, CE marking, ENISA/CSIRT reporting obligations). An open-source
+community project cannot declare itself "CRA-compliant".
+
+What we *can* offer — and what we're building — is the **technical and
+organizational groundwork** that makes CRA conformity significantly less
+costly for whoever operates the stack: SBOM generation in CI (CycloneDX),
+Trivy vulnerability scanning, hardened containers, structured audit
+logging with tamper-evident hash chains, a coordinated-disclosure policy
+(SECURITY.md + security.txt), and a documented update process. The
+operator still has to do the formal conformity work — but ideally without
+starting from zero. We'd love to discuss:
 
 - What does **CRA readiness** realistically mean for an open-source
-  groupware stack like this?
+  groupware stack like this, and where exactly does the operator's
+  responsibility begin?
 - Which **procurement requirements** are your organizations already seeing
   (SBOM requests? security questionnaires? conformity assessments)?
-- How should a community project approach **security update commitments**
+- How should a community project support **security update commitments**
   and **vulnerability disclosure** without a commercial backing?
 
 **3. Migration stories** — CalDAV/CardDAV sync, Sieve rules, importing data

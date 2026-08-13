@@ -198,21 +198,30 @@ bash tests/load/run.sh --quick        # Sync benchmark only
 Software used by large organizations and public institutions must soon
 comply with the **EU Cyber Resilience Act (CRA)** — CE marking for software,
 SBOMs, coordinated vulnerability disclosure, and guaranteed security
-updates. This project is built with CRA readiness in mind:
+updates.
 
-- **Trivy vulnerability scanning** (HIGH/CRITICAL) on every CI run — repo and
-  all container images
+**Important:** CRA conformity is **not** a technical feature and cannot be
+claimed by an open-source project. Conformity assessment (technical file,
+CE marking, ENISA/CSIRT reporting) is the responsibility of the
+manufacturer or the operating organization. What this project provides is
+the **technical and organizational groundwork** that makes that conformity
+assessment significantly less costly:
+
+- **SBOM generation** (CycloneDX) in CI — repo and all container images
+- **Trivy vulnerability scanning** (HIGH/CRITICAL) on every CI run
 - **Hardened containers** — minimal images, non-root where possible,
   healthchecks, no debug tooling in production
 - **Tamper-evident audit log** with hash chain + SIEM export (backend)
 - **At-rest encryption** — AES-256-GCM (HIPAA-grade, backend)
 - **Security-focused CI** — shellcheck, secrets in vault (never in git),
   dependency pinning
+- **Coordinated disclosure policy** — SECURITY.md + security.txt
 - **Structured JSON logging** + Prometheus metrics for security monitoring
 
-> ⚠️ CRA conformity assessment is a journey, not a destination. We welcome
-> discussion and contributions on SBOM generation, vulnerability disclosure
-> policy, and security update commitments — see `MAILING-LIST-CALL.md`.
+> ⚠️ The operator still carries the formal conformity obligations (CRA
+> conformity assessment, technical documentation, vulnerability reporting).
+> We welcome discussion and contributions on closing the remaining gaps —
+> see `MAILING-LIST-CALL.md` and `CRA-READINESS.md`.
 
 ## Project Structure
 
