@@ -125,6 +125,14 @@ jobs:
           cd sogo6-ui
           npm ci || npm install
 
+      - name: TypeScript type gate (tsc --noEmit)
+        run: |
+          # Regression gate: fails if the tsc error count rises above the
+          # baseline in scripts/tsc-error-baseline.txt. Pre-existing type
+          # debt passes with a warning; new errors block the pipeline.
+          # After fixing errors, run: bash scripts/typecheck-gate.sh --update
+          bash scripts/typecheck-gate.sh
+
       - name: Run UI unit tests
         run: |
           cd sogo6-ui
