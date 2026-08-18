@@ -302,7 +302,7 @@ services:
     # config.json). The server config (LDAP directory + relay) lives in the TOML
     # file and must be *imported* into the store first, then the server started.
     # The image entrypoint is already `stalwart`, so we wrap import + run in sh.
-    command: ["sh", "-c", "stalwart -i /etc/stalwart/config.toml && exec stalwart"]
+    command: ["sh", "-c", "stalwart -c /etc/stalwart/config.json -i /etc/stalwart/config.toml && exec stalwart -c /etc/stalwart/config.json"]
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"
