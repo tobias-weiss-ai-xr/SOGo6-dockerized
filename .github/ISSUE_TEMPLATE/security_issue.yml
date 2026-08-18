@@ -1,0 +1,51 @@
+name: Security Issue
+description: Report a security vulnerability (visible only to maintainers)
+labels: ["security", "triage"]
+body:
+  - type: textarea
+    id: vulnerability
+    attributes:
+      label: Security Vulnerability Description
+      description: Describe the security issue. Avoid disclosing exploit details publicly.
+      placeholder: "Describe the vulnerability, its impact, and affected versions."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce (Private)
+      description: How can maintainers reproduce the issue? This will only be visible to maintainers.
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the potential impact of this vulnerability?
+      placeholder: "e.g. Remote code execution, data leak, privilege escalation ..."
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Estimated Severity
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation
+      description: Any ideas for how to fix or mitigate this issue?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked the SECURITY.md file for responsible disclosure guidelines
+          required: true

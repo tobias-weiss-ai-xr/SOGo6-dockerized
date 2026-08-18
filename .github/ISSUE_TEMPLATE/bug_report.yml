@@ -1,0 +1,96 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in SOGo6-dockerized
+labels: ["bug", "triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I click X, Y happens instead of Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "I expected X to happen."
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: "Instead, Y happened."
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs / Screenshots
+      description: |
+        Paste any relevant server logs, browser console output, or screenshots.
+        Tip: Use \`docker logs <container>\` for server-side logs.
+      render: shell
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the stack is affected?
+      options:
+        - UI (sogo6-ui / Next.js)
+        - Backend API (sogo6-server / Flask)
+        - Authentication / LDAP
+        - Mail (SMTP / IMAP)
+        - Calendar / Contacts (CalDAV / CardDAV)
+        - Docker / Deployment
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: "Git commit hash, tag, or version number."
+      placeholder: "e.g. 9f9a6c6 or v1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Docker version, browser, etc.
+      placeholder: |
+        - OS: Ubuntu 24.04
+        - Docker: 29.6.2
+        - Browser: Firefox 130
+        - Deployment: traefik + Let's Encrypt
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm before submitting.
+      options:
+        - label: I have searched existing issues for duplicates
+          required: true
+        - label: I can reproduce this consistently
+          required: true
