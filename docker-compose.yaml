@@ -186,6 +186,9 @@ services:
     environment:
       LDAP_ORGANISATION: ${LDAP_ORGANISATION:-Example Org}
       LDAP_DOMAIN: ${LDAP_DOMAIN:-example.org}
+      # Base DN must be derived from LDAP_DOMAIN (entrypoint does NOT infer it); if
+      # unset it defaults to dc=example,dc=org and seed LDIFs for other domains fail.
+      LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=example,dc=org}
       # ⚠️  Change these in production — generate strong passwords and set via env
       LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-}
       LDAP_CONFIG_PASSWORD: ${LDAP_CONFIG_PASSWORD:-}
