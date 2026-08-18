@@ -1,0 +1,41 @@
+# Traefik ingress override for contextual-intelligence.org
+networks:
+  traefik-web:
+    external: true
+
+services:
+  sogo6-ui:
+    networks:
+      - sogo6-net
+      - traefik-web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "https://sogo6.contextual-intelligence.org"
+      NEXT_PUBLIC_ADMIN_DOMAINS: "contextual-intelligence.org"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.sogo6-ui-http.entrypoints: "web"
+      traefik.http.routers.sogo6-ui-http.rule: "Host(`sogo6.contextual-intelligence.org`)"
+      traefik.http.routers.sogo6-ui-http.middlewares: "https-redirect@file"
+      traefik.http.routers.sogo6-ui.entrypoints: "websecure"
+      traefik.http.routers.sogo6-ui.rule: "Host(`sogo6.contextual-intelligence.org`)"
+      traefik.http.routers.sogo6-ui.tls.certresolver: "mytlschallenge"
+      traefik.http.services.sogo6-ui.loadbalancer.server.port: "3000"
+
+  sogo6-server:
+    networks:
+      - sogo6-net
+      - traefik-web
+    environment:
+      # Propagate the vault-generated admin password (compose omits this by default)
+      SOGO_P_ADMIN: ${SOGO_P_ADMIN:-admin}
+      SOGO_P_ADMIN_PWD: ${SOGO_P_ADMIN_PWD:-}
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.sogo6-api-http.entrypoints: "web"
+      traefik.http.routers.sogo6-api-http.rule: "Host(`sogo6.contextual-intelligence.org`) && PathPrefix(`/api`)"
+      traefik.http.routers.sogo6-api-http.middlewares: "https-redirect@file"
+      traefik.http.routers.sogo6-api.entrypoints: "websecure"
+      traefik.http.routers.sogo6-api.rule: "Host(`sogo6.contextual-intelligence.org`) && (PathPrefix(`/api`) || PathPrefix(`/swagger-basic`) || PathPrefix(`/swagger-admin`) || PathPrefix(`/openapi-basic.json`) || PathPrefix(`/openapi-admin.json`) || PathPrefix(`/admin/openapi-admin.json`) || PathPrefix(`/swagger-ui-dist`))"
+      traefik.http.routers.sogo6-api.tls.certresolver: "mytlschallenge"
+      traefik.http.routers.sogo6-api.priority: "100"
+      traefik.http.services.sogo6-api.loadbalancer.server.port: "5000"
