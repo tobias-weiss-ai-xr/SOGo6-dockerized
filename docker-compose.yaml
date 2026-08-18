@@ -298,11 +298,10 @@ services:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
       - ./sogo6/stalwart/config.toml:/etc/stalwart/config.toml:ro
-    # Stalwart's `-c` flag points at the *config store* definition (JSON, here
-    # config.json). The server config (LDAP directory + relay) lives in the TOML
-    # file and must be *imported* into the store first, then the server started.
-    # The image entrypoint is already `stalwart`, so we wrap import + run in sh.
-    command: ["sh", "-c", "stalwart -c /etc/stalwart/config.json -i /etc/stalwart/config.toml && exec stalwart -c /etc/stalwart/config.json"]
+    # The image default CMD (`--config /etc/stalwart/config.json`) starts Stalwart
+    # with an (initially empty) config store; the server config from config.toml
+    # (LDAP directory + outbound relay to tobias-weiss.org) is applied at runtime
+    # via the management API once the relay credentials are available.
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"
