@@ -288,9 +288,19 @@ services:
       STALWART_HOSTNAME: mail.${LDAP_DOMAIN:-example.org}
       # ⚠️  Change in production — set STALWART_DB_PASSWORD env var
       STALWART_DB_PASSWORD: ${STALWART_DB_PASSWORD:-}
+      # LDAP admin password (vault) — used by Stalwart to bind to the directory
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-}
+      # Outbound relay credentials for tobias-weiss.org (vault); set for real sending
+      STALWART_RELAY_HOST: ${STALWART_RELAY_HOST:-smtp.tobias-weiss.org}
+      STALWART_RELAY_USER: ${STALWART_RELAY_USER:-}
+      STALWART_RELAY_PASSWORD: ${STALWART_RELAY_PASSWORD:-}
     volumes:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
+      - ./sogo6/stalwart/config.toml:/etc/stalwart/config.toml:ro
+    # Load the demo config (LDAP directory + relay). The image entrypoint is already
+    # `stalwart`, so this supplies the args only (not the binary again).
+    command: ["-c", "/etc/stalwart/config.toml"]
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"

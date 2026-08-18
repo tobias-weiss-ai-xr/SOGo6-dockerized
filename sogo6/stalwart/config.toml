@@ -1,15 +1,32 @@
-[store."default"]
-type = "postgresql"
-host = "sogo6-postgres"
-port = 5432
-database = "stalwart"
-auth-username = "stalwart"
-auth-secret = { type = "value", value = "stalwart_sogo6_2026" }
+# Stalwart mail server configuration for the SOGo6 demo
+#
+# The image entrypoint is already `stalwart`; this file is loaded via
+# `command: ["-c", "/etc/stalwart/config.toml"]`.
 
+# ── Data store ───────────────────────────────────────────────────────────────
+# SQLite keeps the demo dependency-free (no separate database required).
+[store."default"]
+type = "sqlite"
+path = "/var/lib/stalwart/db.sqlite"
+
+# ── User directory: the SOGo6 OpenLDAP tree ─────────────────────────────────
+# dc=sogo6,dc=contextual-intelligence,dc=org (derived from SOGO_DOMAIN)
 [directory."ldap"]
 type = "ldap"
 addresses = ["ldap://sogo6-ldap:389"]
-bind-dn = "cn=admin,dc=example,dc=org"
-bind-password = "admin"
-base-dn = "ou=users,dc=example,dc=org"
+bind-dn = "cn=admin,dc=sogo6,dc=contextual-intelligence,dc=org"
+# Password is injected from the vault (.env) — never hardcoded.
+bind-password = { type = "env", value = "LDAP_ADMIN_PASSWORD" }
+base-dn = "ou=users,dc=sogo6,dc=contextual-intelligence,dc=org"
 filter = "(objectClass=inetOrgPerson)"
+
+# ── Outbound relay / smarthost: operator mailcow at tobias-weiss.org ──────────
+# Auth credentials are supplied via environment (vault), not hardcoded.
+[remote."tobias-weiss"]
+addresses = ["smtp.tobias-weiss.org:587"]
+auth.username = { type = "env", value = "STALWART_RELAY_USER" }
+auth.secret = { type = "env", value = "STALWART_RELAY_PASSWORD" }
+
+# ── Route all outbound mail through the relay ───────────────────────────────
+[queue]
+next-hop = ["tobias-weiss"]
