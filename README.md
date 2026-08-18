@@ -20,33 +20,26 @@ Docker-based deployment of **SOGo 6** — the next-generation groupware suite (N
 
 ## Architecture
 
+```mermaid
+graph TD
+    ingress["Ingress — Traefik / Nginx / K8s"]
+    server["SOGo 6 Server<br/>Flask · Python · :5000"]
+    ui["SOGo 6 UI<br/>Next.js 16 · :3000"]
+    redis["Redis<br/>Cache / Sessions"]
+    db["PostgreSQL / MariaDB<br/>Choose one"]
+    ldap["OpenLDAP<br/>Authentication"]
+    stalwart["Stalwart<br/>Mail / IMAP / SMTP"]
+    monitoring["Monitoring <i>(optional)</i><br/>Prometheus · Grafana · Loki · Promtail"]
+
+    ingress -- "/api" --> server
+    ingress -- "/" --> ui
+    ui -.->|"REST API"| server
+    server --> redis
+    server --> db
+    server --> ldap
+    server --> stalwart
+    ldap --> monitoring
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Ingress (Nginx/K8s)              │
-└────────┬────────────────────────────────┬───────────┘
-         │ /api                            │ /
-         ▼                                 ▼
-┌─────────────────┐               ┌─────────────────┐
-│  SOGo 6 Server  │◄─────────────►│   SOGo 6 UI     │
-│  Flask (Python) │    REST API   │  Next.js 16     │
-│  :5000          │               │  :3000           │
-└──┬──┬──┬──┬─────┘               └─────────────────┘
-   │  │  │  │
-   │  │  │  └──────────────────────────┐
-   │  │  └──────────────┐              │
-   ▼  ▼                 ▼              ▼
-┌──────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│Redis │ │PostgreSQL│ │OpenLDAP  │ │ Stalwart │
-│Cache │ │ MariaDB  │ │  (Auth)  │ │Mail/IMAP │
-│      │ │ (Choose) │ │          │ │  /SMTP   │
-└──────┘ └──────────┘ └──────────┘ └──────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────┐
-│              Monitoring (optional)                   │
-│  Prometheus ─ Grafana ─ Loki ─ Promtail              │
-│  Metrics      Dashboards   Logs     Collector        │
-└─────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
