@@ -28,16 +28,16 @@ services:
     container_name: sogo6-ui
     build:
       context: ./sogo6-ui
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     environment:
+      # Internal URL used by server-side routes; overridden at runtime
+      # by NEXT_PUBLIC_API_BASE_URL when set (see env-route-payload.ts).
       REACT_APP_API_BASE_URL: http://sogo6-server:5000/api/user/v1
       # Public URL for browser-facing deployments (reverse proxy).
       # When set, /env returns this + '/api/user/v1' instead of the internal URL.
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
-      NEXT_PUBLIC_ADMIN_DOMAINS: admin.localhost
-      SSE_ENABLED: "false"
-      LOGIN_PREFILL_EMAIL: ${SOGO_TEST_USER:-mmustermann@example.org}
-      LOGIN_PREFILL_PASSWORD: ${SOGO_TEST_PASS:-UniMarburg2026!}
+      NEXT_PUBLIC_ADMIN_DOMAINS: ${NEXT_PUBLIC_ADMIN_DOMAINS:-admin.localhost}
+      SSE_ENABLED: "${SSE_ENABLED:-true}"
       HOSTNAME: 0.0.0.0
     ports:
       - "${UI_PORT:-3000}:3000"
@@ -49,8 +49,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
-          cpus: "1.0"
+          memory: 1G
+          cpus: "2.0"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/env || exit 1"]
       interval: 30s
