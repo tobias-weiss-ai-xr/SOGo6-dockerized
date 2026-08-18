@@ -298,9 +298,11 @@ services:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
       - ./sogo6/stalwart/config.toml:/etc/stalwart/config.toml:ro
-    # Load the demo config (LDAP directory + relay). The image entrypoint is already
-    # `stalwart`, so this supplies the args only (not the binary again).
-    command: ["-c", "/etc/stalwart/config.toml"]
+    # Stalwart's `-c` flag points at the *config store* definition (JSON, here
+    # config.json). The server config (LDAP directory + relay) lives in the TOML
+    # file and must be *imported* into the store first, then the server started.
+    # The image entrypoint is already `stalwart`, so we wrap import + run in sh.
+    command: ["sh", "-c", "stalwart -i /etc/stalwart/config.toml && exec stalwart"]
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"
