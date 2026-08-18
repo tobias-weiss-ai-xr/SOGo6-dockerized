@@ -31,6 +31,9 @@ services:
       dockerfile: Dockerfile
     environment:
       REACT_APP_API_BASE_URL: http://sogo6-server:5000/api/user/v1
+      # Public URL for browser-facing deployments (reverse proxy).
+      # When set, /env returns this + '/api/user/v1' instead of the internal URL.
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
       NEXT_PUBLIC_ADMIN_DOMAINS: admin.localhost
       SSE_ENABLED: "false"
       LOGIN_PREFILL_EMAIL: ${SOGO_TEST_USER:-mmustermann@example.org}
