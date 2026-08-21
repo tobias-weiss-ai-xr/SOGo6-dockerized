@@ -34,3 +34,6 @@ __pycache__/
 sogo6/nginx/certs/
 .next/
 *.tsbuildinfo
+
+# taskfleet worktrees (do not commit)
+.tf-worktrees/
