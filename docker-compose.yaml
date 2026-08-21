@@ -261,6 +261,7 @@ services:
       MYSQL_DATABASE: ${MARIADB_DATABASE:-sogo}
     volumes:
       - sogo6-mariadb-data:/var/lib/mysql
+      - ./sogo6/mariadb/my.cnf:/etc/mysql/conf.d/my.cnf:ro
     ports:
       - "${MARIADB_PORT:-3306}:3306"
     networks:
