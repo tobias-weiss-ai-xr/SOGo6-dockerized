@@ -3,6 +3,25 @@
 # The image entrypoint is already `stalwart`; this file is loaded via
 # `command: ["-c", "/etc/stalwart/config.toml"]`.
 
+# ── Server listeners ──────────────────────────────────────────────────────────
+[server]
+
+[server.listener."imap"]
+bind = ["[::]:143"]
+protocol = "imap"
+
+[server.listener."smtp"]
+bind = ["[::]:25"]
+protocol = "smtp"
+
+[server.listener."submissions"]
+bind = ["[::]:587"]
+protocol = "submissions"
+
+[server.listener."sieve"]
+bind = ["[::]:4190"]
+protocol = "sieve"
+
 # ── Data store ───────────────────────────────────────────────────────────────
 # SQLite keeps the demo dependency-free (no separate database required).
 [store."default"]
