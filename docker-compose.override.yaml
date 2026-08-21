@@ -39,11 +39,14 @@ services:
   sogo6-server:
     build:
       target: development
+    # Disable the debugpy remote debugger + Flask debug mode for the public demo.
+    # Run the app directly via app/run.py with --no-debug (no 0.0.0.0:5678 listener).
+    command: ["python", "app/run.py", "--host=0.0.0.0", "--port=5000", "--no-debug"]
     environment:
-      FLASK_ENV: development
-      FLASK_DEBUG: "1"
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
       PYTHONUNBUFFERED: "1"
-      LOG_LEVEL: debug
+      LOG_LEVEL: info
     volumes:
       - ./sogo6-server:/app:cached
     deploy:
