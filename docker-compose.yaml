@@ -321,7 +321,7 @@ services:
           cpus: "2.0"
           memory: 256M
     healthcheck:
-      test: ["CMD-SHELL", "ss -tln | grep -q ':143 '"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/25'"]
       interval: 15s
       timeout: 5s
       retries: 5
