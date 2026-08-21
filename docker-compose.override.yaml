@@ -43,6 +43,7 @@ services:
     # Run the app directly via app/run.py with --no-debug (no 0.0.0.0:5678 listener).
     command: ["python", "app/run.py", "--host=0.0.0.0", "--port=5000", "--no-debug"]
     environment:
+      PYTHONPATH: /app
       FLASK_ENV: production
       FLASK_DEBUG: "0"
       PYTHONUNBUFFERED: "1"
