@@ -287,6 +287,11 @@ services:
     depends_on:
       sogo6-redis:
         condition: service_healthy
+    # Load the FULL server config (listeners + LDAP directory + relay) from
+    # config.toml instead of the minimal store-bootstrap config.json. The image
+    # VOLUME /etc/stalwart shadows the bind-mounted host file, so the config
+    # below is the one already present in the (reused) /etc/stalwart volume.
+    command: ["--config", "/etc/stalwart/config.toml"]
     environment:
       STALWART_RECOVERY_ADMIN: admin:${STALWART_SECRET:-eval_admin_2026}
       STALWART_HOSTNAME: mail.${LDAP_DOMAIN:-example.org}
