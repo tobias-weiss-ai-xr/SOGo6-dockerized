@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: LGPL-2.1-only
 import { defineConfig, devices } from '@playwright/test';
 
+// Support both local (Docker) and remote (live demo) testing:
+//   - Default: local Docker (http://localhost:3000)
+//   - REMOTE=true: live demo (https://sogo6.contextual-intelligence.org)
+const isRemote = process.env.REMOTE === 'true';
+const baseURL = isRemote
+  ? 'https://sogo6.contextual-intelligence.org'
+  : 'http://localhost:3000';
+
 export default defineConfig({
   testDir: './specs',
   fullyParallel: false,
@@ -15,10 +23,11 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    ignoreHTTPSErrors: true,
   },
 
   projects: [
@@ -26,7 +35,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 900 },
+        viewport: { width: 1440, height: 900 },
       },
     },
   ],
