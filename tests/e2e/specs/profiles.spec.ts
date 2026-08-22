@@ -179,16 +179,17 @@ test.describe('Profile', () => {
     });
     expect(prefsOk).toBeGreaterThan(0);
 
-    // /shared-mailboxes was observed 500 CONSTANTLY (5/5) on 2026-08-22.
-    // Canonical report: document it as a PERSISTENT backend bug that breaks the
-    // profile page ("Failed to load profile"). If it starts returning 200 the
-    // annotation flips and this test records the fix.
+    // /shared-mailboxes was observed 500 CONSTANTLY (5/5) on 2026-08-22 — root
+    // cause: ApiSharedMailboxes/ApiSharedMailbox/ApiResourceBooking hardcoded
+    // ClientPostgreSQL while the deployment uses MariaDB. Fixed by switching to
+    // f"Client{SOGO_P_DB_TYPE}" (server deploy 2026-08-22). Now expect 200.
     const shOk = results['/shared-mailboxes'].filter((s) => s === 200).length;
     const sh500 = results['/shared-mailboxes'].filter((s) => s === 500).length;
     test.info().annotations.push({
-      type: 'known-issue: /shared-mailboxes',
-      description: `shared-mailboxes: ${shOk}/${ROUNDS} ok, ${sh500} x500 — PERSISTENT 500 (backend). Breaks the profile data chain.`,
+      type: '/shared-mailboxes',
+      description: `shared-mailboxes: ${shOk}/${ROUNDS} ok, ${sh500} x500 (was persistent 500 before the ClientPostgreSQL→dynamic fix)`,
     });
+    expect(shOk).toBeGreaterThan(0);
   });
 
   test('profile settings page columns render (user settings profile)', async ({ page }) => {
