@@ -14,7 +14,22 @@
     "MAIL_SETTINGS": {
       "SOGO_D_MAIL_ENABLED": true,
       "SOGO_D_MAX_MAILBOX_SIZE": 1024,
-      "SOGO_D_MAX_ATTACHMENT_SIZE": 25
+      "SOGO_D_MAX_ATTACHMENT_SIZE": 25,
+      "SOGO_D_MAIL_SERVER_TYPE": "imap",
+      "SOGO_D_IMAP_SERVER": "sogo6-stalwart",
+      "SOGO_D_IMAP_PORT": 993,
+      "SOGO_D_IMAP_ENCRYPTION": "SSL/TLS",
+      "SOGO_D_IMAP_AUTH_MECH": "login",
+      "SOGO_D_MAIL_FILTERING_ENABLED": true,
+      "SOGO_D_MAIL_FILTERING_TYPE": "sieve",
+      "SOGO_D_SIEVE_SERVER": "sogo6-stalwart",
+      "SOGO_D_SIEVE_PORT": 4190,
+      "SOGO_D_SIEVE_ENCRYPTION": "None",
+      "SOGO_D_SIEVE_AUTH_MECH": "plain",
+      "SOGO_D_SMTP_SERVER": "sogo6-stalwart",
+      "SOGO_D_SMTP_PORT": 25,
+      "SOGO_D_SMTP_ENCRYPTION": "None",
+      "SOGO_D_SMTP_AUTH_MECH": "None"
     },
     "CONTACT_SETTINGS": {
       "SOGO_D_CONTACT_ENABLED": true
