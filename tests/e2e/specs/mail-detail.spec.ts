@@ -78,13 +78,49 @@ async function getInboxMails(page: import('@playwright/test').Page): Promise<any
   return body?.data ?? body ?? [];
 }
 
+async function ensureInboxHasMail(page: import('@playwright/test').Page): Promise<{ mails: any[]; folder: string }> {
+  let mails = await getInboxMails(page);
+  let folder = 'INBOX';
+  if (mails.length === 0) {
+    // Send a test email to self to populate INBOX
+    const headers = await authHeaders(page);
+    await page.request.post(`${REMOTE_API}/mailboxes/0/mail/send`, {
+      data: {
+        from: CREDENTIALS.email,
+        to: [CREDENTIALS.email],
+        subject: `Test mail ${Date.now()}`,
+        body: 'Test email for e2e tests.',
+        is_html: false,
+      },
+      headers,
+    });
+    // Wait for the email to arrive in INBOX or Junk Mail
+    for (let i = 0; i < 5; i++) {
+      await page.waitForTimeout(2000);
+      mails = await getInboxMails(page);
+      if (mails.length > 0) break;
+      // Also check Junk Mail (Stalwart may route self-sent emails to Junk)
+      const junkRes = await page.request.get(
+        `${REMOTE_API}/mailboxes/0/folders/Junk%20Mail/mails?page_size=5`,
+        { headers },
+      );
+      if (junkRes.status() === 200) {
+        const junkBody = await junkRes.json();
+        const junkMails = junkBody?.data ?? junkBody ?? [];
+        if (junkMails.length > 0) { mails = junkMails; folder = 'Junk Mail'; break; }
+      }
+    }
+  }
+  return { mails, folder };
+}
+
 // ── Tests ──────────────────────────────────────────────────────────────────
 
 test.describe('Mail Detail Page', () => {
 
   test('inbox mails have non-empty UIDs', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     for (const mail of mails) {
       expect(mail.uid).toBeTruthy();
@@ -98,15 +134,16 @@ test.describe('Mail Detail Page', () => {
 
   test('click first mail navigates to detail page', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const uid = String(mails[0].uid);
 
-    await page.goto(`${REMOTE_BASE}/en/u/0/INBOX`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(5000);
 
     // Try clicking the first mail item in the list
-    const firstMail = page.locator('ul li div[class*="cursor-pointer"], a[href*="/INBOX/"]').first();
+    const folderPath = encodeURIComponent(folder);
+    const firstMail = page.locator(`ul li div[class*="cursor-pointer"], a[href*="/${folderPath}/"]`).first();
     const hasClickable = await firstMail.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasClickable) {
@@ -114,23 +151,23 @@ test.describe('Mail Detail Page', () => {
       await page.waitForTimeout(5000);
       const afterUrl = page.url();
       // Should navigate to a mail detail page
-      expect(afterUrl).toContain('/INBOX/');
+      expect(afterUrl).toContain(`/${encodeURIComponent(folder)}/`);
     } else {
       // Fallback: directly navigate to the mail detail page
-      await page.goto(`${REMOTE_BASE}/en/u/0/INBOX/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+      await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
       await page.waitForTimeout(3000);
-      expect(page.url()).toContain(`/INBOX/${uid}`);
+      expect(page.url()).toContain(`/${encodeURIComponent(folder)}/${uid}`);
     }
   });
 
   test('mail detail page shows subject and sender', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const mail = mails[0];
     const uid = String(mail.uid);
 
-    await page.goto(`${REMOTE_BASE}/en/u/0/INBOX/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(5000);
 
     const bodyText = await page.evaluate(() => document.body.innerText ?? '');
@@ -144,12 +181,12 @@ test.describe('Mail Detail Page', () => {
 
   test('mail detail API returns full content', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const uid = String(mails[0].uid);
     const headers = await authHeaders(page);
 
-    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/${uid}`, { headers });
+    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/${encodeURIComponent(folder)}/mails/${uid}`, { headers });
     expect(res.status()).toBe(200);
     const body = await res.json();
     const mail = body?.data ?? body;
@@ -162,12 +199,12 @@ test.describe('Mail Detail Page', () => {
 
   test('mail raw endpoint returns raw email', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const uid = String(mails[0].uid);
     const headers = await authHeaders(page);
 
-    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/${uid}/raw`, { headers });
+    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/${encodeURIComponent(folder)}/mails/${uid}/raw`, { headers });
     // 200 or 404 (endpoint may not exist)
     test.info().annotations.push({
       type: 'raw-endpoint',
@@ -178,12 +215,12 @@ test.describe('Mail Detail Page', () => {
 
   test('mail reply endpoint returns reply data', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const uid = String(mails[0].uid);
     const headers = await authHeaders(page);
 
-    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/${uid}/reply`, { headers });
+    const res = await page.request.get(`${REMOTE_API}/mailboxes/0/folders/${encodeURIComponent(folder)}/mails/${uid}/reply`, { headers });
     test.info().annotations.push({
       type: 'reply-endpoint',
       description: `GET /mails/${uid}/reply -> ${res.status()}`,
@@ -193,12 +230,12 @@ test.describe('Mail Detail Page', () => {
 
   test('mail download endpoint', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const uid = String(mails[0].uid);
     const headers = await authHeaders(page);
 
-    const res = await page.request.post(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/${uid}/download`, { headers });
+    const res = await page.request.post(`${REMOTE_API}/mailboxes/0/folders/${encodeURIComponent(folder)}/mails/${uid}/download`, { headers });
     test.info().annotations.push({
       type: 'download-endpoint',
       description: `POST /mails/${uid}/download -> ${res.status()}`,
@@ -231,7 +268,7 @@ test.describe('Mail Detail Page', () => {
 
   test('navigating between mails via browser back/forward', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     if (mails.length < 2) {
       test.info().annotations.push({ type: 'skip', description: 'Need ≥2 mails for back/forward test' });
       return;
@@ -241,31 +278,31 @@ test.describe('Mail Detail Page', () => {
     const uid2 = String(mails[1].uid);
 
     // Navigate to first mail
-    await page.goto(`${REMOTE_BASE}/en/u/0/INBOX/${uid1}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}/${uid1}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(3000);
-    expect(page.url()).toContain(`/INBOX/${uid1}`);
+    expect(page.url()).toContain(`/${encodeURIComponent(folder)}/${uid1}`);
 
     // Navigate to second mail
-    await page.goto(`${REMOTE_BASE}/en/u/0/INBOX/${uid2}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}/${uid2}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(3000);
-    expect(page.url()).toContain(`/INBOX/${uid2}`);
+    expect(page.url()).toContain(`/${encodeURIComponent(folder)}/${uid2}`);
 
     // Go back to first mail
     await page.goBack({ waitUntil: 'load' }).catch(() => {});
     await page.waitForTimeout(3000);
     // URL should contain the first mail's UID (or INBOX)
     const backUrl = page.url();
-    expect(backUrl).toContain('/INBOX');
+    expect(backUrl).toContain(`/${encodeURIComponent(folder)}`);
   });
 
   test('mail detail shows date when available', async ({ page }) => {
     await loginAsUser(page);
-    const mails = await getInboxMails(page);
+    const { mails, folder } = await ensureInboxHasMail(page);
     expect(mails.length).toBeGreaterThan(0);
     const mail = mails[0];
     const uid = String(mail.uid);
 
-    await page.goto(`${REMOTE_BASE}/en/u/0/INBOX/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/0/${encodeURIComponent(folder)}/${uid}`, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(5000);
 
     // Check if the detail page shows a date (not "Invalid Date")
