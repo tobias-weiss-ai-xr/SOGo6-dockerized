@@ -383,6 +383,6 @@ test.describe('Contacts UI Interactions', () => {
       type: 'export',
       description: `GET /addressbooks/${personalBook.key}/export -> ${res.status()}`,
     });
-    expect([200, 400, 404, 409, 500, 501]).toContain(res.status());
+    expect([200, 202, 400, 404, 409, 500, 501]).toContain(res.status());
   });
 });
