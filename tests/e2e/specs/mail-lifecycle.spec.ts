@@ -4,7 +4,7 @@
 // E2E tests for the Mail LIFE-CYCLE on the live SOGo6 demo site:
 //   - send a self-addressed email via the API (real SMTP round-trip)
 //   - mail accounts & settings API (filters, vacation, forward, notify)
-//   - mail search (documented 503 while Stalwart IMAP is unavailable on 20993)
+//   - mail search (now working — IMAP connected via sogo6-stalwart:993/SSL/TLS)
 //
 // Tests run against https://sogo6.contextual-intelligence.org
 // Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
@@ -131,19 +131,19 @@ test.describe('Mail Life-Cycle', () => {
     }
   });
 
-  test('mail search is documented as unavailable while IMAP is down (503)', async ({ page }) => {
+  test('mail search returns results (IMAP now connected)', async ({ page }) => {
     await loginAsUser(page);
     const token = await getAuthToken(page);
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     const res = await page.request.get(`${REMOTE_API}/mailboxes/0/search?q=test&limit=5`, { headers });
-    // Stalwart IMAP (internal port 20993) is currently unreachable from the API
-    // container, so search returns 503 S000311. Document as known backend gap.
+    // IMAP is now connected (fixed: sogo6-stalwart:993/SSL/TLS).
+    // Search should return 200 with results.
     test.info().annotations.push({
-      type: 'known-gap',
-      description: `GET /mailboxes/0/search -> ${res.status()}. Backend connects to sogo6-stalwart:20993, which is the host-mapped port rather than the in-network 993.`,
+      type: 'fixed',
+      description: `GET /mailboxes/0/search -> ${res.status()}. IMAP now connected via sogo6-stalwart:993/SSL/TLS.`,
     });
-    expect([503, 404]).toContain(res.status());
+    expect(res.status()).toBe(200);
   });
 
   test('mail filters UI page loads', async ({ page }) => {
