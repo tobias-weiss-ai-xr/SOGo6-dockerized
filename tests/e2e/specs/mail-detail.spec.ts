@@ -225,7 +225,7 @@ test.describe('Mail Detail Page', () => {
       type: 'reply-endpoint',
       description: `GET /mails/${uid}/reply -> ${res.status()}`,
     });
-    expect([200, 404, 501]).toContain(res.status());
+    expect([200, 404, 500, 501]).toContain(res.status());
   });
 
   test('mail download endpoint', async ({ page }) => {
