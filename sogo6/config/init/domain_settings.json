@@ -29,7 +29,12 @@
       "SOGO_D_SMTP_SERVER": "sogo6-stalwart",
       "SOGO_D_SMTP_PORT": 25,
       "SOGO_D_SMTP_ENCRYPTION": "None",
-      "SOGO_D_SMTP_AUTH_MECH": "None"
+      "SOGO_D_SMTP_AUTH_MECH": "None",
+      "SOGO_D_MAIL_INBOX": "INBOX",
+      "SOGO_D_MAIL_SENT": "Sent Items",
+      "SOGO_D_MAIL_DRAFT": "Drafts",
+      "SOGO_D_MAIL_TRASH": "Trash",
+      "SOGO_D_MAIL_JUNK": "Junk Mail"
     },
     "CONTACT_SETTINGS": {
       "SOGO_D_CONTACT_ENABLED": true
