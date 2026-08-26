@@ -1,16 +1,23 @@
 // SPDX-FileCopyrightText: 2025 SOGo project contributors
 // SPDX-License-Identifier: LGPL-2.1-only
 //
-// FOUND-BUGS CANARY — documents known OPEN bugs discovered by this e2e suite.
-// Each test expects the CURRENT (buggy) behaviour and therefore PASSES today.
-// If the bug is FIXED, the test FAILS and alerts us to update/remove the entry.
-// This turns discovered defects into regression canaries.
+// REGRESSION CANARY — verifies previously-broken features are working and pins
+// the remaining known gaps. Every previously-reported "bug" here was
+// investigated; the revisions below document the truth:
 //
-// Inventory (verified): mail filter auto-replies not wired (404), export/download 404,
-// PATCH /preferences 404 (profile not seeded), snooze POST 400, filters/validate 400,
-// SAML2 discovery/metadata 412 (SAML2 not configured).
-// FIXED (removed from canary): /auth/webauthn begin+credentials 500-rate-limiter crash,
-// /auth/callback/{dom} 500, POST /polls/{id}/respond 500.
+//  * Filters auto-replies (vacation/forward/notify) WORK at /vacation, /forward,
+//    /notify (the old canary used a wrong /filters/vacation path -> 404).
+//  * Folder export WORKED after fixing parse_uids_from_bytes (it iterated a
+//    bytes object expecting b' ' but Python 3 yields ints, so all UIDs were
+//    joined into one string -> export 400). Guarded below by asserting a ZIP.
+//  * Mail download WORKED (it is a POST, old canary used GET).
+//  * PATCH /preferences WORKED; a flat/no-op payload used to produce a
+//    misleading 404 "User Profile Not Found" (0-row MySQL UPDATE). Now returns 200.
+//  * POST /snooze WORKED (schema needs account_id/mail_uids/folder; old canary
+//    sent only snooze_until -> 400). Returns 200 first time / 409 if repeated.
+//
+// Remaining KNOWN GAP: SAML2 discovery/metadata return 412 because SAML2 is not
+// configured (requires an external IdP). Pinned below.
 //
 // Runs against https://sogo6.contextual-intelligence.org
 // Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
@@ -62,61 +69,57 @@ test.beforeAll(async ({ browser }) => {
 
 const auth = () => ({ Authorization: `Bearer ${TOKEN}` });
 
-test.describe('Found-bugs canary — documented open defects', () => {
+test.describe('Regression canary — previously-broken features now verified working', () => {
 
-  test('BUG-01: mail filter auto-replies (vacation/forward/notify) are not wired -> expected 404', async ({ request }) => {
-    for (const f of ['vacation', 'forward', 'notify']) {
-      const res = await request.get(`${REMOTE_API}/mailboxes/0/filters/${f}`, { headers: auth() });
-      test.info().annotations.push({ type: 'filter', description: `/mailboxes/0/filters/${f} -> ${res.status()}` });
-      expect(res.status()).toBe(404); // S000637 — flip when wired
+  test('CAN-01: filters auto-replies (vacation/forward/notify) are reachable at /vacation etc.', async ({ request }) => {
+    for (const [suffix, field] of [['vacation', 'vacation'], ['forward', 'forward'], ['notify', 'notification'] as const]) {
+      const res = await request.get(`${REMOTE_API}/mailboxes/0/${suffix}`, { headers: auth() });
+      test.info().annotations.push({ type: 'filters', description: `GET /mailboxes/0/${suffix} -> ${res.status()}` });
+      expect(res.status()).toBe(200);
     }
   });
 
-  test('BUG-02: mail export & download are not implemented -> expected 404', async ({ request }) => {
-    const exp = await request.get(`${REMOTE_API}/mailboxes/0/folders/INBOX/export`, { headers: auth() });
-    test.info().annotations.push({ type: 'export', description: `export -> ${exp.status()}` });
-    expect(exp.status()).toBe(404);
-    const dl = await request.get(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/14/download`, { headers: auth() });
-    test.info().annotations.push({ type: 'download', description: `download -> ${dl.status()}` });
-    expect(dl.status()).toBe(404);
+  test('CAN-02: folder export returns a ZIP (guards parse_uids_from_bytes regression)', async ({ request }) => {
+    const res = await request.post(`${REMOTE_API}/mailboxes/0/folders/INBOX/export`, { headers: auth() });
+    test.info().annotations.push({ type: 'export', description: `POST export -> ${res.status()}` });
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type'] || '').toContain('zip');
   });
 
-  test('BUG-03: PATCH /preferences -> expected 404 (profile record not seeded)', async ({ request }) => {
+  test('CAN-03: download a mail as .eml works', async ({ request }) => {
+    const res = await request.post(`${REMOTE_API}/mailboxes/0/folders/INBOX/mails/14/download`, {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { format: 'eml' },
+    });
+    test.info().annotations.push({ type: 'download', description: `download -> ${res.status()}` });
+    expect(res.status()).toBe(200);
+  });
+
+  test('CAN-04: PATCH /preferences returns 200 even for a no-op payload (was misleading 404)', async ({ request }) => {
     const res = await request.patch(`${REMOTE_API}/preferences`, {
       headers: { ...auth(), 'Content-Type': 'application/json' },
-      data: { settings: { SOGO_U_LANGUAGE: 'de' } },
+      data: { settings: { SOGO_U_LANGUAGE: 'English' } },
     });
     test.info().annotations.push({ type: 'prefs', description: `PATCH /preferences -> ${res.status()}` });
-    expect(res.status()).toBe(404);
+    expect(res.status()).toBe(200);
   });
 
-  test('BUG-04: POST /snooze -> expected 400 (schema requires account_id/folder_name/mail_uid)', async ({ request }) => {
+  test('CAN-05: POST /snooze validates correctly (200 first time / 409 duplicate, never 400/500)', async ({ request }) => {
     const res = await request.post(`${REMOTE_API}/snooze/`, {
       headers: { ...auth(), 'Content-Type': 'application/json' },
-      data: { snooze_until: '2030-01-01T00:00:00Z' },
+      data: { account_id: '0', mail_uids: ['434343'], folder: 'INBOX', snooze_until: '2030-01-01T09:00:00Z' },
     });
     test.info().annotations.push({ type: 'snooze', description: `POST /snooze -> ${res.status()}` });
-    expect(res.status()).toBe(400);
+    expect([200, 409]).toContain(res.status());
   });
+});
 
-  // BUG-06 REMOVED — /auth/webauthn/credentials now returns 200 (rate-limiter + interface fixed).
-  // Remaining SAML2 gap (412 = SAML2 not configured) preserved below.
-
-  test('BUG-07: SAML2 self-service endpoints 500/412 with valid auth (SAML2 not configured) -> canary', async ({ request }) => {
-    const cases: Array<[string, 'get' | 'post']> = [
-      ['${REMOTE_API}/auth/saml2/metadata', 'get'],
-      ['${REMOTE_API}/auth/saml2/discovery', 'post'],
-    ];
-    for (const [url, m] of cases) {
-      const res = await request[m](url, {
-        headers: { ...auth(), 'Content-Type': 'application/json' },
-        data: {},
-      });
-      test.info().annotations.push({ type: 'auth', description: `${m.toUpperCase()} ${url} -> ${res.status()}` });
-      // 412 = SAML2 not configured; alert if it starts returning a 2xx (misleading success)
+test.describe('Known gap — pinned', () => {
+  test('SAMl2 discovery/metadata -> 412 (SAML2 not configured); alert if it returns 2xx', async ({ request }) => {
+    for (const [url, m] of [['/auth/saml2/metadata', 'get'], ['/auth/saml2/discovery', 'post']] as const) {
+      const res = await request[m](`${REMOTE_API}${url}`, { headers: { ...auth(), 'Content-Type': 'application/json' }, data: {} });
+      test.info().annotations.push({ type: 'saml2', description: `${m.toUpperCase()} ${url} -> ${res.status()}` });
       expect([500, 412, 404, 400]).toContain(res.status());
     }
   });
-  // BUG-08 REMOVED — POST /polls/{id}/respond now returns 422 (participant required,
-  // no longer a 500).
 });
