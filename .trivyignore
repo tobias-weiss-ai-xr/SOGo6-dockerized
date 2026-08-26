@@ -1,0 +1,10 @@
+# .trivyignore — Accepted risks for Trivy CI gate (CRA Art. 13)
+#
+# Each entry must have a documented justification.
+# Format: <vulnerability-id> [<justification>]
+#
+# To add an exception:
+#   1. Run 'trivy fs --severity HIGH,CRITICAL .' locally
+#   2. Identify the CVE and verify it's not exploitable in our context
+#   3. Add below with justification
+#   4. Create a tracking issue to re-evaluate when a fix is available

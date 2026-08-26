@@ -31,7 +31,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (repo)
-        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: fs
@@ -40,9 +39,9 @@ jobs:
           exit-code: 1
           severity: HIGH,CRITICAL
           hide-progress: true
+          ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner (server Dockerfile)
-        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: config
@@ -50,9 +49,9 @@ jobs:
           format: table
           exit-code: 1
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner (UI Dockerfile)
-        continue-on-error: true
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: config
@@ -60,6 +59,7 @@ jobs:
           format: table
           exit-code: 1
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
 
       # ── CRA Art. 13: SBOM generation (CycloneDX) ──────────────────────
       - name: Generate SBOM (repo)
