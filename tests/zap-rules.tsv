@@ -1,0 +1,8 @@
+# ZAP Baseline Scan Rules — suppress known false positives
+# Format: <rule-id>\t<reason>
+# Reference: https://www.zaproxy.org/docs/alerts/
+10038	CSP uses unsafe-inline (acceptable for Next.js without nonce migration — see scripts/csp-nonce.ts)
+10019	Server Leaks Version (Traefik/LetsEncrypt banner — low risk)
+10015	Incomplete/Invalid CSP (interim until nonce-based CSP in UI)
+10202	Absence of Anti-CSRF Tokens (API uses JWT Bearer auth, not cookie sessions)
+90001	Other Information (informational only)

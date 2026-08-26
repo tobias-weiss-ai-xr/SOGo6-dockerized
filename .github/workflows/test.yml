@@ -502,3 +502,33 @@ jobs:
             echo "=== $svc logs ==="
             docker compose logs --tail=50 "$svc" 2>/dev/null || true
           done
+
+  # ── CRA Art. 10(1)(c): DAST / Web Application Security Scan ───────────
+  owasp-zap:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-24.04
+    needs: [security]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ZAP Baseline Scan (SOGo6 UI)
+        continue-on-error: true
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'https://sogo6.contextual-intelligence.org/'
+          rules_file_name: 'tests/zap-rules.tsv'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: |
+            report_html.html
+            report_json.json
+          if-no-files-found: ignore
