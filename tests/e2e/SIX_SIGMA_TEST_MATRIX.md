@@ -43,7 +43,7 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 | | | Create well-formed request | 〃 | T0-SE-08 | 〃 | 🔶 ANNOTATED — S001501 ManageSieve unreachable (same family as IMAP 20993) |
 | 4 | **Team calendars** | List teams + invites | `tier0-team-calendars.spec.ts` | T0-TC-01/02 | `GET /user/v1/calendars/teams[/invites]` | 🟢 200 |
 | | | Create validates `name` | 〃 | T0-TC-03 | `POST .../calendars/teams` | 🟢 422 |
-| | | Create hosted-source | 〃 | T0-TC-04 | 〃 (with name) | 🔶 ANNOTATED — 405 S000604 hosted source |
+| | | Create hosted-source | 〃 | T0-TC-04 | 〃 (with name) | 🟢 FIXED submodule `9390c09` — `CalendarSources.get()` routes `source_type=TEAM` → `CalendarSourceDb` (was ERROR_CALENDAR_NOT_SUPPORTED 405); live-verified `source_type=team` persists; 834 calendar tests green |
 | | | Unauthenticated | 〃 | T0-TC-05 | 〃 GET | 🟢 401 |
 | 5 | **WebAuthn / passkeys** | Status + credential list | `tier0-webauthn.spec.ts` | T0-WA-01/02 | `GET /user/v1/webauthn[/credentials]` | 🟢 200 |
 | | | Registration + login challenges | 〃 | T0-WA-03/04 | `GET .../webauthn/challenge/register|login` | 🟢 200 *(fixed 282955d)* |
