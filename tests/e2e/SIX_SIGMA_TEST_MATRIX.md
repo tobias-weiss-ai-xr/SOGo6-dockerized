@@ -56,7 +56,7 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 | | | Unknown domain → 404 (was 500) | 〃 | T0-DE-08 | `GET .../domains/{d}[/status]` | 🟢 404 S000638 *(fixed 282955d)* |
 | | | Domain CRUD + duplicate guard | 〃 | T0-DE-09 | `POST/GET/DELETE .../domains` | 🟢 201/200/409 |
 | | | Unauthenticated | 〃 | T0-DE-10 | 〃 | 🟢 401 |
-| 7 | **CalDAV (client)** | Settings API availability | `tier0-caldav.spec.ts` | T0-CD-01/02 | `GET /user/v1/calendars/caldav/*` | 🔶 ANNOTATED — not deployed (404); UI page RSC crash digest 1629184700 documented |
+| 7 | **CalDAV (client)** | Settings API availability | `tier0-caldav.spec.ts` | T0-CD-01/02 | `GET /user/v1/calendars/caldav/*` | ✅ **FIXED submodule `59b6c94`** — `GET /calendars/caldav/connection` + `/overview` deployed (principal/discovery + per-calendar sync status incl. real event counts; external subs `discoverable=false`); live 200 + 838 calendar tests green. UI page RSC crash (digest 1629184700) separate front-end issue, open |
 | | | Well-known discovery redirect | 〃 | T0-CD-03 | `/.well-known/caldav` | 🔶 ANNOTATED — 301→/caldav/ when WebDAV mounted |
 | 8 | **CalDAV server (JMAP proxy)** | JMAP session/status | 〃 | T0-CS-01/02 | `GET /admin/v1/jmap/session|status` | 🟢 200 |
 | | | JMAP envelope | 〃 | T0-CS-03 | `POST /admin/v1/jmap` | 🔶 ANNOTATED — subset wired (Core/echo unknownMethod) |
