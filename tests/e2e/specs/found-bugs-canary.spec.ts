@@ -8,7 +8,9 @@
 //
 // Inventory (verified): mail filter auto-replies not wired (404), export/download 404,
 // PATCH /preferences 404 (profile not seeded), snooze POST 400, filters/validate 400,
-// auth self-service endpoints 500/412 even with valid auth.
+// SAML2 discovery/metadata 412 (SAML2 not configured).
+// FIXED (removed from canary): /auth/webauthn begin+credentials 500-rate-limiter crash,
+// /auth/callback/{dom} 500, POST /polls/{id}/respond 500.
 //
 // Runs against https://sogo6.contextual-intelligence.org
 // Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
@@ -97,20 +99,12 @@ test.describe('Found-bugs canary — documented open defects', () => {
     expect(res.status()).toBe(400);
   });
 
-  test('BUG-06: auth self-service endpoints return 500/412 even with valid auth -> canary', async ({ request }) => {
-    const webauthnCreds = await request.get(`${REMOTE_API}/auth/webauthn/credentials`, { headers: auth() });
-    test.info().annotations.push({ type: 'auth', description: `webauthn/credentials -> ${webauthnCreds.status()}` });
-    expect([500, 412, 404]).toContain(webauthnCreds.status());
-    const samlMeta = await request.get(`${REMOTE_API}/auth/saml2/metadata`, { headers: auth() });
-    test.info().annotations.push({ type: 'auth', description: `saml2/metadata -> ${samlMeta.status()}` });
-    expect([500, 412, 404]).toContain(samlMeta.status());
-  });
+  // BUG-06 REMOVED — /auth/webauthn/credentials now returns 200 (rate-limiter + interface fixed).
+  // Remaining SAML2 gap (412 = SAML2 not configured) preserved below.
 
-  test('BUG-07: auth mutating self-service endpoints 500/412 with valid auth -> canary', async ({ request }) => {
+  test('BUG-07: SAML2 self-service endpoints 500/412 with valid auth (SAML2 not configured) -> canary', async ({ request }) => {
     const cases: Array<[string, 'get' | 'post']> = [
-      ['${REMOTE_API}/auth/webauthn/register/begin', 'post'],
-      ['${REMOTE_API}/auth/webauthn/login/begin', 'post'],
-      ['${REMOTE_API}/auth/callback/0', 'post'],
+      ['${REMOTE_API}/auth/saml2/metadata', 'get'],
       ['${REMOTE_API}/auth/saml2/discovery', 'post'],
     ];
     for (const [url, m] of cases) {
@@ -119,16 +113,10 @@ test.describe('Found-bugs canary — documented open defects', () => {
         data: {},
       });
       test.info().annotations.push({ type: 'auth', description: `${m.toUpperCase()} ${url} -> ${res.status()}` });
+      // 412 = SAML2 not configured; alert if it starts returning a 2xx (misleading success)
       expect([500, 412, 404, 400]).toContain(res.status());
     }
   });
-
-  test('BUG-08: POST /polls/{id}/respond crashes with 500 on an empty response -> canary', async ({ request }) => {
-    const res = await request.post(`${REMOTE_API}/polls/0/respond`, {
-      headers: { ...auth(), 'Content-Type': 'application/json' },
-      data: {},
-    });
-    test.info().annotations.push({ type: 'polls', description: `POST /polls/0/respond -> ${res.status()}` });
-    expect([500, 404, 400]).toContain(res.status());
-  });
+  // BUG-08 REMOVED — POST /polls/{id}/respond now returns 422 (participant required,
+  // no longer a 500).
 });
