@@ -105,4 +105,30 @@ test.describe('Found-bugs canary — documented open defects', () => {
     test.info().annotations.push({ type: 'auth', description: `saml2/metadata -> ${samlMeta.status()}` });
     expect([500, 412, 404]).toContain(samlMeta.status());
   });
+
+  test('BUG-07: auth mutating self-service endpoints 500/412 with valid auth -> canary', async ({ request }) => {
+    const cases: Array<[string, 'get' | 'post']> = [
+      ['${REMOTE_API}/auth/webauthn/register/begin', 'post'],
+      ['${REMOTE_API}/auth/webauthn/login/begin', 'post'],
+      ['${REMOTE_API}/auth/callback/0', 'post'],
+      ['${REMOTE_API}/auth/saml2/discovery', 'post'],
+    ];
+    for (const [url, m] of cases) {
+      const res = await request[m](url, {
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        data: {},
+      });
+      test.info().annotations.push({ type: 'auth', description: `${m.toUpperCase()} ${url} -> ${res.status()}` });
+      expect([500, 412, 404, 400]).toContain(res.status());
+    }
+  });
+
+  test('BUG-08: POST /polls/{id}/respond crashes with 500 on an empty response -> canary', async ({ request }) => {
+    const res = await request.post(`${REMOTE_API}/polls/0/respond`, {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: {},
+    });
+    test.info().annotations.push({ type: 'polls', description: `POST /polls/0/respond -> ${res.status()}` });
+    expect([500, 404, 400]).toContain(res.status());
+  });
 });
