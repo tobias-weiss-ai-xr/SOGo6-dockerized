@@ -100,7 +100,7 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 | JMAP subset only (`Core/echo` unknownMethod) | T0-CS-03 | Wire JMAP core + requested method sets (Mail/Calendar push) |
 | API playground unmounted | T0-AP-01/02 | Set `DO_SWAGGER` in demo process config |
 | Shared-mailbox create logs MySQL `created_at` DataError (ISO8601) though API 201s | probe evidence | ~~Serialize datetime to MariaDB format before insert; surface real errors~~ **FIXED submodule `97d2a7a`**, live-verified: `ClientMySQL` now normalizes ISO-8601 datetimes → MySQL `YYYY-MM-DD HH:MM:SS` before bind (also covers assignments/notes/resource-booking/email-auth). 18+129 tests green; deployed to `sogo6-server` + restart |
-| Redis session-cache intermittent `I/O operation on closed file` | known intermittent | Pool reconnect / health-check for Redis client |
+| ~~Redis session-cache intermittent `I/O operation on closed file`~~ **FIXED submodule `ae16e1a`** | known intermittent | Pipeline Redis ops (zset_paginate_hashes/_pipeline_hgetall/revoke_user_sessions_*) now retry via `_ReconnectOnError`; made `_ReconnectOnError` a proper descriptor (bare use never bound self). 67 cache + 142 broader tests green; deployed + restarted |
 
 ## Running the suite
 
