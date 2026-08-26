@@ -93,13 +93,13 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 
 | Gap | Evidence | Fix direction |
 |-----|----------|---------------|
-| ManageSieve unreachable (S001501; IMAP family 503 to `sogo6-stalwart:20993`) | T0-SE-08; `mail.spec`/`api-playground` 503s | Point IMAP/Sieve to the internal service port (993 / ManageSieve) instead of 20993 |
+| ManageSieve unreachable (S001501; IMAP family 503 to `sogo6-stalwart:20993`) | T0-SE-08; `mail.spec`/`api-playground` 503s | **STALE — already resolved**: live domain runtime `SOGO_D_IMAP_SERVER`/`PORT` are `sogo6-stalwart:993` (SSL/TLS) and `SOGO_D_SIEVE_*` `sogo6-stalwart:4190` (verified directly in `sogo6_sogo_settings.settings_domain_default`); only reachability re-check needed |
 | ~~Resource booking `my-bookings` 500~~ **FIXED 7afb45c** | T0-RB-06 | Fixed `CalUserType` import path + `ERROR_SERVER_ERROR`→`ERROR_UNKOWN` in `ApiResourceBooking`/`ModuleResourceBooking` |
 | Team-calendar create 405 S000604 | T0-TC-04 | Hosted CalDAV source must advertise team support (or route to a backend that does) |
 | CalDAV settings API absent + UI RSC crash (digest 1629184700) | T0-CD-01/02; blocked task | Deploy `/calendars/caldav/*` routes; fix RSC render error |
 | JMAP subset only (`Core/echo` unknownMethod) | T0-CS-03 | Wire JMAP core + requested method sets (Mail/Calendar push) |
 | API playground unmounted | T0-AP-01/02 | Set `DO_SWAGGER` in demo process config |
-| Shared-mailbox create logs MySQL `created_at` DataError (ISO8601) though API 201s | probe evidence | Serialize datetime to MariaDB format before insert; surface real errors |
+| Shared-mailbox create logs MySQL `created_at` DataError (ISO8601) though API 201s | probe evidence | ~~Serialize datetime to MariaDB format before insert; surface real errors~~ **FIXED submodule `97d2a7a`**, live-verified: `ClientMySQL` now normalizes ISO-8601 datetimes → MySQL `YYYY-MM-DD HH:MM:SS` before bind (also covers assignments/notes/resource-booking/email-auth). 18+129 tests green; deployed to `sogo6-server` + restart |
 | Redis session-cache intermittent `I/O operation on closed file` | known intermittent | Pool reconnect / health-check for Redis client |
 
 ## Running the suite
