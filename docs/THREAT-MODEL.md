@@ -89,8 +89,8 @@
 | ID | Bug | Severity | Status |
 |----|-----|----------|--------|
 | SEC-01 | `GET /admin/v1/approvals` → 500 (g.user None) | Medium | ✅ Fixed |
-| SEC-02 | LDAP injection payload `*)(uid=*))(|` → 500 (should be 401) | **High** | 🔴 Open |
-| SEC-03 | Cyrillic homoglyph `аdmin` in login → 500 (should be 401) | **High** | 🔴 Open |
+| SEC-02 | LDAP injection payload `*)(uid=*))(|` → 500 (should be 401) | **High** | ✅ Fixed (catch RequestException in _check_login) |
+| SEC-03 | Cyrillic homoglyph `аdmin` in login → 500 (should be 401) | **High** | ✅ Fixed (catch RequestException/UnicodeError in _check_login) |
 | SEC-04 | Default admin password `admin` in shipped config | **Critical** | ✅ Fixed (startup guard) |
 | SEC-05 | No security headers on live site | **High** | ✅ Fixed (Traefik middleware) |
 | SEC-06 | Trivy CI gate `continue-on-error: true` | Medium | ✅ Fixed |

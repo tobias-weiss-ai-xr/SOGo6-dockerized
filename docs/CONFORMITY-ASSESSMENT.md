@@ -85,8 +85,8 @@ This self-assessment is based on:
 
 | ID | Issue | Severity | Mitigation | Target |
 |----|-------|----------|------------|--------|
-| SEC-02 | LDAP injection payload → 500 | High | LDAP bind error handling | Phase 4 |
-| SEC-03 | Unicode homoglyph login → 500 | High | Login input validation | Phase 4 |
+| SEC-02 | LDAP injection payload → 500 | High | ✅ Fixed (2026-08-26) — now returns 401 |
+| SEC-03 | Unicode homoglyph login → 500 | High | ✅ Fixed (2026-08-26) — now returns 401 |
 | GAP-01 | Audit log structured format | Medium | Phase 3 T-22..26 | 2026-10 |
 | GAP-02 | Global API rate limiting | Medium | Phase 4 T-36 | 2027-01 |
 | GAP-03 | ENISA/CSIRT notification automation | Low | Phase 3 T-28 | 2026-10 |

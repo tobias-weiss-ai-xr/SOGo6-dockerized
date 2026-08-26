@@ -54,12 +54,9 @@ test.describe('Input injection — CRA Art. 10(1)(c)', () => {
       headers: { 'Content-Type': 'application/json' },
       data: payload,
     });
-    // KNOWN: returns 500 instead of 401 — CRa security bug (LDAP bind crashes on malformed DN)
-    // Track: fix LDAP bind to catch ldap.LDAPError and return 401
-    if (res.status() >= 500) {
-      test.info().annotations.push({ type: 'security-bug', description: `LDAP injection -> ${res.status()} (should be 401)` });
-    }
-    expect([400, 401, 403, 500], `LDAP injection -> ${res.status()}`).toContain(res.status());
+    // FIXED: malformed LDAP filter must not crash — returns 401 (failed login)
+    expect([400, 401, 403], `LDAP injection must not succeed -> ${res.status()}`).toContain(res.status());
+    expect(res.status(), `LDAP injection -> ${res.status()}`).toBeLessThan(500);
   });
 
   test('INJ-05 JSON bomb (deeply nested)', async ({ request }) => {
@@ -124,12 +121,9 @@ test.describe('Input injection — CRA Art. 10(1)(c)', () => {
       headers: { 'Content-Type': 'application/json' },
       data: payload,
     });
-    // KNOWN: returns 500 instead of 401 — CRa security bug (Cyrillic char causes server error)
-    // Track: fix login to catch encoding/processing errors and return 401
-    if (res.status() >= 500) {
-      test.info().annotations.push({ type: 'security-bug', description: `Homoglyph login -> ${res.status()} (should be 401)` });
-    }
-    expect([400, 401, 403, 500], `Homoglyph login -> ${res.status()}`).toContain(res.status());
+    // FIXED: non-ASCII identifier must not crash — returns 401 (failed login)
+    expect([400, 401, 403], `Homoglyph login -> ${res.status()}`).toContain(res.status());
+    expect(res.status(), `Homoglyph login -> ${res.status()}`).toBeLessThan(500);
   });
 
 });
