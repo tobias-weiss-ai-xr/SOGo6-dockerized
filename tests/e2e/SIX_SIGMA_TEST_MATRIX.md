@@ -84,10 +84,10 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 | Tier-0 features traced | **9 / 9 (100 %)** |
 | Acceptance criteria traced | **53** (39 feature + 8 defect path + boundaries) |
 | Green (asserted + passed) | **62** |
-| Annotated known-gap | **2** (N/A CalDAV UI, IMAP-family 503s — both non-blocking; all other previously-annotated Tier-0 gaps now live-verified/fixed) |
+| Annotated known-gap | **0** — all previously-annotated Tier-0 gaps live-verified/fixed (incl. IMAP-family reachability + CalDAV UI page) |
 | Red | **0** |
 | **Feature coverage σ** | **100 % coverage → 6σ compliance surface** (all Tier-0 features covered) |
-| **Green-criterion σ** | **100 % green (62/62) → 6σ** (all traced criteria assert and pass; 2 carry documented annotations for genuinely-deferred items) |
+| **Green-criterion σ** | **100 % green (62/62) → 6σ** (all traced criteria assert and pass; every documented gap now live-verified at the real HTTP level with real auth) |
 
 ## Known gaps & remediation path (moves σ from annotated → green)
 
@@ -95,7 +95,7 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 
 | Gap | Evidence | Fix direction |
 |-----|----------|---------------|
-| ManageSieve unreachable (S001501; IMAP family 503 to `sogo6-stalwart:20993`) | T0-SE-08; `mail.spec`/`api-playground` 503s | **STALE — already resolved**: live domain runtime `SOGO_D_IMAP_SERVER`/`PORT` are `sogo6-stalwart:993` (SSL/TLS) and `SOGO_D_SIEVE_*` `sogo6-stalwart:4190` (verified directly in `sogo6_sogo_settings.settings_domain_default`); only reachability re-check needed |
+| ManageSieve / IMAP-family 503s to `sogo6-stalwart:20993` | T0-SE-08; `mail.spec`/`api-playground` 503s | **RESOLVED — stale config**: live domain runtime is `SOGO_D_IMAP_SERVER/PORT=sogo6-stalwart:993` (SSL/TLS), `SOGO_D_SIEVE_*=sogo6-stalwart:4190`, `SOGO_D_SMTP_*=sogo6-stalwart:25` (verified in `settings_domain_default`). Reachability from `sogo6-server` confirmed on 143/993(TLSv1.3)/4190(ManageSieve v1.0)/25/587. With a real JWT, `GET /api/user/v1/mailboxes` → **200**. The old `:20993` target no longer exists in runtime settings.
 | ~~Resource booking `my-bookings` 500~~ **FIXED 7afb45c** | T0-RB-06 | Fixed `CalUserType` import path + `ERROR_SERVER_ERROR`→`ERROR_UNKOWN` in `ApiResourceBooking`/`ModuleResourceBooking` |
 | Team-calendar create 405 S000604 | T0-TC-04 | **FIXED submodule `9390c09`**, live-verified: `CalendarSources.get()` now routes `source_type=TEAM` to `CalendarSourceDb` (was falling through to ERROR_CALENDAR_NOT_SUPPORTED). Team create persists `source_type=team`; invite + delete round-trip. 834 calendar tests green. |
 | ~~CalDAV settings API absent + UI RSC crash (digest 1629184700)~~ **FIXED** | T0-CD-01/02 + UI | **API**: `GET /calendars/caldav/connection` + `/overview` deployed (submodule `59b6c94`). **RSC crash**: `caldav-sync-settings.tsx` lacked `'use client'` while using next-intl + RTK Query hooks → Server Component threw during RSC render. Marked client (UI submodule `bc18f90`); `/en/user_settings/calendars/caldav` now returns 200; image rebuilt + UI container recreated, healthy |
@@ -112,6 +112,27 @@ Tier-0 feature, its negative/defect paths, and boundary/validation checks.
 submodule sogo6-server : ApiJmapProtocol.py Core/echo (RFC 8620 §2.2)
 submodule sogo6-ui     : bc18f90 add 'use client' to caldav-sync-settings.tsx (RSC crash)
 parent                 : matrix annotations updated (T0-CD-03/T0-CS-03/T0-AP-01-02 + gaps list)
+```
+
+## Live-verified access (real HTTP auth, port 50000)
+
+> All Tier-0 endpoints re-verified end-to-end with real JWTs (not mocks). **Login was never broken** — earlier probes used the wrong login domain+password.
+
+```text
+user login  POST /api/user/v1/auth/login  {username, password} -> HTTP 200 jwt_token
+   testuser  -> testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+   maxmustermann / UniMarburg2026!   sekretariat / Sekretariat2026!
+   bibliothek / LibraryUni2026!      rektorat / Rektorat2026!Admin
+   lisa.mayer / UniMarburg2026!      klaus.schmidt / ProfessorUni2026!
+   sabine.weber / DeanUni2026!Secure  testuser2 / password123
+admin login POST /api/admin/v1/auth/login {username,password} -> SOGO_P_ADMIN=admin / SOGO_P_ADMIN_PWD=3fb7db8074230771
+
+JMAP  POST /api/admin/v1/jmap  Core/echo -> methodResponses echo args (RFC 8620 §2.2);
+      non-core method -> unknownMethod error
+caldav GET /api/user/v1/calendars/caldav/connection|overview -> 200 (real event counts)
+well-known GET /.well-known/caldav -> 301 -> /caldav/
+playground /docs 302 /swagger-basic 200 /openapi-basic.json 200
+mail GET /api/user/v1/mailboxes (user JWT) -> 200
 ```
 
 ## Running the suite
