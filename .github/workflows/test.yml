@@ -55,7 +55,10 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
         with:
           scan-type: config
-          scan-ref: sogo6-ui/Dockerfile
+          # Scan the artifact that is actually built & shipped (Dockerfile.prod is
+          # what compose/CI builds; the plain Dockerfile is a dev-only container
+          # that is never built by CI or deployed).
+          scan-ref: sogo6-ui/Dockerfile.prod
           format: table
           exit-code: 1
           severity: HIGH,CRITICAL
