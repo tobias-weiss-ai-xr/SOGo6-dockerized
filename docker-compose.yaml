@@ -90,6 +90,8 @@ services:
       SOGO_P_VOUCHER_SECRET: ${SOGO_P_VOUCHER_SECRET:-}
       SOGO_AES_ENC_KEY: ${SOGO_AES_ENC_KEY:-}
       SOGO_SECRET_KEY: ${SOGO_SECRET_KEY:-}
+      # Admin API password — CRA Art. 15: server refuses to start if empty/default
+      SOGO_P_ADMIN_PWD: ${SOGO_P_ADMIN_PWD:-}
       # ── SAML2 SP keypair ───────────────────────────────────────────────────
       # Mount sp-cert.pem and sp-key.pem at /etc/sogo/saml/ for SAML2 SSO.
       # Generate with: openssl req -x509 -newkey rsa:2048 -keyout sp-key.pem \
