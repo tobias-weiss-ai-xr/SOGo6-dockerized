@@ -114,7 +114,11 @@ if $LDAP_AUTH_WORKS; then
     fi
 
     echo "10. Negative: invalid JWT token rejected"
-    INVALID_TOKEN_TEST=$(curl -sk "$API_URL/api/user/v1/system" \
+    # Hit an AUTH-PROTECTED endpoint. /api/user/v1/system is intentionally public
+    # (pre-login UI bootstrap — listed in anon_endpoints in app/__init__.py), so a
+    # bogus bearer token there legitimately returns S000000. /api/user/v1/profile
+    # is protected and correctly returns S000203 for an invalid token.
+    INVALID_TOKEN_TEST=$(curl -sk "$API_URL/api/user/v1/profile" \
         -H "Authorization: Bearer invalidtoken123" 2>/dev/null)
     if echo "$INVALID_TOKEN_TEST" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('error_code')!='S000000'" 2>/dev/null; then
         pass "Invalid JWT token correctly rejected"

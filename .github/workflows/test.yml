@@ -243,9 +243,16 @@ jobs:
       - name: Run shell test suite
         run: bash tests/run-all-tests.sh
 
+      - name: Reset login rate limiter (fresh IP budget for integration tests)
+        run: |
+          # The shell suite consumes the per-IP 20 login/60s budget, which would
+          # otherwise throttle the login/hardening/rate-limit tests below.
+          docker exec sogo6-redis redis-cli --scan --pattern 'login:*' \
+            | xargs -r docker exec sogo6-redis redis-cli del || true
+
       - name: Run Python integration tests
         run: |
-          pip3 install -q pytest requests
+          pip3 install -q -r tests/integration/requirements.txt
           SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x
 
       - name: Run backend unit tests (server, inside container)
