@@ -63,6 +63,7 @@
 | I-1 | IDOR on calendar/addressbook/mail | Data leak | JWT-scoped queries | No automated IDOR testing until now (ISO-01..06 added) | ✅ Now tested |
 | I-2 | Admin sees user mail content | Privacy violation | Separate admin/user auth | Tested in ISO-06 | ✅ Tested |
 | I-3 | Error messages reveal internal state | Reconnaissance | Generic error codes (S999999) | **INJ-04/10: unhandled LDAP errors leak 500** | 🔴 Bug |
+| I-6 | App-password revoke leaks 500 on bad ID | Reconnaissance | Tagged errors (S001xxx) | ~~delete non-existent ID → 500 S999999~~ **Fixed → 404 S001220** (e40dfae, tested) | ✅ Fixed |
 | I-4 | LDAP data enumeration | User recon | Auth required for user API | — | ✅ Mitigated |
 | I-5 | SBOM/dependency enumeration via package.json | Supply chain recon | Public repo (acceptable for OSS) | — | ✅ Accepted |
 
