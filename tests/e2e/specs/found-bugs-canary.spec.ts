@@ -20,15 +20,15 @@
 // configured (requires an external IdP). Pinned below.
 //
 // Runs against https://sogo6.contextual-intelligence.org
-// Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Credentials: see tests/e2e/.env (gitignored)
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 async function doLogin(page: import('@playwright/test').Page) {

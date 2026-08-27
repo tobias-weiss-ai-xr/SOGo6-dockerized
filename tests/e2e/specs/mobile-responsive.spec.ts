@@ -6,13 +6,13 @@
 // Verifies core pages render on a mobile-class viewport (375x812) without
 // horizontal overflow and that the sidebar switches to a sheet/menu pattern.
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 async function setupEnvInterception(page: import('@playwright/test').Page) {

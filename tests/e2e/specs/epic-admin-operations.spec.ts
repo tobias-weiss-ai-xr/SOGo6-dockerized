@@ -8,15 +8,15 @@
 // management, shared-mailbox governance, and auditability.
 //
 // Runs against https://sogo6.contextual-intelligence.org/api/admin/v1
-// Admin credentials (process settings store): admin / 3fb7db8074230771
+// Admin credentials: see tests/e2e/.env (gitignored)
 //
 // Every story is authenticated with a real admin JWT. 5xx fails; 2xx/4xx are OK.
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const ADMIN_API = 'https://sogo6.contextual-intelligence.org/api/admin/v1';
-const ADMIN = { username: 'admin', password: '3fb7db8074230771' };
+const ADMIN = { username: 'admin', password: REMOTE_CREDENTIALS.admin.password };
 
 const ACCEPT = [200, 201, 202, 204, 400, 404, 422];
 

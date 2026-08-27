@@ -7,13 +7,13 @@
 // the axe dependency: accessible names on interactive elements, landmarks,
 // single h1, lang attribute, and aria-hidden/hidden content absence on key flows.
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 async function setupEnvInterception(page: import('@playwright/test').Page) {

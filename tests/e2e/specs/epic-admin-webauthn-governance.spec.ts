@@ -7,12 +7,12 @@
 // user passkey inventory, and additional config-as-code management.
 //
 // Runs against https://sogo6.contextual-intelligence.org/api/admin/v1
-// Admin credentials: admin / 3fb7db8074230771
+// Admin credentials: see tests/e2e/.env (gitignored)
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const ADMIN_API = 'https://sogo6.contextual-intelligence.org/api/admin/v1';
-const ADMIN = { username: 'admin', password: '3fb7db8074230771' };
+const ADMIN = { username: 'admin', password: REMOTE_CREDENTIALS.admin.password };
 const ACCEPT = [200, 201, 202, 204, 400, 404, 409, 422];
 
 let ADMIN_TOKEN: string | null = null;

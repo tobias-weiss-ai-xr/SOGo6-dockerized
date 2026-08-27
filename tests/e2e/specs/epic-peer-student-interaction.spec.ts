@@ -8,16 +8,16 @@
 // membership from the peer perspective.
 //
 // Actors:
-//   student-a = testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+//   student-a = [see tests/e2e/.env] / [see tests/e2e/.env]
 //   student-b = testuser2@sogo6.contextual-intelligence.org / password123
 //
 // Runs against https://sogo6.contextual-intelligence.org
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const ACTORS = {
-  a: { email: 'testuser@sogo6.contextual-intelligence.org', password: 'S0g0Test2026!Secure' },
+  a: { email: REMOTE_CREDENTIALS.user.email, password: REMOTE_CREDENTIALS.user.password },
   b: { email: 'testuser2@sogo6.contextual-intelligence.org', password: 'password123' },
 };
 const ACCEPT = [200, 201, 202, 204, 400, 404, 409, 422];

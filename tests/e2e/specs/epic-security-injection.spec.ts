@@ -3,14 +3,14 @@
  * Key assertion: NO 5xx responses — the server must not crash on malicious input.
  */
 import { test, expect } from '@playwright/test';
-import { apiLogin, REMOTE_API, bearer } from '../helpers';
+import { apiLogin, REMOTE_API, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const BASE = REMOTE_API.replace('/api/user/v1', '');
 const USER_API = BASE + '/api/user/v1';
 
 let token: string | null = null;
 async function tk(): Promise<string> {
-  if (!token) token = await apiLogin('testuser@sogo6.contextual-intelligence.org', 'S0g0Test2026!Secure');
+  if (!token) token = await apiLogin(REMOTE_CREDENTIALS.user.email, REMOTE_CREDENTIALS.user.password);
   return token;
 }
 
@@ -73,7 +73,7 @@ test.describe('Input injection — CRA Art. 10(1)(c)', () => {
   test('INJ-06 oversized body (5MB)', async ({ request }) => {
     const t = await tk();
     const huge = 'x'.repeat(5 * 1024 * 1024);
-    const payload = { subject: huge, body: 'test', to: 'testuser@sogo6.contextual-intelligence.org' };
+    const payload = { subject: huge, body: 'test', to: REMOTE_CREDENTIALS.user.email };
     const res = await request.post(`${USER_API}/mailboxes/0/mails`, {
       headers: { ...bearer(t), 'Content-Type': 'application/json' },
       data: payload,
@@ -96,7 +96,7 @@ test.describe('Input injection — CRA Art. 10(1)(c)', () => {
     const payload = {
       subject: 'test\r\nX-Injected: evil',
       body: 'crlf test',
-      to: 'testuser@sogo6.contextual-intelligence.org',
+      to: REMOTE_CREDENTIALS.user.email,
     };
     const res = await request.post(`${USER_API}/mailboxes/0/mails`, {
       headers: { ...bearer(t), 'Content-Type': 'application/json' },

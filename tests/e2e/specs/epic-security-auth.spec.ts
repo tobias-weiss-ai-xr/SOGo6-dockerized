@@ -8,14 +8,14 @@
 // auth-mode endpoint that the UI uses to decide between LDAP / passkey / SSO.
 //
 // Runs against https://sogo6.contextual-intelligence.org
-// Role: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Role: see tests/e2e/.env (gitignored)
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const ROLE = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 const ACCEPT = [200, 201, 202, 204, 400, 404, 409, 422];
 
@@ -120,7 +120,7 @@ test.describe('Epic — Security: app passwords & auth mode', () => {
   });
 
   test('SEC-10 auth-mode endpoint is reachable without authentication', async ({ request }) => {
-    const res = await request.get(`${REMOTE_API}/../auth/mode?username=testuser@sogo6.contextual-intelligence.org&redirect=`);
+    const res = await request.get(`${REMOTE_API}/../auth/mode?username=${REMOTE_CREDENTIALS.user.email}&redirect=`);
     // auth/mode may return 200 or redirect — just check it's not 5xx
     expect([200, 301, 302, 400, 404], `GET /auth/mode -> ${res.status()}`).toContain(res.status());
     test.info().annotations.push({ type: 'auth-mode', description: `-> ${res.status()}` });

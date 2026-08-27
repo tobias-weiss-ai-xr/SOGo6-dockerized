@@ -5,20 +5,20 @@
 // Covers: admin login, admin panel page load, system settings, user management.
 //
 // Tests run against https://sogo6.contextual-intelligence.org
-// Admin credentials: admin / admin (default)
+// Admin credentials: see tests/e2e/.env (gitignored)
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const REMOTE_ADMIN_API = 'https://sogo6.contextual-intelligence.org/api/admin/v1';
 const USER_CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: '3fb7db8074230771', // from server .env: SOGO_P_ADMIN_PWD
+  username: REMOTE_CREDENTIALS.admin.username,
+  password: REMOTE_CREDENTIALS.admin.password, // from server .env: SOGO_P_ADMIN_PWD
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────

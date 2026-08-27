@@ -8,14 +8,14 @@
 // home, calendar discovery, principal properties, and resource type checks.
 //
 // Runs against https://sogo6.contextual-intelligence.org
-// Role: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Role: see tests/e2e/.env (gitignored)
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const ROLE = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 let USER_TOKEN: string | null = null;

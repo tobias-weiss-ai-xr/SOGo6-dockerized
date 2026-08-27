@@ -8,20 +8,20 @@
 //
 // Design:
 //   - Tests run against https://sogo6.contextual-intelligence.org
-//   - Uses credentials: testuser@sogo6.contextual-intelligence.org / password123
+//   - Uses credentials: [see tests/e2e/.env] / password123
 //   - Each story logs pass/fail via test.info() annotations
 //   - Backend API gaps (500/503) are documented in annotations, not failures
 //   - UI tests soft-fail if elements not present (frontend not yet implemented)
 //   - API tests run regardless of UI state
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 // ── Constants for remote SOGo6 instance ────────────────────────────────────
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 
 const REMOTE_CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
+  email: REMOTE_CREDENTIALS.user.email,
   password: 'password123',
 };
 

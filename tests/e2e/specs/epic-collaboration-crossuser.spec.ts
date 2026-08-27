@@ -9,18 +9,18 @@
 // faculty. Each actor authenticates with their own real JWT.
 //
 // Actors (all live-verified in the LDAP directory):
-//   testuser      / S0g0Test2026!Secure
+//   testuser      / [see tests/e2e/.env]
 //   maxmustermann / UniMarburg2026!
 //   lisa.mayer    / UniMarburg2026!
 //   rektorat      / Rektorat2026!Admin
 //
 // Runs against https://sogo6.contextual-intelligence.org
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const ACTORS = {
-  student: { email: 'testuser@sogo6.contextual-intelligence.org', password: 'S0g0Test2026!Secure' },
+  student: { email: REMOTE_CREDENTIALS.user.email, password: REMOTE_CREDENTIALS.user.password },
   peer: { email: 'maxmustermann@sogo6.contextual-intelligence.org', password: 'UniMarburg2026!' },
   faculty: { email: 'lisa.mayer@sogo6.contextual-intelligence.org', password: 'UniMarburg2026!' },
   exec: { email: 'rektorat@sogo6.contextual-intelligence.org', password: 'Rektorat2026!Admin' },

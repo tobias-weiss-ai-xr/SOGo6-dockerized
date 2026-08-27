@@ -2,7 +2,7 @@
  * CRA Art. 10(1)(c) — Authorization Bypass Verification (G2)
  */
 import { test, expect } from '@playwright/test';
-import { apiLogin, REMOTE_API, bearer } from '../helpers';
+import { apiLogin, REMOTE_API, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const BASE = REMOTE_API.replace('/api/user/v1', '');
 const USER_API = BASE + '/api/user/v1';
@@ -11,11 +11,11 @@ const ADMIN_API = BASE + '/api/admin/v1';
 let userToken: string | null = null;
 let adminToken: string | null = null;
 async function getUserToken(): Promise<string> {
-  if (!userToken) userToken = await apiLogin('testuser@sogo6.contextual-intelligence.org', 'S0g0Test2026!Secure');
+  if (!userToken) userToken = await apiLogin(REMOTE_CREDENTIALS.user.email, REMOTE_CREDENTIALS.user.password);
   return userToken;
 }
 async function getAdminToken(): Promise<string> {
-  if (!adminToken) adminToken = await apiLogin('admin', '3fb7db8074230771', 'admin');
+  if (!adminToken) adminToken = await apiLogin(REMOTE_CREDENTIALS.admin.username, REMOTE_CREDENTIALS.admin.password, REMOTE_API);
   return adminToken;
 }
 

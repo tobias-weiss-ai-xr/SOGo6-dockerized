@@ -4,7 +4,7 @@
 /**
  * Feature tests for app passwords on the live SOGo6 demo site.
  * Tests run against https://sogo6.contextual-intelligence.org
- * Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+ * Credentials: see tests/e2e/.env (gitignored)
  *
  * NOTE: Revoking a NON-EXISTENT app password previously returned a 500
  * (S999999 Undefined Error) because ModuleAppPassword.delete raised an
@@ -14,7 +14,7 @@
  * in container) but fails GRACEFULLY (404, never 5xx).
  */
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 import { apiLogin, REMOTE_API, bearer } from '../helpers';
 
 const BASE = REMOTE_API.replace('/api/user/v1', '');
@@ -23,7 +23,7 @@ const API = BASE + '/api/user/v1';
 let token: string | null = null;
 async function getToken(request: any): Promise<string> {
   if (!token) {
-    token = await apiLogin(request, 'testuser@sogo6.contextual-intelligence.org', 'S0g0Test2026!Secure', REMOTE_API);
+    token = await apiLogin(request, REMOTE_CREDENTIALS.user.email, REMOTE_CREDENTIALS.user.password, REMOTE_API);
   }
   return token;
 }

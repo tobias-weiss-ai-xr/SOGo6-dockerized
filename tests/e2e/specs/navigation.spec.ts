@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2025 SOGo project contributors
 // SPDX-License-Identifier: LGPL-2.1-only
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const ADMIN_API = 'https://sogo6.contextual-intelligence.org/api/admin/v1';
 const CREDENTIALS = {
-  admin: { username: 'admin', password: '3fb7db8074230771' },
+  admin: { username: 'admin', password: REMOTE_CREDENTIALS.admin.password },
 };
 
 test.describe('Navigation & i18n', () => {

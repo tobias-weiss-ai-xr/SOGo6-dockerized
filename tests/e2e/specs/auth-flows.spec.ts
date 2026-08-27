@@ -6,15 +6,15 @@
 // logout, session persistence, protected route redirect, language switching.
 //
 // Tests run against https://sogo6.contextual-intelligence.org
-// Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Credentials: see tests/e2e/.env (gitignored)
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ test.describe('Authentication Flows', () => {
   test('protected route handles unauthenticated access (documented)', async ({ page }) => {
     await setupEnvInterception(page);
     // Navigate to a protected route without being logged in
-    await page.goto(`${REMOTE_BASE}/en/u/testuser@sogo6.contextual-intelligence.org/INBOX`, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
+    await page.goto(`${REMOTE_BASE}/en/u/${REMOTE_CREDENTIALS.user.email}/INBOX`, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(5000);
 
     // Observed behavior on this deployment: the app stays on the /u/ URL with an

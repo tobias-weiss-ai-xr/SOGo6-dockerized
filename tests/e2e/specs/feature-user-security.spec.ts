@@ -4,13 +4,13 @@
 /**
  * Feature tests for user security endpoints on the live SOGo6 demo site.
  * Tests run against https://sogo6.contextual-intelligence.org
- * Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+ * Credentials: see tests/e2e/.env (gitignored)
  *
  * NOTE: Password-change tests only exercise the FAILURE / validation paths so the
  * live credentials are never modified.
  */
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 import { apiLogin, REMOTE_API, bearer } from '../helpers';
 
 const BASE = REMOTE_API.replace('/api/user/v1', '');
@@ -19,7 +19,7 @@ const API = BASE + '/api/user/v1';
 let token: string | null = null;
 async function getToken(request: any): Promise<string> {
   if (!token) {
-    token = await apiLogin(request, 'testuser@sogo6.contextual-intelligence.org', 'S0g0Test2026!Secure', REMOTE_API);
+    token = await apiLogin(request, REMOTE_CREDENTIALS.user.email, REMOTE_CREDENTIALS.user.password, REMOTE_API);
   }
   return token;
 }
@@ -91,7 +91,7 @@ test.describe('User Security Features', () => {
         Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8'),
       );
       expect(payload.iss).toBe('SOGo6');
-      expect(payload.uid).toBe('testuser@sogo6.contextual-intelligence.org');
+      expect(payload.uid).toBe(REMOTE_CREDENTIALS.user.email);
       expect(payload.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
 

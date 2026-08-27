@@ -10,15 +10,15 @@
 //     the profile page briefly show "Failed to load profile." This probe
 //     measures the failure rate without hard-failing on a single blip.
 //
-// Credentials: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Credentials: see tests/e2e/.env (gitignored)
 
-import { test, expect } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const CREDENTIALS = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 
 async function setupEnvInterception(page: import('@playwright/test').Page) {
@@ -133,7 +133,7 @@ test.describe('Profile', () => {
       const text = document.body?.innerText?.toLowerCase() || '';
       return {
         hasName: text.includes('test user'),
-        hasEmail: text.includes('testuser@sogo6.contextual-intelligence.org'),
+        hasEmail: text.includes(REMOTE_CREDENTIALS.user.email),
         hasHeading: text.includes('profile'),
         len: text.length,
       };

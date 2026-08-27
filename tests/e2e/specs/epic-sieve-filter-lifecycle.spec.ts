@@ -8,14 +8,14 @@
 // through the complete data lifecycle.
 //
 // Runs against https://sogo6.contextual-intelligence.org
-// Role: testuser@sogo6.contextual-intelligence.org / S0g0Test2026!Secure
+// Role: see tests/e2e/.env (gitignored)
 
-import { test, expect, apiLogin, bearer } from '../helpers';
+import { test, expect, apiLogin, bearer, REMOTE_CREDENTIALS } from '../helpers';
 
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 const ROLE = {
-  email: 'testuser@sogo6.contextual-intelligence.org',
-  password: 'S0g0Test2026!Secure',
+  email: REMOTE_CREDENTIALS.user.email,
+  password: REMOTE_CREDENTIALS.user.password,
 };
 const ACCEPT = [200, 201, 202, 204, 400, 404, 409, 422];
 

@@ -378,7 +378,7 @@ jobs:
           cd sogo6-ui
           npm run prebuild
           echo "Compiled messages:"
-          ls src/compiled-messages/ | head -5
+          ls src/lib/i18n/compiled-messages/ | head -5
 
       - name: Run Playwright E2E tests
         run: |

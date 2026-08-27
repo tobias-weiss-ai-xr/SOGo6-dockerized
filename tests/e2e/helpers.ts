@@ -5,6 +5,39 @@
 
 import { test as base, expect as baseExpect } from '@playwright/test';
 import path from 'path';
+import fs from 'fs';
+
+// ── Minimal .env loader (no external dependency) ──────────────────────────
+// Loads tests/e2e/.env (gitignored) so secrets never live in source code.
+// Process env takes precedence over the file (CI-friendly).
+function loadDotEnv(): Record<string, string> {
+  const vars: Record<string, string> = {};
+  const envPath = path.join(__dirname, '.env');
+  try {
+    const raw = fs.readFileSync(envPath, 'utf8');
+    for (const line of raw.split(/\r?\n/) ) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      vars[key] = value;
+    }
+  } catch {
+    /* .env absent — fall through to process.env */
+  }
+  return vars;
+}
+
+const envFile = loadDotEnv();
+function secret(key: string): string {
+  return process.env[key] ?? envFile[key] ?? '';
+}
+
 
 // Re-export full test and expect objects
 export const test = base;
@@ -142,16 +175,23 @@ export const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 export const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 export const ADMIN_API = 'https://sogo6.contextual-intelligence.org/api/admin/v1';
 
+// Credentials are loaded from tests/e2e/.env (gitignored) — never commit
+// real secrets to source. If they are missing, tests that need live login
+// will report a clear error instead of silently using stale values.
 export const REMOTE_CREDENTIALS = {
   user: {
-    email: 'testuser@sogo6.contextual-intelligence.org',
-    password: 'S0g0Test2026!Secure',
+    email: secret('REMOTE_USER_EMAIL'),
+    password: secret('REMOTE_USER_PASSWORD'),
   },
   admin: {
-    username: 'admin',
-    password: '3fb7db8074230771',
+    username: secret('REMOTE_ADMIN_USERNAME'),
+    password: secret('REMOTE_ADMIN_PASSWORD'),
   },
 };
+
+if (!REMOTE_CREDENTIALS.user.email || !REMOTE_CREDENTIALS.user.password) {
+  console.warn('[helpers] REMOTE user credentials missing — set REMOTE_USER_EMAIL/REMOTE_USER_PASSWORD in tests/e2e/.env');
+}
 
 /**
  * Intercept /env and prefill the remote credentials so the login form is
@@ -220,4 +260,26 @@ export async function loginRemoteAdmin(page: any): Promise<string | null> {
 /** Convenience: standard auth headers for API calls. */
 export function bearer(token: string | null, extra: Record<string, string> = {}) {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...extra };
+}
+
+/**
+ * Role login via the v1 API (LDAP user bind). Accepts any directory user and
+ * returns the real JWT. Used by the role/persona epic suites.
+ */
+export async function apiLogin(
+  request: { post: (u: string, o?: any) => Promise<{ json: () => Promise<any>; status: () => number }> },
+  username: string,
+  password: string,
+  base: string = REMOTE_API,
+): Promise<string | null> {
+  try {
+    const res = await request.post(`${base}/auth/login`, {
+      headers: { 'Content-Type': 'application/json' },
+      data: { username, password },
+    });
+    const body = await res.json().catch(() => ({}));
+    return body?.data?.jwt_token ?? body?.data?.token ?? body?.data?.access_token ?? null;
+  } catch {
+    return null;
+  }
 }
