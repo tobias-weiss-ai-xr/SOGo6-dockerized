@@ -281,24 +281,27 @@ check_already_initialized() {
 
     log_info "Checking if already initialized..."
 
-    # Health returns 412 when not configured, 200/503 when configured
+    # /api/user/v1/system is the authoritative signal: it returns 412
+    # (S000001 "Not Configured Yet") while SOGo is unconfigured and 200 once
+    # system + domain-default settings exist. /api/user/v1/health returns 200
+    # in BOTH states, so it must not be used for this decision.
     local http_code
-    http_code=$(curl -sk --connect-timeout 2 --max-time 3 -o /dev/null -w '%{http_code}' "${SERVER_URL}/api/user/v1/health" 2>/dev/null || true)
+    http_code=$(curl -sk --connect-timeout 2 --max-time 3 -o /dev/null -w '%{http_code}' "${SERVER_URL}/api/user/v1/system" 2>/dev/null || true)
     http_code="${http_code:-000}"
     # Trim any whitespace
     http_code="$(echo "$http_code" | tr -d '[:space:]')"
 
-    if [ "$http_code" = "200" ] || [ "$http_code" = "503" ]; then
-        log_success "Already initialized (health: ${http_code}). Use -f/--force to re-configure."
+    if [ "$http_code" = "200" ]; then
+        log_success "Already initialized (system config: ${http_code}). Use -f/--force to re-configure."
         return 0
     fi
 
     if [ "$http_code" = "412" ]; then
-        log_info "System not yet initialized (health: 412 - needs configuration)"
+        log_info "System not yet initialized (/api/user/v1/system: 412 - needs configuration)"
         return 1
     fi
 
-    log_warning "Health check returned code '${http_code}', proceeding..."
+    log_warning "System state check returned code '${http_code}', proceeding..."
     return 1
 }
 

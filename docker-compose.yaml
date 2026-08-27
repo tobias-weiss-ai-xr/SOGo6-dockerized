@@ -303,7 +303,10 @@ services:
     volumes:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
-      - ./sogo6/stalwart/config.toml:/etc/stalwart/config.toml:ro
+      # Test/CI environments can select a hardened config (local-only delivery,
+      # no external relay) by setting STALWART_CONFIG_FILE. Production keeps the
+      # default config.toml (operator smarthost relay).
+      - ${STALWART_CONFIG_FILE:-./sogo6/stalwart/config.toml}:/etc/stalwart/config.toml:ro
     # The image default CMD (`--config /etc/stalwart/config.json`) starts Stalwart
     # with an (initially empty) config store; the server config from config.toml
     # (LDAP directory + outbound relay to tobias-weiss.org) is applied at runtime

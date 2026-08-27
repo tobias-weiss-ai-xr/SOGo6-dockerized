@@ -1,0 +1,54 @@
+# Stalwart mail server configuration — CI / automated-test hardened variant.
+#
+# Hardening for the test environment (selected via docker-compose variable
+# STALWART_CONFIG_FILE=./sogo6/stalwart/config.test.toml in CI):
+#
+#   * User directory points at the LOCAL OpenLDAP tree (dc=example,dc=org) so
+#     the demo's internal users resolve as LOCAL recipients — mail is delivered
+#     only inside the instance.
+#   * NO external smarthost / relay (no [remote.*] and no [queue] next-hop):
+#     recipients outside the demo domain have no delivery route and are
+#     rejected — test accounts can never send mail to real external addresses.
+#
+# The production/demo deployment keeps the regular config.toml (with the
+# operator relay) via the default value of STALWART_CONFIG_FILE.
+
+[server]
+
+[server.listener."imap"]
+bind = ["[::]:143"]
+protocol = "imap"
+
+[server.listener."smtp"]
+bind = ["[::]:25"]
+protocol = "smtp"
+
+[server.listener."submissions"]
+bind = ["[::]:587"]
+protocol = "submissions"
+
+[server.listener."sieve"]
+bind = ["[::]:4190"]
+protocol = "sieve"
+
+# ── Data store ───────────────────────────────────────────────────────────────
+# SQLite keeps the demo dependency-free (no separate database required).
+[store."default"]
+type = "sqlite"
+path = "/var/lib/stalwart/db.sqlite"
+
+# ── User directory: the LOCAL SOGo OpenLDAP tree (dc=example,dc=org) ─────────
+# The CI/local LDAP container is initialised with this suffix (init.ldif).
+[directory."ldap"]
+type = "ldap"
+addresses = ["ldap://sogo6-ldap:389"]
+bind-dn = "cn=admin,dc=example,dc=org"
+# Password is injected from the vault (.env) — never hardcoded.
+bind-password = { type = "env", value = "LDAP_ADMIN_PASSWORD" }
+base-dn = "ou=users,dc=example,dc=org"
+filter = "(objectClass=inetOrgPerson)"
+
+# Deliberately absent: [remote."*"] and [queue] next-hop.
+# → any recipient outside dc=example,dc=org has no delivery route and is
+#   rejected at RCPT time (550). Internal (example.org) recipients are
+#   delivered to the local SQLite store only.

@@ -187,6 +187,10 @@ jobs:
           echo "SOGO_AES_ENC_KEY=$SOGO_AES_ENC_KEY" >> "$GITHUB_ENV"
           source <(grep SOGO_SECRET_KEY secrets/sogo6.vault.env)
           echo "SOGO_SECRET_KEY=$SOGO_SECRET_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_ADMIN_PWD secrets/sogo6.vault.env)
+          echo "SOGO_ADMIN_USER=admin" >> "$GITHUB_ENV"
+          echo "SOGO_ADMIN_PASSWORD=$SOGO_P_ADMIN_PWD" >> "$GITHUB_ENV"
+          echo "STALWART_CONFIG_FILE=./sogo6/stalwart/config.test.toml" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |
@@ -322,6 +326,10 @@ jobs:
           echo "SOGO_AES_ENC_KEY=$SOGO_AES_ENC_KEY" >> "$GITHUB_ENV"
           source <(grep SOGO_SECRET_KEY secrets/sogo6.vault.env)
           echo "SOGO_SECRET_KEY=$SOGO_SECRET_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_ADMIN_PWD secrets/sogo6.vault.env)
+          echo "SOGO_ADMIN_USER=admin" >> "$GITHUB_ENV"
+          echo "SOGO_ADMIN_PASSWORD=$SOGO_P_ADMIN_PWD" >> "$GITHUB_ENV"
+          echo "STALWART_CONFIG_FILE=./sogo6/stalwart/config.test.toml" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |
