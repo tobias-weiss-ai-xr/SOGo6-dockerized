@@ -26,11 +26,13 @@ jobs:
           submodules: 'true'
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # No repository-root package manifest exists (the UI keeps its lockfile in
+      # sogo6-ui/), so `cache: npm` would hard-fail setup-node looking for a root
+      # lockfile. This workflow only installs global CLI tools, so no cache key.
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install validation tools
         run: |

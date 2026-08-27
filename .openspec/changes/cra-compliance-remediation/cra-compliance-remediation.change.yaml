@@ -1,6 +1,6 @@
 id: cra-compliance-remediation
 title: CRA Compliance Remediation — Full Gap Closure
-status: planned
+status: in_progress
 priority: critical
 type: compliance
 cra_article: '13,14,15,10,11,24,29,30'

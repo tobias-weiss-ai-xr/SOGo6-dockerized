@@ -461,6 +461,35 @@ jobs:
           submodules: 'true'
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate secrets
+        run: bash sogo6/scripts/manage-secrets.sh
+
+      - name: Generate TLS certs
+        run: bash sogo6/scripts/gen-certs.sh
+
+      - name: Export vault secrets to environment
+        run: |
+          grep -v '^#' secrets/sogo6.vault.env | grep -v '^$' | while IFS='=' read -r key val; do
+            echo "$key=$val" >> "$GITHUB_ENV"
+          done
+          # Map vault keys to compose/server env var names
+          source <(grep MARIADB_PASSWORD secrets/sogo6.vault.env | grep -v MARIADB_ROOT)
+          echo "SOGO_P_DB_PASS=$MARIADB_PASSWORD" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_USER=sogo" >> "$GITHUB_ENV"
+          echo "SOGO_P_DB_TYPE=MySQL" >> "$GITHUB_ENV"
+          source <(grep LDAP_ADMIN_PASSWORD secrets/sogo6.vault.env)
+          echo "SOGO_LDAP_BIND_PASSWORD=$LDAP_ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_VOUCHER_SECRET secrets/sogo6.vault.env)
+          echo "SOGO_P_VOUCHER_SECRET=$SOGO_P_VOUCHER_SECRET" >> "$GITHUB_ENV"
+          source <(grep SOGO_AES_ENC_KEY secrets/sogo6.vault.env)
+          echo "SOGO_AES_ENC_KEY=$SOGO_AES_ENC_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_SECRET_KEY secrets/sogo6.vault.env)
+          echo "SOGO_SECRET_KEY=$SOGO_SECRET_KEY" >> "$GITHUB_ENV"
+          source <(grep SOGO_P_ADMIN_PWD secrets/sogo6.vault.env)
+          echo "SOGO_ADMIN_USER=admin" >> "$GITHUB_ENV"
+          echo "SOGO_ADMIN_PASSWORD=$SOGO_P_ADMIN_PWD" >> "$GITHUB_ENV"
+          echo "STALWART_CONFIG_FILE=./sogo6/stalwart/config.test.toml" >> "$GITHUB_ENV"
+
       - name: Install k6 for load testing
         run: |
           K6_VERSION="0.59.0"
@@ -479,9 +508,42 @@ jobs:
           echo "::error::Failed to download k6 after 3 attempts"
           exit 1
 
-      - name: Start stack (reuse cached images)
+      - name: Start stack
         run: |
-          docker compose --profile db-mariadb up -d --wait --wait-timeout 180 || docker compose --profile db-mariadb up -d
+          # Full profile set (like test-stack): the server healthcheck and the
+          # admin/user logins used by the k6 scripts require a seeded LDAP.
+          docker compose --profile db-mariadb --profile auth-ldap --profile mail-stalwart up -d
+          echo "Waiting for all services (redis, mariadb, ldap, stalwart, server)..."
+          timeout 360 bash -c '
+          for i in $(seq 1 72); do
+            UNHEALTHY=$(docker compose ps --format "{{.Name}} {{.Health}}" 2>/dev/null | grep -E "sogo6-(redis|mariadb|ldap|stalwart|server)" | grep -v healthy | grep -v -E "starting" || true)
+            if [ -z "$UNHEALTHY" ]; then
+              echo "All services healthy after ${i} checks"
+              docker compose ps
+              exit 0
+            fi
+            echo "Waiting... ($i/72)"
+            sleep 5
+          done
+          echo "Timeout waiting for services"
+          docker compose ps
+          docker compose logs --tail=20 sogo6-server sogo6-ldap sogo6-stalwart
+          exit 1
+          '
+
+      - name: Initialize SOGo6
+        run: bash sogo6/scripts/init-sogo6.sh
+
+      - name: Wait for readiness
+        run: |
+          echo "Waiting for API..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5001/api/user/v1/system >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
 
       - name: Run load tests (JSON output)
         id: load-tests
