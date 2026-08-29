@@ -142,3 +142,21 @@ cd /tmp/e2e-tests && NODE_PATH=/home/weiss/actions-runner-deploy-2/_work/ki-komp
   /home/weiss/actions-runner-deploy-2/_work/ki-kompetenz-training/ki-kompetenz-training/node_modules/.bin/playwright test \
   --config=playwright.config.ts specs/tier0-*.spec.ts specs/six-sigma-defect-paths.spec.ts --reporter=list
 ```
+
+## Visual regression (live demo UI)
+
+> Baseline screenshots are committed under `specs/ui-visual-demo.spec.ts-snapshots/` and must be
+> refreshed deliberately with `npx playwright test specs/ui-visual-demo.spec.ts --update-snapshots`.
+> `animations: disabled` + small `maxDiffPixelRatio` keep the baselines stable despite live data.
+
+| # | Visual anchor | Spec file | Test id | Live result |
+|---|---------------|-----------|---------|-------------|
+| 1 | **Login page** renders (deterministic Light theme; animations off) | `ui-visual-demo.spec.ts` | VIS-UA-01 | 🟢 2.1s (baseline `login-page.png`) |
+| 2 | **Logged-in shell** renders (mailbox pane + any open dialog stack) | 〃 | VIS-UA-02 | 🟢 11s (`logged-in-shell.png`) |
+| 2a | Compose stack baseline — the **3 "New message" dialogs** observed after login are the newest **drafts** (Drafts folder = 69 msgs; uids 69/68/67) reopened as compose windows by a fresh session — pinned visually + audited as annotation | 〃 | VIS-UA-02a | 🟢 (`compose-dialogs.png`, texts dumped to console) |
+| 3 | **Mail reading pane** for a selected message | 〃 | VIS-UA-03 | 🟢 11.5s (`mail-reading-pane.png`) |
+
+```text
+Run: npx playwright test specs/ui-visual-demo.spec.ts            # 3/3 vs committed baselines
+Refresh: npx playwright test specs/ui-visual-demo.spec.ts --update-snapshots
+```

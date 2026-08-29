@@ -5,6 +5,8 @@ playwright-results.json
 *.png
 *.webm
 node_modules/
+# Visual-regression baselines MUST be committed (Playwright toHaveScreenshot)
+!specs/*.ts-snapshots/*.png
 # Secrets — never commit
 .env
 .env.local
