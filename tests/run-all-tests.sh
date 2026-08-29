@@ -138,6 +138,23 @@ run_playwright_test() {
     else
         warn "No Playwright E2E test script found"
     fi
+
+    # Local Playwright spec suite (@local tag) — runs against the local stack.
+    # Includes JMAP user-protocol + recently-wired blueprints coverage.
+    if [ -d "$SCRIPT_DIR/e2e" ] && [ -x "$SCRIPT_DIR/e2e/node_modules/.bin/playwright" ]; then
+        echo "  Running: Playwright local specs (@local)"
+        set +e
+        ( cd "$SCRIPT_DIR/e2e" && timeout 300 npx playwright test --grep @local --reporter=list 2>&1 )
+        local rc2=$?
+        set -e
+        if [ "$rc2" -eq 124 ]; then
+            fail "Playwright local specs timed out"
+        elif [ "$rc2" -ne 0 ]; then
+            fail "Playwright local specs exited with code $rc2"
+        fi
+    else
+        warn "Playwright local specs skipped (tests/e2e node_modules not installed)"
+    fi
     echo ""
 }
 

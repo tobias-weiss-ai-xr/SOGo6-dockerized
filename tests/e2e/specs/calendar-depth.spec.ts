@@ -14,15 +14,18 @@
 //   - UI tests soft-fail if elements not present (frontend not yet implemented)
 //   - API tests run regardless of UI state
 
-import { test, expect, REMOTE_CREDENTIALS } from '../helpers';
+import { test, expect, REMOTE_CREDENTIALS as REMOTE_CREDS } from '../helpers';
 
 // ── Constants for remote SOGo6 instance ────────────────────────────────────
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 
+// Local shim ({email, password}) derived from the imported helpers object.
+// (Previously this shadowed the import with a self-referential initializer,
+// which crashed collection for the whole suite.)
 const REMOTE_CREDENTIALS = {
-  email: REMOTE_CREDENTIALS.user.email,
-  password: 'password123',
+  email: REMOTE_CREDS.user.email,
+  password: REMOTE_CREDS.user.password || 'password123',
 };
 
 // ── Helpers for remote instance ────────────────────────────────────────────
