@@ -269,21 +269,35 @@ which skip on the closed data channel. Not addressed here.
 
 ---
 
-## 6. Coverage gaps still open (candidate next work)
+## 6. Coverage gaps — status (2026-08-29)
 
 Enabled-LDAP run added ~44 passing tests. The server exposes **73 blueprint
-prefixes**; the suite covers the core auth/calendar/contact/mail/jobs surface but
-these **core user-facing APIs are untested**:
+prefixes**; the suite now covers auth/calendar/contact/mail/jobs **and** a first
+batch of the §6 user-facing/admin APIs via `tests/integration/test_apis_coverage.py`
+(11 tests, all green). Per-blueprint status after probing the live build:
 
-`/jmap`, `/files`, `/resources`, `/polls`, `/push`, `/quotas`, `/oauth`,
-`/scim/v2`, `/mfa`, `/webauthn`, `/app-passwords`, `/auth/password-reset`,
-`/auth/saml2`, `/search`, `/webhooks`, `/workflows`, `/approvals`, `/audit-log`,
-`/backup`, `/branding`, `/customization`, `/config-as-code`.
+**Covered (mounted, return 200, asserted in `test_apis_coverage.py`):**
+- User: `resources`, `polls` (scheduling), `preferences`, `profile`, `webauthn`,
+  `customization/themes`, `search/global`.
+- Admin: `quotas/<uid>`, `approvals`, `backup`, `config-as-code/export`.
 
-Many `/admin/*` blueprints (`donors`, `eidas`, `hipaa`, `volunteers`, `crm`,
-`tickets`, `student-groups`, `matrix`, `opencloud`, `/quick-actions`,
-`/shared-mailboxes`, `/shared-drafts`, `/snooze`, `/mailbox-debug`) appear to come
-from a customised fork and are admin-only — decide whether to test them.
+**Mounted but not straightforwardly testable:**
+- `/api/admin/v1/jmap` → `405` on `GET /` (JMAP is a POST protocol; would need a
+  proper JMAP request — left for a dedicated JMAP test).
+- `/api/admin/v1/webhooks`, `/workflows`, `/audit-log` → `401` even with the admin
+  JWT (require an additional scope/role) — out of scope for the smoke coverage.
+
+**Not mounted in this build (404 — not in the running image):**
+`/jmap` (user), `/files`, `/scim/v2`, `/mfa`, `/oauth/clients`, `/app-passwords`,
+`/push/vapid-public-key`, `/auth/password-reset`, `/auth/saml2`, `/branding`,
+`/webhooks`, `/workflows`, `/audit-log` (user side); `/files`, `/scim/v2`, `/mfa`,
+`/branding` (admin side). These blueprints are absent here — re-test only if a
+future build mounts them.
+
+**Admin-only fork blueprints (still undecided):** `donors`, `eidas`, `hipaa`,
+`volunteers`, `crm`, `tickets`, `student-groups`, `matrix`, `opencloud`,
+`/quick-actions`, `/shared-mailboxes`, `/shared-drafts`, `/snooze`, `/mailbox-debug`
+applied to come from a customised fork — decide whether to test them.
 
 ---
 
