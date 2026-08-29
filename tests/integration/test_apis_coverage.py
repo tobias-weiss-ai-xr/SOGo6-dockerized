@@ -142,3 +142,75 @@ class TestAdminApis:
         data = resp.json().get("data", {})
         assert isinstance(data.get("config", {}), dict)
         assert isinstance(data.get("checksum", ""), str) and data.get("checksum")
+
+    def test_webhooks_listable(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/webhooks",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert "webhooks" in resp.json().get("data", {})
+
+    def test_workflows_listable(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/workflows",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert "workflows" in resp.json().get("data", {})
+
+    def test_audit_log_listable(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/audit-log",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        data = resp.json().get("data", {})
+        assert "entries" in data and "total" in data
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JMAP protocol (RFC 8620) — session + one method call
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestJmapProtocol:
+    def test_jmap_session(self, admin_tok):
+        # RFC 8620 §2: the session resource advertises capabilities + apiUrl.
+        resp = requests.get(f"{API_URL}/api/admin/v1/jmap/session",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "urn:ietf:params:jmap:core" in data.get("capabilities", {})
+        assert data.get("apiUrl") == "/jmap"
+        assert isinstance(data.get("accounts"), dict)
+
+    def test_jmap_status(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/jmap/status",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        data = resp.json().get("data", {})
+        assert data.get("enabled") is True
+        assert isinstance(data.get("capabilities", []), list) and data["capabilities"]
+
+    def test_jmap_method_dispatch(self, admin_tok):
+        # RFC 8620 §2.1: POST with `using` + `methodCalls`. The mail gateway is
+        # not wired in this build (status reports store="unconfigured"), so the
+        # method returns an accountNotFound *method* error — but the protocol
+        # itself must parse, validate capabilities and dispatch (200 + envelope).
+        body = {
+            "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+            "methodCalls": [["Mailbox/get", {"accountId": "default", "ids": None}, "0"]],
+        }
+        resp = requests.post(f"{API_URL}/api/admin/v1/jmap", json=body,
+                              headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        env = resp.json()
+        assert "methodResponses" in env and isinstance(env["methodResponses"], list)
+        assert len(env["methodResponses"]) >= 1
+        # each methodResponse is [name, resultOrError, callId]
+        assert isinstance(env["methodResponses"][0], list) and len(env["methodResponses"][0]) == 3
+
+    def test_jmap_requires_core_capability(self, admin_tok):
+        # RFC 8620 §2.1: omitting urn:ietf:params:jmap:core yields an
+        # unknownCapability method error (still HTTP 200 — protocol-level, not 4xx).
+        body = {"using": [], "methodCalls": [["Mailbox/get", {"accountId": "default"}, "0"]]}
+        resp = requests.post(f"{API_URL}/api/admin/v1/jmap", json=body,
+                              headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        env = resp.json()
+        assert env["methodResponses"][0][0] == "error"
+        assert env["methodResponses"][0][1].get("type") == "unknownCapability"

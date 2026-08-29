@@ -276,16 +276,23 @@ prefixes**; the suite now covers auth/calendar/contact/mail/jobs **and** a first
 batch of the §6 user-facing/admin APIs via `tests/integration/test_apis_coverage.py`
 (11 tests, all green). Per-blueprint status after probing the live build:
 
-**Covered (mounted, return 200, asserted in `test_apis_coverage.py`):**
+**Covered (mounted, return 200, asserted in `test_apis_coverage.py` — 18 tests):**
 - User: `resources`, `polls` (scheduling), `preferences`, `profile`, `webauthn`,
   `customization/themes`, `search/global`.
-- Admin: `quotas/<uid>`, `approvals`, `backup`, `config-as-code/export`.
+- Admin: `quotas/<uid>`, `approvals`, `backup`, `config-as-code/export`,
+  `webhooks`, `workflows`, `audit-log`; JMAP `session` / `status` / `POST` method
+  dispatch (RFC 8620).
 
-**Mounted but not straightforwardly testable:**
-- `/api/admin/v1/jmap` → `405` on `GET /` (JMAP is a POST protocol; would need a
-  proper JMAP request — left for a dedicated JMAP test).
-- `/api/admin/v1/webhooks`, `/workflows`, `/audit-log` → `401` even with the admin
-  JWT (require an additional scope/role) — out of scope for the smoke coverage.
+**Mounted but a separate config gap (protocol works, mail gateway does not):**
+- JMAP mail methods (`Mailbox/get`, `Email/get`, …) return `accountNotFound`
+  because the JMAP→IMAP gateway is **unconfigured** in this build
+  (`GET /api/admin/v1/jmap/status` → `store:"unconfigured"`; `_gateway()` is
+  `None`). IMAP auth works, but the JMAP gateway object is never wired, so JMAP
+  cannot actually read mail. The protocol surface (session/status/dispatch +
+  capability validation) is fully testable and is covered; wiring the gateway is
+  a distinct task. NOTE: an earlier probe showed `401` for `webhooks`/`workflows`/
+  `audit-log` — that was a transient/rate-limited admin token, not a scope gate;
+  with a fresh admin JWT they return 200 (covered above).
 
 **Not mounted in this build (404 — not in the running image):**
 `/jmap` (user), `/files`, `/scim/v2`, `/mfa`, `/oauth/clients`, `/app-passwords`,
