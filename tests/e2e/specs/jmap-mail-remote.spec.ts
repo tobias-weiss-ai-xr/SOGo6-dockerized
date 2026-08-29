@@ -15,8 +15,17 @@
 //   - Email/get previously returned a `serverFail` method error for real
 //     message ids; FIXED in sogo6-server 3368e93 (flags list vs dict mapping)
 //     and now asserted (see the Email/get test below).
+//   - Email/query with `inMailboxes` returned total 0 for UNPADDED base64url
+//     mailbox ids (exactly what JS clients emit); FIXED in sogo6-server
+//     a873f33 (RFC 4648 §5-tolerant decoding) — both padded and unpadded ids
+//     are now asserted to resolve.
+//   - Email/set move previously hard-failed (`command COPY illegal in state
+//     AUTH` — the connection never SELECTed a folder before COPY) and, once
+//     that cleared, left a \Deleted ghost in the source; both FIXED on the
+//     demo (and upstream in a873f33 via source-folder select + UID EXPUNGE)
+//     and now asserted by the self-cleaning move round-trip below.
 //
-// All assertions are read-only.
+// Read-only except for the explicitly self-cleaning move test.
 //
 //   npx playwright test jmap-mail-remote.spec.ts
 
@@ -109,5 +118,91 @@ test.describe('JMAP mail read methods on the live demo @remote', () => {
       description:
         'FIXED 2026-08-29 in sogo6-server 3368e93: _mail_to_jmap now tolerates the store flags LIST (IMAP flags) instead of assuming a dict — Email/get on real message ids no longer serverFails. This test previously asserted the serverFail behavior.',
     });
+  });
+
+  test('Email/query inMailboxes accepts UNPADDED base64url mailbox ids (RFC 4648 §5)', async ({ request }) => {
+    // JS clients (Buffer.toString('base64url')) strip the '=' padding; pre-a873f33
+    // the server urlsafe_b64decode rejected that and inMailboxes silently
+    // matched nothing (total 0) while the same request with padded ids worked.
+    const jmap = async (mailboxId: string) => {
+      const res = await request.post(`${JMAP}`, {
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        data: {
+          using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
+          accountId: '0',
+          methodCalls: [['Email/query', { filter: { inMailboxes: [mailboxId] }, limit: 1 }, 'q0']],
+        },
+      });
+      expect(res.status()).toBe(200);
+      return (await res.json()).methodResponses[0][1];
+    };
+    const padded = Buffer.from('mailbox:INBOX').toString('base64');
+    const unpadded = padded.replace(/=+$/, '');
+    const [pRes, uRes] = [await jmap(padded), await jmap(unpadded)];
+    expect(pRes.total).toBeGreaterThan(0);
+    expect(uRes.total).toBe(pRes.total); // unpadded must agree with padded, not 0
+  });
+
+  test('Email/set moves a message folder-to-folder with no ghost (self-cleaning round-trip)', async ({ request }) => {
+    // Regression pin for TWO demo-discovered bugs fixed in a873f33 + demo
+    // deploy: (1) uid_copy ran in state AUTH (COPY illegal) because no folder
+    // was SELECTed first; (2) the source copy was never expunged, so the moved
+    // message still appeared in the old folder. Both made the UI's
+    // move-to-folder silently fail / ghost on the demo.
+    const jmap = async (methodCalls: unknown[]) => {
+      const res = await request.post(`${JMAP}`, {
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        data: {
+          using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
+          accountId: '0',
+          methodCalls,
+        },
+      });
+      expect(res.status()).toBe(200);
+      return (await res.json()).methodResponses;
+    };
+    const boxId = (name: string) => Buffer.from(`mailbox:${name}`).toString('base64url'); // UNPADDED on purpose
+    const queryIds = async (folder: string): Promise<string[]> => {
+      const [[, r]] = await jmap([['Email/query', { filter: { inMailboxes: [boxId(folder)] }, limit: 500 }, 'q']]);
+      return r?.ids ?? [];
+    };
+
+    const scratch = `ZZ-e2e-move-${Date.now()}`;
+    try {
+      // Ensure a scratch destination exists (create if a prior failed run left it destroyed).
+      const [[, mb]] = await jmap([['Mailbox/get', { ids: [boxId(scratch)] }, 'm0']]);
+      if (!(mb?.list ?? []).length) {
+        await jmap([['Mailbox/set', { create: { [scratch]: { name: scratch } } }, 'm1']]);
+      }
+
+      const inboxBefore = await queryIds('INBOX');
+      expect(inboxBefore.length).toBeGreaterThan(0);
+      const subject = inboxBefore[inboxBefore.length - 1]; // oldest present message
+
+      // Move INTO scratch.
+      const [[, upd]] = await jmap([['Email/set', { update: { [subject]: { mailboxIds: { [boxId(scratch)]: true } } } }, 's0']]);
+      expect(upd.updated).toMatchObject({ [subject]: null });
+      expect(upd.notUpdated).toEqual({}); // empty-object when nothing failed
+
+      const inboxAfter = await queryIds('INBOX');
+      const scratchIds = await queryIds(scratch);
+      expect(inboxAfter).not.toContain(subject); // no ghost in source (expunge works)
+      expect(scratchIds.length).toBeGreaterThan(0); // landed in destination
+
+      // Move BACK (use the destination's own ids — JMAP email ids encode the folder).
+      const moved = scratchIds[scratchIds.length - 1];
+      const [[, back]] = await jmap([
+        ['Email/set', { update: { [moved]: { mailboxIds: { [boxId('INBOX')]: true, [boxId(scratch)]: false } } } }, 's2'],
+      ]);
+      expect(back.updated).toMatchObject({ [moved]: null });
+      // Ids are folder-scoped, so the restored message has a new id. Compare counts.
+      const inboxFinal = await queryIds('INBOX');
+      expect(inboxFinal.length).toBeGreaterThanOrEqual(inboxBefore.length - 1);
+    } finally {
+      // Clean up the scratch folder unconditionally so repeated runs are idempotent.
+      const [[, del]] = await jmap([['Mailbox/set', { destroy: [boxId(scratch)] }, 'm4']]);
+      const failed = (del?.notDestroyed ?? {}) as Record<string, unknown>;
+      expect(Object.keys(failed)).toEqual([]);
+    }
   });
 });
