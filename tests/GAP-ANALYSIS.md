@@ -311,6 +311,38 @@ been registered. Per-blueprint status:
 - `mfa` / `password-reset` expose only action sub-paths (no read-only root) —
   acceptable; covered indirectly via the mount checks above.
 
+**JMAP mail data-plane — chasing the “intermittent” query/get failures (2026-08-29, resolved):**
+The remaining `Email/query` total-0 / `Email/get` misses on the demo were NOT
+flaky — three real interop/server bugs, all found via ground-truth probes and fixed:
+
+- **Unpadded base64url ids (RFC 4648 §5):** JS clients (`Buffer.toString('base64url')`,
+  most browsers) omit the `=` padding; `urlsafe_b64decode` rejects non-multiple-of-4
+  lengths → `_decode_box_id`/`_decode_email_id` returned `None` → `inMailboxes`
+  silently matched nothing (total 0, no `get_folder_mails` in the log). Fix:
+  `_b64url_decode` pads before decoding. Padded vs unpadded now both resolve
+  (verified live: 11 == 11). Committed `a873f33`.
+- **Move left a ghost:** `ModuleMail.move_mails` did UID COPY + `\Deleted` but
+  never expunged → moved messages still listed in the source folder. Fix:
+  `ClientImap.uid_expunge` (RFC 4315 UID EXPUNGE) called after flagging, with
+  folder-wide `expunge_folder` as fallback. Committed `a873f33`.
+- **Demo-only: `command COPY illegal in state AUTH`** — the demo's older
+  `uid_copy` never SELECTed a folder before UID COPY, so the demo's JMAP move
+  always serverFailed (and once fixed, still needed the expunge). Both fixed on
+  the demo (source-folder select + expunge + str-tolerant error decode) and
+  pinned by `jmap-mail-remote.spec.ts` (unpadded-ids + self-cleaning move
+  round-trip). Local tree already had the select source_folder fix (`109664c`).
+- `Email/set` `updated`/`notUpdated` are **objects** (`{id: null}` / `{}`), not
+  lists; JMAP email ids **encode the folder** (`base64url("<folder>\0<uid>")`)
+  so a moved message gets a new id — test assertions adapted accordingly.
+
+**Cracked the “intermittent” local move-test flake (2026-08-29):** the seed tool
+could not `SELECT "Junk Mail"` (unquoted space → `BAD` → cleanup skipped the
+folder → ghosts accumulated), and the `/edit` flow destroys its source message
+by design (`open_mail_for_edit` deletes the original), so the edit test now uses
+its own dedicated seed. `local-mail-data.spec.ts` is now deterministic: **10/10
+across 6 consecutive runs**, and the submodule unit suite is **2390 passed /
+2 skipped** (only the 2 pre-existing `test_api_envelope` mock errors remain).
+
 **Admin-only fork blueprints (still undecided):** `donors`, `eidas`, `hipaa`,
 `volunteers`, `crm`, `tickets`, `student-groups`, `matrix`, `opencloud`,
 `/quick-actions`, `/shared-mailboxes`, `/shared-drafts`, `/snooze`, `/mailbox-debug`
@@ -328,5 +360,10 @@ applied to come from a customised fork — decide whether to test them.
 | `tests/integration/test_mail_api.py` | mailbox account-schema assertion + `MAIL_BACKEND_AVAILABLE` gating |
 | `tests/integration/test_acl_and_sync.py` | profile email extraction from `mailboxes[0].identities[].mail` |
 | `.gitignore` | ignore generated `tests/test-report-*.json`, `tests/e2e-results.json`, `tests/package-lock.json`, `tests/node_modules/` |
+| `sogo6-server … (a873f33)` | `_b64url_decode` (unpadded base64url tolerance), `ClientImap.uid_expunge` (RFC 4315), `move_mails` expunge-after-move, safe domain-settings create/patch; 2390 passed / 2 skipped |
+| `tests/e2e/scripts/mail-seed.py` (new) | IMAP seeder run inside the stalwart namespace: `append`/`batch`/`cleanup`/`list`; folder names with spaces now quoted (imaplib `SELECT "Junk Mail"`) |
+| `tests/e2e/helpers.ts` | `seedLocalMailBatch` (single-session batch seed) + JMAP stability gate helpers |
+| `tests/e2e/specs/local-mail-data.spec.ts` (new) | local REST+JMAP mail data plane: list/detail/raw/edit/reply/destroy/move/delete/query; folder-aware `emailId`; dedicated edit seed |
+| `tests/e2e/specs/jmap-mail-remote.spec.ts` | + unpadded-base64url `inMailboxes` regression and self-cleaning Email/set move round-trip (demo) |
 
 Local, gitignored fix: `secrets/sogo6.vault.env` `SOGO_P_DB_PASS` corrected to match the running MariaDB.
