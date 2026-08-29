@@ -11,9 +11,10 @@
 //   - mail-method responses normalize the client call tag to "0" (Core/echo
 //     echoes the tag verbatim, mail methods renumber it);
 //   - the `limit` argument is unreliable (limit:3 returned 12 ids, limit:5
-//     returned 5);
-//   - Email/get returns a `serverFail` method error for real message ids
-//     (Mailbox/get + Email/query work; Email/get is broken on this build).
+//     returned 5).
+//   - Email/get previously returned a `serverFail` method error for real
+//     message ids; FIXED in sogo6-server 3368e93 (flags list vs dict mapping)
+//     and now asserted (see the Email/get test below).
 //
 // All assertions are read-only.
 //
@@ -67,7 +68,7 @@ test.describe('JMAP mail read methods on the live demo @remote', () => {
     });
   });
 
-  test('Email/get for a real message id is a documented serverFail (issue on this build)', async ({ request }) => {
+  test('Email/get returns the real message (list-flag mapping regression)', async ({ request }) => {
     // First resolve a real message id via Email/query, then fetch it.
     const q = await request.post(`${JMAP}`, {
       headers: { ...auth(), 'Content-Type': 'application/json' },
@@ -94,18 +95,19 @@ test.describe('JMAP mail read methods on the live demo @remote', () => {
     expect(res.status()).toBe(200);
     const env = await res.json();
     const [name, result] = env.methodResponses[0];
-    expect(name === 'error' || name === 'Email/get').toBe(true);
-    if (name === 'error') {
-      // As of the current demo build this is serverFail (Email/get is broken
-      // for real messages); document it so the test flips when fixed.
-      expect(result.type).toBe('serverFail');
-      test.info().annotations.push({
-        type: 'issue',
-        description:
-          'Email/get returns serverFail for real message ids on the current demo server build. Mailbox/get + Email/query work; Email/get is broken. Flip this test to expect a populated list once fixed.',
-      });
-    } else {
-      expect(Array.isArray(result.list)).toBe(true);
-    }
+    expect(name).toBe('Email/get');
+    expect(result.notFound).toEqual([]);
+    expect(result.list.length).toBe(1);
+    const email = result.list[0];
+    // The message resolves and its flags map from the store's IMAP flag list
+    // (regression: pre-3368e93 this was a serverFail AttributeError).
+    expect(email.id).toBeTruthy();
+    expect(typeof email.size).toBe('number');
+    expect(email.keywords).toMatchObject({ $seen: expect.any(Boolean), $flagged: expect.any(Boolean) });
+    test.info().annotations.push({
+      type: 'issue',
+      description:
+        'FIXED 2026-08-29 in sogo6-server 3368e93: _mail_to_jmap now tolerates the store flags LIST (IMAP flags) instead of assuming a dict — Email/get on real message ids no longer serverFails. This test previously asserted the serverFail behavior.',
+    });
   });
 });
