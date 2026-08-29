@@ -168,49 +168,93 @@ class TestAdminApis:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestJmapProtocol:
-    def test_jmap_session(self, admin_tok):
-        # RFC 8620 §2: the session resource advertises capabilities + apiUrl.
-        resp = requests.get(f"{API_URL}/api/admin/v1/jmap/session",
-                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+    # JMAP is a user mail protocol: it is mounted under /api/user/v1/jmap and
+    # resolves the caller's real mail account (main account id "0").
+
+    def test_jmap_session(self, user_tok):
+        # RFC 8620 §2: the session advertises capabilities + apiUrl and the
+        # caller's accountId (the mail module's main-account id, "0").
+        resp = requests.get(f"{API_URL}/api/user/v1/jmap/session",
+                             headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
         assert resp.status_code == 200
         data = resp.json()
         assert "urn:ietf:params:jmap:core" in data.get("capabilities", {})
         assert data.get("apiUrl") == "/jmap"
-        assert isinstance(data.get("accounts"), dict)
+        assert "0" in data.get("accounts", {})
 
-    def test_jmap_status(self, admin_tok):
-        resp = requests.get(f"{API_URL}/api/admin/v1/jmap/status",
-                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+    def test_jmap_status(self, user_tok):
+        resp = requests.get(f"{API_URL}/api/user/v1/jmap/status",
+                             headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
         assert resp.status_code == 200
         data = resp.json().get("data", {})
         assert data.get("enabled") is True
         assert isinstance(data.get("capabilities", []), list) and data["capabilities"]
 
-    def test_jmap_method_dispatch(self, admin_tok):
-        # RFC 8620 §2.1: POST with `using` + `methodCalls`. The mail gateway is
-        # not wired in this build (status reports store="unconfigured"), so the
-        # method returns an accountNotFound *method* error — but the protocol
-        # itself must parse, validate capabilities and dispatch (200 + envelope).
+    def test_jmap_mailbox_get(self, user_tok):
+        # RFC 8620 §2.1: POST with `using` + top-level `accountId` + `methodCalls`.
+        # The gateway is wired (registered under the user API), so Mailbox/get
+        # returns the caller's real mailboxes (INBOX, Drafts, ...).
         body = {
             "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-            "methodCalls": [["Mailbox/get", {"accountId": "default", "ids": None}, "0"]],
+            "accountId": "0",
+            "methodCalls": [["Mailbox/get", {"ids": None}, "0"]],
         }
-        resp = requests.post(f"{API_URL}/api/admin/v1/jmap", json=body,
-                              headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        resp = requests.post(f"{API_URL}/api/user/v1/jmap", json=body,
+                              headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
         assert resp.status_code == 200
         env = resp.json()
         assert "methodResponses" in env and isinstance(env["methodResponses"], list)
-        assert len(env["methodResponses"]) >= 1
-        # each methodResponse is [name, resultOrError, callId]
-        assert isinstance(env["methodResponses"][0], list) and len(env["methodResponses"][0]) == 3
+        name, result, _cid = env["methodResponses"][0]
+        assert name == "Mailbox/get"
+        assert isinstance(result.get("list", []), list) and len(result["list"]) >= 1
 
-    def test_jmap_requires_core_capability(self, admin_tok):
+    def test_jmap_requires_core_capability(self, user_tok):
         # RFC 8620 §2.1: omitting urn:ietf:params:jmap:core yields an
         # unknownCapability method error (still HTTP 200 — protocol-level, not 4xx).
-        body = {"using": [], "methodCalls": [["Mailbox/get", {"accountId": "default"}, "0"]]}
-        resp = requests.post(f"{API_URL}/api/admin/v1/jmap", json=body,
-                              headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        body = {"using": [], "methodCalls": [["Mailbox/get", {"ids": None}, "0"]]}
+        resp = requests.post(f"{API_URL}/api/user/v1/jmap", json=body,
+                              headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
         assert resp.status_code == 200
         env = resp.json()
         assert env["methodResponses"][0][0] == "error"
         assert env["methodResponses"][0][1].get("type") == "unknownCapability"
+
+
+class TestUserAuthApis:
+    """User auth/security blueprints previously orphaned or probed at the wrong
+    path. Mounted under /api/user/v1/auth/..., /api/user/v1/oauth, /api/user/v1/push."""
+
+    def test_app_passwords_listable(self, user_tok):
+        resp = requests.get(f"{API_URL}/api/user/v1/auth/app-passwords/",
+                             headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert isinstance(resp.json().get("data", []), list)
+
+    def test_oauth_clients_listable(self, user_tok):
+        resp = requests.get(f"{API_URL}/api/user/v1/oauth/clients",
+                             headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert "clients" in resp.json().get("data", {})
+
+    def test_push_vapid_public_key(self, user_tok):
+        resp = requests.get(f"{API_URL}/api/user/v1/push/vapid-public-key",
+                             headers={"Authorization": f"Bearer {user_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert "public_key" in resp.json()
+
+
+class TestAdminCoverageExtended2:
+    """Admin endpoints that earlier 404'd only because they were probed at the
+    blueprint root instead of their real sub-paths."""
+
+    def test_file_shares_listable(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/files/shares",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert "shares" in resp.json().get("data", {})
+
+    def test_domain_branding(self, admin_tok):
+        resp = requests.get(f"{API_URL}/api/admin/v1/branding/example.org",
+                             headers={"Authorization": f"Bearer {admin_tok}"}, timeout=10)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), dict)

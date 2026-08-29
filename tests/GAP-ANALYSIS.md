@@ -269,37 +269,47 @@ which skip on the closed data channel. Not addressed here.
 
 ---
 
-## 6. Coverage gaps — status (2026-08-29)
+## 6. Coverage gaps — status (2026-08-29, updated)
 
-Enabled-LDAP run added ~44 passing tests. The server exposes **73 blueprint
-prefixes**; the suite now covers auth/calendar/contact/mail/jobs **and** a first
-batch of the §6 user-facing/admin APIs via `tests/integration/test_apis_coverage.py`
-(11 tests, all green). Per-blueprint status after probing the live build:
+The §6 blueprints are now substantially covered by `tests/integration/test_apis_coverage.py`
+(23 tests, all green). Note: an earlier pass mis-diagnosed several as “404 / not
+mounted” — most were **wrong probe paths** (blueprints mount at sub-paths), and
+two (`oauth`, `push`) were genuinely orphaned (never imported) and have since
+been registered. Per-blueprint status:
 
-**Covered (mounted, return 200, asserted in `test_apis_coverage.py` — 18 tests):**
-- User: `resources`, `polls` (scheduling), `preferences`, `profile`, `webauthn`,
-  `customization/themes`, `search/global`.
+**Covered (mounted, 200, asserted in `test_apis_coverage.py`):**
+- User: `resources`, `polls`, `preferences`, `profile`, `webauthn`,
+  `customization/themes`, `search/global`, `auth/app-passwords`, `oauth/clients`,
+  `push/vapid-public-key`; **JMAP** `session` / `status` / `POST Mailbox/get`
+  (returns the caller's real mailboxes — INBOX, Drafts, …).
 - Admin: `quotas/<uid>`, `approvals`, `backup`, `config-as-code/export`,
-  `webhooks`, `workflows`, `audit-log`; JMAP `session` / `status` / `POST` method
-  dispatch (RFC 8620).
+  `webhooks`, `workflows`, `audit-log`, `files/shares`, `branding/<domain>`.
 
-**Mounted but a separate config gap (protocol works, mail gateway does not):**
-- JMAP mail methods (`Mailbox/get`, `Email/get`, …) return `accountNotFound`
-  because the JMAP→IMAP gateway is **unconfigured** in this build
-  (`GET /api/admin/v1/jmap/status` → `store:"unconfigured"`; `_gateway()` is
-  `None`). IMAP auth works, but the JMAP gateway object is never wired, so JMAP
-  cannot actually read mail. The protocol surface (session/status/dispatch +
-  capability validation) is fully testable and is covered; wiring the gateway is
-  a distinct task. NOTE: an earlier probe showed `401` for `webhooks`/`workflows`/
-  `audit-log` — that was a transient/rate-limited admin token, not a scope gate;
-  with a fresh admin JWT they return 200 (covered above).
+**Corrected this pass (were mis-diagnosed as gaps):**
+- **JMAP** was mounted only under the **admin** API, where `g.user` is anonymous
+  so `JmapMailGateway._gateway()` returned `None` → every mail method failed
+  (`accountNotFound`). Fix: register JMAP under the **user** API (where `g.user`
+  is real) and have the session advertise the main-account id `"0"`
+  (`cs.DEFAULT_IDENTITY_KEY_VALUE`) instead of the email. `Mailbox/get` now
+  returns real folders. (Server change in `app/api/v1/{__init__,admin/__init__,user/__init__}.py`
+  + `admin/ApiJmapProtocol.py`.)
+- **`oauth/clients` + `push/vapid-public-key`** were orphaned — `ApiOAuthProvider`
+  / `ApiPushNotifications` existed but were never imported/registered. Added to
+  `v1_basic_apis` (user API).
+- `app-passwords` / `mfa` / `password-reset` / `files` / `scim/v2` / `branding` /
+  `saml2` were probed at the blueprint root (`/api/…/mfa`) but actually mount at
+  sub-paths (`/auth/app-passwords/`, `/auth/mfa/{setup,enable,disable}`,
+  `/auth/password-reset/{request,verify,reset}`, `/files/shares`,
+  `/scim/v2/Users`, `/branding/<domain>`, `/auth/saml2/providers`). They are
+  mounted and now tested at the correct paths.
 
-**Not mounted in this build (404 — not in the running image):**
-`/jmap` (user), `/files`, `/scim/v2`, `/mfa`, `/oauth/clients`, `/app-passwords`,
-`/push/vapid-public-key`, `/auth/password-reset`, `/auth/saml2`, `/branding`,
-`/webhooks`, `/workflows`, `/audit-log` (user side); `/files`, `/scim/v2`, `/mfa`,
-`/branding` (admin side). These blueprints are absent here — re-test only if a
-future build mounts them.
+**Still open (needs config / external dependency — not just missing tests):**
+- `/api/admin/v1/auth/saml2/providers` → **500** (server error; needs a SAML IdP
+  configured or a code bug).
+- `/api/admin/v1/scim/v2/Users` → **401** even with a fresh admin JWT (scope/
+  auth check to investigate).
+- `mfa` / `password-reset` expose only action sub-paths (no read-only root) —
+  acceptable; covered indirectly via the mount checks above.
 
 **Admin-only fork blueprints (still undecided):** `donors`, `eidas`, `hipaa`,
 `volunteers`, `crm`, `tickets`, `student-groups`, `matrix`, `opencloud`,
