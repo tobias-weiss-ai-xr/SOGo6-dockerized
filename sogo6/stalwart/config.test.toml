@@ -39,6 +39,14 @@ path = "/var/lib/stalwart/db.sqlite"
 
 # ── User directory: the LOCAL SOGo OpenLDAP tree (dc=example,dc=org) ─────────
 # The CI/local LDAP container is initialised with this suffix (init.ldif).
+#
+# IMPORTANT (2026-08-29): for IMAP/SMTP login to work the directory must be
+# (1) reached by a *login-scoped* filter (the {username}/{email} placeholder is
+#     required — a bare `(objectClass=inetOrgPerson)` matches every entry and
+#     Stalwart then binds the first one found, which fails authentication), and
+# (2) set as the default authentication directory via [authentication].
+# Both were missing before; without them the community build silently ignores
+# the directory and every LDAP login returns AUTHENTICATIONFAILED.
 [directory."ldap"]
 type = "ldap"
 addresses = ["ldap://sogo6-ldap:389"]
@@ -46,7 +54,14 @@ bind-dn = "cn=admin,dc=example,dc=org"
 # Password is injected from the vault (.env) — never hardcoded.
 bind-password = { type = "env", value = "LDAP_ADMIN_PASSWORD" }
 base-dn = "ou=users,dc=example,dc=org"
-filter = "(objectClass=inetOrgPerson)"
+filter = "(|(uid={username})(mail={username}))"
+# Authenticate by binding as the user (not by comparing the stored hash).
+bind-authentication = true
+
+# Use the LDAP directory as the default authentication source so IMAP/SMTP
+# logins against the demo users (testuser@example.org, …) succeed.
+[authentication]
+directoryId = "ldap"
 
 # Deliberately absent: [remote."*"] and [queue] next-hop.
 # → any recipient outside dc=example,dc=org has no delivery route and is

@@ -30,6 +30,12 @@ path = "/var/lib/stalwart/db.sqlite"
 
 # ── User directory: the SOGo6 OpenLDAP tree ─────────────────────────────────
 # dc=sogo6,dc=contextual-intelligence,dc=org (derived from SOGO_DOMAIN)
+#
+# The {username}/{email} placeholder is REQUIRED in `filter` — a bare
+# (objectClass=inetOrgPerson) matches every entry and Stalwart binds the first
+# one found, which fails authentication. `bind-authentication = true` makes
+# Stalwart authenticate by binding as the user. The directory must also be the
+# default authentication source ([authentication] directoryId = "ldap").
 [directory."ldap"]
 type = "ldap"
 addresses = ["ldap://sogo6-ldap:389"]
@@ -37,7 +43,11 @@ bind-dn = "cn=admin,dc=sogo6,dc=contextual-intelligence,dc=org"
 # Password is injected from the vault (.env) — never hardcoded.
 bind-password = { type = "env", value = "LDAP_ADMIN_PASSWORD" }
 base-dn = "ou=users,dc=sogo6,dc=contextual-intelligence,dc=org"
-filter = "(objectClass=inetOrgPerson)"
+filter = "(|(uid={username})(mail={username}))"
+bind-authentication = true
+
+[authentication]
+directoryId = "ldap"
 
 # ── Outbound relay / smarthost: operator mailcow at tobias-weiss.org ──────────
 # Auth credentials are supplied via environment (vault), not hardcoded.

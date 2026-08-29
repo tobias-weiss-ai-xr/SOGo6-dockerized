@@ -75,8 +75,12 @@ services:
       SOGO_P_DB_TYPE: ${SOGO_P_DB_TYPE:-MySQL}
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
       SOGO_LDAP_URI: ${SOGO_LDAP_URI:-ldap://sogo6-ldap:389}
-      SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=sogo6,dc=contextual-intelligence,dc=org}
-      SOGO_LDAP_BIND_DN: ${SOGO_LDAP_BIND_DN:-cn=admin,dc=sogo6,dc=contextual-intelligence,dc=org}
+      # These must match sogo6-ldap's LDAP_BASE_DN/LDAP_BIND_DN (see the ldap
+      # service below). Both default to dc=example,dc=org so that fresh/CI
+      # boot (LDAP_DOMAIN=example.org) has a consistent tree. Deployments with a
+      # production domain set SOGO_LDAP_BASE_DN + SOGO_LDAP_BIND_DN explicitly.
+      SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
+      SOGO_LDAP_BIND_DN: ${SOGO_LDAP_BIND_DN:-cn=admin,dc=example,dc=org}
       SOGO_LDAP_BIND_PASSWORD: ${SOGO_LDAP_BIND_PASSWORD:-}
       SOGO_SMTP_SERVER: ${SOGO_SMTP_SERVER:-sogo6-stalwart}
       SOGO_SMTP_PORT: ${SOGO_SMTP_PORT:-20025}
@@ -218,7 +222,7 @@ services:
           memory: 128M
     healthcheck:
       # Use a wrapper that falls back to anonymous bind when no admin password is set
-      test: ["CMD-SHELL", "PASS=${LDAP_ADMIN_PASSWORD}; ldapsearch -x -H ldap://localhost:389 -b ${LDAP_BASE_DN:-dc=sogo6,dc=contextual-intelligence,dc=org} ${PASS:+-D cn=admin,${LDAP_BASE_DN:-dc=sogo6,dc=contextual-intelligence,dc=org} -w $PASS} -s base 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "PASS=${LDAP_ADMIN_PASSWORD}; ldapsearch -x -H ldap://localhost:389 -b ${LDAP_BASE_DN:-dc=example,dc=org} ${PASS:+-D cn=admin,${LDAP_BASE_DN:-dc=example,dc=org} -w $PASS} -s base 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -308,14 +312,17 @@ services:
     volumes:
       - sogo6-stalwart-data:/var/lib/stalwart
       - ./sogo6/stalwart/config.json:/etc/stalwart/config.json:ro
-      # Test/CI environments can select a hardened config (local-only delivery,
-      # no external relay) by setting STALWART_CONFIG_FILE. Production keeps the
-      # default config.toml (operator smarthost relay).
-      - ${STALWART_CONFIG_FILE:-./sogo6/stalwart/config.toml}:/etc/stalwart/config.toml:ro
+      # Default to the hardened local/demo config (config.test.toml): it matches
+      # the demo LDAP seed (dc=example,dc=org) and delivers only locally (no
+      # external relay). Production / real-sending deployments MUST set
+      # STALWART_CONFIG_FILE=./sogo6/stalwart/config.toml to enable the operator
+      # smarthost relay (tobias-weiss.org) and the production domain.
+      - ${STALWART_CONFIG_FILE:-./sogo6/stalwart/config.test.toml}:/etc/stalwart/config.toml:ro
     # The image default CMD (`--config /etc/stalwart/config.json`) starts Stalwart
-    # with an (initially empty) config store; the server config from config.toml
-    # (LDAP directory + outbound relay to tobias-weiss.org) is applied at runtime
-    # via the management API once the relay credentials are available.
+    # with an (initially empty) config store; the server config from the selected
+    # config file (config.test.toml by default — local LDAP directory, no relay;
+    # or config.toml for the operator relay to tobias-weiss.org) is applied at
+    # runtime via the management API once the relay credentials are available.
     ports:
       - "${STALWART_SMTP_PORT:-20025}:25"
       - "${STALWART_SMTPS_PORT:-20465}:465"
