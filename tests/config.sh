@@ -28,6 +28,15 @@ POSTGRES_USER="${SOGO_PG_USER:-sogo}"
 POSTGRES_PASSWORD="${SOGO_PG_PASSWORD:-sogo}"
 POSTGRES_DB="${SOGO_PG_DB:-sogo}"
 
+# MariaDB backend (used by db-mariadb profile). NOTE: the integration scripts
+# were historically written against POSTGRES_* vars; these MARIADB_* defaults
+# ensure a value is always present so they do not crash under `set -u`.
+# Override via SOGO_MARIADB_* or process.conf when a custom password is used.
+MARIADB_USER="${SOGO_MARIADB_USER:-sogo}"
+MARIADB_PASSWORD="${SOGO_MARIADB_PASSWORD:-sogo}"
+MARIADB_DATABASE="${SOGO_MARIADB_DATABASE:-sogo}"
+MARIADB_PORT="${SOGO_MARIADB_PORT:-3306}"
+
 REDIS_HOST="${SOGO_REDIS_HOST:-localhost}"
 REDIS_PORT="${SOGO_REDIS_PORT:-6379}"
 

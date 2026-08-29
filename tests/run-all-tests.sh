@@ -72,13 +72,34 @@ run_python_tests() {
         pip3 install -q -r "$req" 2>/dev/null || true
     fi
 
+    local out rc npass nfail nerror
     set +e
-    SOGO_INTEGRATION_TESTS=1 python3 -m pytest "$SCRIPT_DIR/integration/" -v --tb=short 2>&1
-    local rc=$?
+    out=$(SOGO_INTEGRATION_TESTS=1 python3 -m pytest "$SCRIPT_DIR/integration/" -v --tb=short 2>&1)
+    rc=$?
     set -e
+
+    echo "$out"
+
+    # Surface the pytest outcome and feed real pass/fail/error counts into the
+    # suite tally. Previously this function swallowed pytest's exit code, so
+    # "All N tests passed" could be reported while pytest had failures/errors.
+    npass=$(echo "$out" | grep -oE '[0-9]+ passed' | tail -1 | grep -oE '[0-9]+' || echo 0)
+    nfail=$(echo "$out" | grep -oE '[0-9]+ failed' | tail -1 | grep -oE '[0-9]+' || echo 0)
+    nerror=$(echo "$out" | grep -oE '[0-9]+ error' | tail -1 | grep -oE '[0-9]+' || echo 0)
+
+    # Iterate each pytest line to enumerate individual [PASS]/[FAIL].
+    while IFS= read -r line; do
+        case "$line" in
+            *" PASSED"*)  TOTAL_PASS=$((TOTAL_PASS + 1)) ;;
+            *" FAILED"*)  TOTAL_FAIL=$((TOTAL_FAIL + 1)) ;;
+            *" ERROR"*)   TOTAL_FAIL=$((TOTAL_FAIL + 1)) ;;
+        esac
+    done <<< "$(echo "$out" | grep -E ' (PASSED|FAILED|ERROR) ')"
 
     if [ "$rc" -eq 5 ]; then
         warn "No Python tests collected"
+    elif [ "$rc" -ne 0 ]; then
+        fail "$name: pytest exited $rc ($nfail failed, $nerror error)"
     fi
     echo ""
 }
@@ -134,6 +155,20 @@ run_test "Integration Flow Tests" "$SCRIPT_DIR/integration-test.sh" 180
 run_test "Admin API CRUD Tests" "$SCRIPT_DIR/admin-api-test.sh" 180
 run_test "Security Tests" "$SCRIPT_DIR/security-test.sh" 120
 run_test "Configuration & Script Validation Tests" "$SCRIPT_DIR/script-test.sh"
+run_test "CalDAV Protocol Tests" "$SCRIPT_DIR/caldav-test.sh" 120
+run_test "CardDAV Protocol Tests" "$SCRIPT_DIR/carddav-test.sh" 120
+run_test "Sieve Filter Tests" "$SCRIPT_DIR/sieve-test.sh" 120
+run_test "Deep IMAP Protocol Tests" "$SCRIPT_DIR/imap-deep-test.sh" 180
+run_test "API CRUD Lifecycle Tests" "$SCRIPT_DIR/api-crud-lifecycle-test.sh" 180
+run_test "Docker Compose Validation Tests" "$SCRIPT_DIR/docker-compose-validation-test.sh" 60
+run_test "Data Persistence Tests" "$SCRIPT_DIR/data-persistence-test.sh" 120
+run_test "WebDAV Sync Tests" "$SCRIPT_DIR/webdav-sync-test.sh" 60
+run_test "ACL & Cross-User Isolation Tests" "$SCRIPT_DIR/acl-crossuser-test.sh" 120
+run_test "Public Access Boundary Tests" "$SCRIPT_DIR/public-access-test.sh" 60
+run_test "Calendar Tasks & Attendance Tests" "$SCRIPT_DIR/calendar-task-attendance-test.sh" 120
+run_test "Agent/Job Lifecycle Tests" "$SCRIPT_DIR/job-lifecycle-test.sh" 120
+run_test "vCard Import/Export Roundtrip Tests" "$SCRIPT_DIR/vcard-import-export-test.sh" 120
+run_test "Stress / Concurrency Tests" "$SCRIPT_DIR/stress-test.sh" 300
 run_python_tests
 run_playwright_test
 

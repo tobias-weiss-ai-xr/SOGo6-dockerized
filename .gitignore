@@ -35,5 +35,11 @@ sogo6/nginx/certs/
 .next/
 *.tsbuildinfo
 
+# Generated test artifacts (distinct from committed source tests)
+tests/test-report-*.json
+tests/e2e-results.json
+tests/package-lock.json
+tests/node_modules/
+
 # taskfleet worktrees (do not commit)
 .tf-worktrees/

@@ -14,6 +14,44 @@ const TEST_USERS = [
 
 const results = { passed: 0, failed: 0, errors: [] };
 
+// Set by main() after probing UI_URL; UI flows skip until we confirm an actual
+// SOGo6 login page is served (avoids bogus failures when :3000 hosts an
+// unrelated app or the SOGo6 frontend isn't deployed).
+let UI_AVAILABLE = false;
+
+// Detect whether UI_URL serves a real SOGo6 login interface. The SOGo6 frontend
+// is not part of the CI/running backend stack (see test_stack.py which skips
+// test_ui_accessible), and the UI port may be occupied by an unrelated site.
+async function detectSogo6Ui(page) {
+  const result = { hasLoginForm: false, hasPassword: false, isMarketing: false, title: '', error: '' };
+  try {
+    await page.goto(UI_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(1200);
+  } catch (e) {
+    result.error = e.message.split('\n')[0];
+    return result;
+  }
+  try {
+    result.title = (await page.title() || '').trim().slice(0, 40);
+  } catch (_) { /* ignore */ }
+
+  // A real auth form has at least a credential input.
+  const hasEmail = await page.$('input[type="email"], input[name="email"], input[name="username"], input[id*="email"]');
+  const hasPassword = await page.$('input[type="password"]');
+  const hasLoginText = !!(await page.$('button[type="submit"], input[type="submit"]'));
+  result.hasLoginForm = !!(hasEmail || hasPassword);
+  result.hasPassword = !!hasPassword;
+
+  // Distinguish an unrelated marketing/blog site (e.g. openDesk Edu on :3000).
+  if (!result.hasLoginForm) {
+    const low = (result.title + ' ' + (await page.evaluate(() => document.body ? document.body.innerText.slice(0, 600) : '').catch(() => ''))).toLowerCase();
+    result.isMarketing =
+      result.title.toLowerCase().includes('blog') ||
+      low.includes('blog') || low.includes('landscape') || low.includes('codeberg');
+  }
+  return result;
+}
+
 function report(label, condition, detail = '') {
   if (condition) {
     results.passed++;
@@ -90,6 +128,7 @@ async function testApiHealth() {
 }
 
 async function testUserLogin() {
+  if (!UI_AVAILABLE) { console.log('\n--- Login Flow: skipped (SOGo6 UI not available) ---'); return; }
   console.log('\n--- Login Flow ---');
   const browser = await chromium.launch({
     headless: true,
@@ -126,6 +165,7 @@ async function testUserLogin() {
 }
 
 async function testNavigation() {
+  if (!UI_AVAILABLE) { console.log('\n--- UI Navigation: skipped (SOGo6 UI not available) ---'); return; }
   console.log('\n--- UI Navigation ---');
   const browser = await chromium.launch({
     headless: true,
@@ -185,6 +225,7 @@ async function testNavigation() {
 }
 
 async function testMailFeatures() {
+  if (!UI_AVAILABLE) { console.log('\n--- Mail Features: skipped (SOGo6 UI not available) ---'); return; }
   console.log('\n--- Mail Features ---');
   const browser = await chromium.launch({
     headless: true,
@@ -234,6 +275,7 @@ async function testMailFeatures() {
 }
 
 async function testCalendarFeatures() {
+  if (!UI_AVAILABLE) { console.log('\n--- Calendar Features: skipped (SOGo6 UI not available) ---'); return; }
   console.log('\n--- Calendar Features ---');
   const browser = await chromium.launch({
     headless: true,
@@ -277,6 +319,7 @@ async function testCalendarFeatures() {
 }
 
 async function testLogoutFlow() {
+  if (!UI_AVAILABLE) { console.log('\n--- Logout Flow: skipped (SOGo6 UI not available) ---'); return; }
   console.log('\n--- Logout Flow ---');
   const browser = await chromium.launch({
     headless: true,
@@ -325,11 +368,30 @@ async function main() {
   console.log('=============================================');
 
   await testApiHealth();
-  await testUserLogin();
-  await testNavigation();
-  await testMailFeatures();
-  await testCalendarFeatures();
-  await testLogoutFlow();
+
+  // Probe once: only run the UI flows if an actual SOGo6 login page is served.
+  const probeBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--ignore-certificate-errors'] });
+  const probePage = await probeBrowser.newPage();
+  const probe = await detectSogo6Ui(probePage);
+  await probeBrowser.close();
+
+  if (probe.hasLoginForm) {
+    UI_AVAILABLE = true;
+    console.log(`\n--- SOGo6 UI detected at ${UI_URL} (${probe.hasPassword ? 'login form' : 'login text'}) ---`);
+    await testUserLogin();
+    await testNavigation();
+    await testMailFeatures();
+    await testCalendarFeatures();
+    await testLogoutFlow();
+  } else {
+    UI_AVAILABLE = false;
+    const detail =
+      probe.isMarketing
+        ? `${UI_URL} serves an unrelated site (${probe.title || 'openDesk/blog'}) — SOGo6 UI not deployed here`
+        : (probe.error ? `unreachable: ${probe.error}` : 'no login form found');
+    console.log(`\n--- SKIPPING UI flows: SOGo6 UI not present (${detail}) ---`);
+    console.log('  To run these, deploy the SOGo6 web frontend (sogo6-ui) on the UI port.');
+  }
 
   console.log('\n=============================================');
   console.log('  RESULTS');

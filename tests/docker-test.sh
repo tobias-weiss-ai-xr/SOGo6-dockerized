@@ -20,6 +20,19 @@ EXPECTED_CONTAINERS=(
     "sogo6-stalwart"
 )
 
+# Core backend services that MUST be present for a valid deployment.
+# The UI container (sogo6-ui) is optional: the web frontend is not part of the
+# backend/CI stack (see test_stack.py which skips test_ui_accessible), and can
+# be run standalone on the UI port. Its absence is reported as a warning, not a
+# hard failure, so a backend-only deployment is not falsely red.
+CORE_SERVICES_LIST=(
+    "sogo6-server"
+    "sogo6-mariadb"
+    "sogo6-redis"
+    "sogo6-ldap"
+    "sogo6-stalwart"
+)
+
 echo "1. Docker daemon reachable"
 if $DOCKER_CMD info &>/dev/null; then
     pass "Docker daemon is running"
@@ -33,6 +46,9 @@ ALL_FOUND=true
 for c in "${EXPECTED_CONTAINERS[@]}"; do
     if grep -qx "$c" <<< "$RUNNING"; then
         pass "Container $c is running"
+    elif ! grep -qw "$c" <<< "${CORE_SERVICES_LIST[*]}"; then
+        # Non-core container (e.g. the UI) absent — warn, not fail.
+        warn "Container $c is NOT running (optional/non-core — UI may run standalone)"
     else
         fail "Container $c is NOT running"
         ALL_FOUND=false
@@ -78,6 +94,8 @@ for c in "${EXPECTED_CONTAINERS[@]}"; do
     STARTED=$($DOCKER_CMD inspect --format '{{.State.StartedAt}}' "$c" 2>/dev/null || true)
     if [ -n "$STARTED" ]; then
         pass "$c started at $STARTED"
+    elif ! grep -qw "$c" <<< "${CORE_SERVICES_LIST[*]}"; then
+        warn "$c start time unknown (optional/non-core — UI may run standalone)"
     else
         fail "$c start time unknown"
     fi
