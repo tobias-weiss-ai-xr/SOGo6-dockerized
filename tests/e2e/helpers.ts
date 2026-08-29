@@ -6,6 +6,7 @@
 import { test as base, expect as baseExpect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import { execSync } from 'child_process';
 
 // ── Minimal .env loader (no external dependency) ──────────────────────────
 // Loads tests/e2e/.env (gitignored) so secrets never live in source code.
@@ -262,6 +263,57 @@ export function bearer(token: string | null, extra: Record<string, string> = {})
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...extra };
 }
 
+// ── Local-mail seeding ────────────────────────────────────────────────────
+// Stalwart refuses foreign TLS connections (empty banner), so test mail must
+// be injected from its OWN network namespace. These helpers shell out to a
+// small python tool that runs inside `container:sogo6-stalwart` and log into
+// IMAPS on localhost:993 (the trusted, app-equivalent path). Local-only.
+
+const SEED_SCRIPT = path.join(__dirname, 'scripts', 'mail-seed.py');
+export const LOCAL_MAIL_MARKER = '[local-e2e] ';
+
+export interface SeedResult {
+  ok: boolean;
+  out: string;
+}
+
+/** Run a mail-seed.py command inside the stalwart network namespace. */
+export function localMailSeed(cmd: string): SeedResult {
+  try {
+    const out = execSync(
+      `docker run --rm -v "${SEED_SCRIPT}":/s.py --network container:sogo6-stalwart ` +
+        `python:3.12-slim python /s.py ${cmd}`,
+      { stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, shell: '/bin/sh' },
+    ).toString();
+    return { ok: true, out };
+  } catch (e: any) {
+    return { ok: false, out: String(e?.stdout || e?.message || e) };
+  }
+}
+
+/** Append a unique message to the local INBOX (subject is marker-prefixed). */
+export function seedLocalMail(subject: string, opts: { seen?: boolean; flagged?: boolean } = {}): SeedResult {
+  const flags = `${opts.seen ? ' --seen' : ''}${opts.flagged ? ' --flagged' : ''}`;
+  return localMailSeed(`append --subject "${subject}"${flags}`);
+}
+
+/**
+ * Append several marker-prefixed messages over a SINGLE IMAP session.
+ * entries: {name, seen?, flagged?}[] — one session = far less stalwart churn
+ * (fresh connections can transiently see stale SELECT counts after appends).
+ */
+export function seedLocalMailBatch(entries: Array<{ name: string; seen?: boolean; flagged?: boolean }>): SeedResult {
+  const items = entries
+    .map((e) => `${e.name}${e.seen ? ':seen' : ''}${e.flagged ? ':flagged' : ''}`)
+    .join(',');
+  return localMailSeed(`batch --subjects "${items}"`);
+}
+
+/** Delete + expunge every locally-seeded (marker-prefixed) message. */
+export function cleanupLocalMail(): SeedResult {
+  return localMailSeed('cleanup');
+}
+
 /**
  * Role login via the v1 API (LDAP user bind). Accepts any directory user and
  * returns the real JWT. Used by the role/persona epic suites.
@@ -283,3 +335,4 @@ export async function apiLogin(
     return null;
   }
 }
+
