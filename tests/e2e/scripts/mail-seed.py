@@ -24,6 +24,7 @@ from email.utils import formatdate, make_msgid
 HOST = "localhost"
 PORT = 993
 USER = "testuser@example.org"
+USER2 = "testuser2@example.org"
 PASSWD = "password123"
 MARKER = "[local-e2e] "
 
@@ -84,7 +85,7 @@ def cleanup(m: imaplib.IMAP4_SSL, folder: str, marker: str) -> int:
 
 def cleanup_all(m: imaplib.IMAP4_SSL, marker: str) -> int:
     total = 0
-    for folder in ("INBOX", "Deleted Items", "Junk Mail"):
+    for folder in ("INBOX", "Deleted Items", "Junk Mail", "Sent Items", "Drafts"):
         try:
             total += cleanup(m, folder, marker)
         except Exception as e:
@@ -144,7 +145,18 @@ def main() -> None:
                 results.append(append(m, args.folder, args.marker + name, seen, flagged))
             print("; ".join(results))
         elif args.cmd == "cleanup":
-            print(f"deleted {cleanup_all(m, args.marker)}")
+            # Clean the primary user and the cross-user recipient (write-path
+            # suites send [local-e2e] mails to testuser2 which land in its
+            # INBOX/Junk and would otherwise accumulate between runs).
+            total = cleanup_all(m, args.marker)
+            try:
+                m2 = connect()
+                m2.login(USER2, PASSWD)
+                total += cleanup_all(m2, args.marker)
+                m2.logout()
+            except Exception as e:
+                print(f"cleanup extra user {USER2}: {e}")
+            print(f"deleted {total}")
         elif args.cmd == "list":
             list_mails(m, args.folder)
     finally:

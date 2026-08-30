@@ -348,6 +348,49 @@ across 6 consecutive runs**, and the submodule unit suite is **2390 passed /
 `/quick-actions`, `/shared-mailboxes`, `/shared-drafts`, `/snooze`, `/mailbox-debug`
 applied to come from a customised fork — decide whether to test them.
 
+## 7. Mail WRITE path covered + cross-user delivery ground truth (2026-08-30)
+
+Round outcome: REST mail write lifecycle is now a first-class @local suite
+(`tests/e2e/specs/local-mail-write-path.spec.ts`, 7 tests, 28/28 stable across
+4 runs; full @local suite now 44/44). Covered: save draft (key+uid, Drafts),
+update draft (`close=true`, old copy replaced), delete draft (204 + key
+invalidation), send saved draft (key consumed, Sent Items), direct send (Sent
+Items, priority header), cross-user send through Stalwart SMTP, attachment
+upload (multipart → tmp_draft → send via key → `has_attachment` in Sent).
+
+Ground truth from the investigation (all verified with live IMAP/DB probes):
+
+- **The server DOES deliver to Stalwart on :25, not :20025.** The `.env`
+  `SOGO_SMTP_PORT=20025` is NOT what the runtime uses — domain settings
+  `SOGO_D_SMTP_PORT` resolve to 25 locally (server log: `Successfully connected
+  to SMTP server sogo6-stalwart:25`). The mailbox sent to testuser2 was
+  accepted (RCPT 250, DATA 250) every time.
+- **“Send doesn't reach the recipient” was a red herring: messages WERE
+  delivered, but Stalwart's built-in anti-spam analyzer filed them in Junk
+  Mail** (spf=temperror from DNSBL timeouts on the test network, no
+  DKIM/SPF for example.org). Confirmed via IMAP as testuser2: `wp-xuser` /
+  `vprobe` / `smtp-auth` probes all in `Junk Mail`, INBOX empty. Re-tested on
+  :465 (SMTPS + AUTH login) → same Junk classification, so auth doesn't matter.
+- Listening ports on `sogo6-stalwart:0.16.19`: 25 (smtp), 465 (submissions,
+  NOT the 587 in config.test.toml — the file is a template; the runtime config
+  was pushed earlier via the management API and lives in the SQLite store),
+  993/143 (IMAP[S]), 995 (POP3S), 4190 (sieve), 443 (HTTP, 404 on
+  /api/management/*), 39083 (management, TLS; plain-HTTP basic-auth probes
+  return empty replies).
+- Stalwart keeps its local directory (`d` table: domain `example.org` +
+  testuser/testadmin/testuser2), blobs (`b`), messages (`t`), queue `q` (empty).
+  The management API is TLS+client-cert; the cert material lives in the store.
+
+Consequences for tests:
+
+- Sent-side assertions are deterministic; recipient-side must tolerate
+  INBOX ∪ Junk Mail (annotated in the spec). A future hardening knob is raising
+  the anti-spam threshold / whitelisting example.org in the TEST config so
+  internal delivery lands in INBOX (needs the management API or a config push
+  path that is currently undocumented).
+- `mail-seed.py cleanup` now also purges testuser2's marker mails (write-path
+  cross-sends accumulate in its Junk) and covers Sent Items/Drafts.
+
 ---
 
 ## Summary of file changes
@@ -365,5 +408,7 @@ applied to come from a customised fork — decide whether to test them.
 | `tests/e2e/helpers.ts` | `seedLocalMailBatch` (single-session batch seed) + JMAP stability gate helpers |
 | `tests/e2e/specs/local-mail-data.spec.ts` (new) | local REST+JMAP mail data plane: list/detail/raw/edit/reply/destroy/move/delete/query; folder-aware `emailId`; dedicated edit seed |
 | `tests/e2e/specs/jmap-mail-remote.spec.ts` | + unpadded-base64url `inMailboxes` regression and self-cleaning Email/set move round-trip (demo) |
+| `tests/e2e/specs/local-mail-write-path.spec.ts` (new) | local REST mail write path: draft save/update/delete/send, direct send, cross-user SMTP delivery (INBOX ∪ Junk), attachment upload → send |
+| `tests/e2e/scripts/mail-seed.py` | cleanup now purges testuser2 marker mails too + covers Sent Items/Drafts |
 
 Local, gitignored fix: `secrets/sogo6.vault.env` `SOGO_P_DB_PASS` corrected to match the running MariaDB.
