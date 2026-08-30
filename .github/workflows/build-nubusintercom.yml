@@ -20,7 +20,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: tobias-weiss-ai-xr/umr/opendesk-edu/opendesk-nix/sogo6-server
+  IMAGE_NAME: tobias-weiss-ai-xr/umr/opendesk-edu/opendesk-nix/sogo6-nubusintercom
 
 jobs:
   build:
@@ -48,6 +48,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=branch
             type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
