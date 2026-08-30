@@ -487,3 +487,43 @@ five new local Playwright specs; the last two §6 blockers resolved.
 **Unit suite: 2418 passed / 2 skipped** (test_module+test_api+test_properties: 618
 passed; +22 new tests); the 2 pre-existing `test_api_envelope` errors and the
 integration-dir errors (need a live server) are unchanged.
+
+### 9.1 Second pass — tasks / freebusy / shares / export / app-passwords (2026-08-30)
+
+Three more defects found by probing previously-untested surfaces:
+
+5. **App passwords 100% broken (image drift)** — `deploy/local/Dockerfile.local`
+   hardcodes a pip list that drifted from `pyproject.toml`: `bcrypt` (app
+   passwords) and `defusedxml` (SAML2 metadata parsing, CalDAV XML) were never
+   installed, so `POST /auth/app-passwords` always failed — masked by
+   `InterfaceAppPassword` as a misleading **404 S001220 "App Password Not
+   Found"**. Fix: add both to the Dockerfile (submodule `8a172ac`).
+6. **`verify()` crashed for expiring tokens** — a function-local
+   `from datetime import …` after the `expires_at` check shadowed the module
+   import → `UnboundLocalError` whenever an app password had an expiry.
+7. **Blank label → 500 S999999** — `RequestException` raised without an error
+   code; now `ERROR_VALIDATION_ERROR` (400 S000300).
+
+**Stack fixes (parent compose):**
+8. **Agent profile was unusable**: the `sogo6-agent` service pointed at
+   `sogo6-server:latest` (not built locally — the server builds `:dev`) and
+   had **no DB credentials** in its environment, so background jobs
+   (`calendar.export.ics` etc.) stayed `pending` forever and any second export
+   hit 409 "Concurrent Job Limit Reached". Fix: agent reuses `:dev` + DB env
+   passthrough; started with `--profile agent`. Export round-trip now works:
+   202 → job success → real ICS result.
+
+**New e2e specs (+13 tests):**
+- `local-app-passwords.spec.ts` (5): create (token shown once, no hash in
+  response), list metadata-only, blank-label 400 regression, delete + re-delete
+  404, unauthenticated.
+- `local-calendar-advanced.spec.ts` (8): task create/list/404/delete;
+  freebusy shape + 422; share with `public_level` (200/409 idempotent) + list;
+  export full async round-trip (202 → poll `/jobs/<id>` → ICS result).
+
+**@local suite: 93/93** · unit +12 (`test_moduleAppPassword`).
+
+**Noted, not fixed:** `app/api/v1/user/ApiAppPassword.py` is an orphaned
+duplicate blueprint (nicer API with `DELETE /<id>` + `/verify`, never
+registered); the registered `auth/` variant lacks a verify endpoint and
+nothing wires `ModuleAppPassword.verify` into any login/protocol flow yet.

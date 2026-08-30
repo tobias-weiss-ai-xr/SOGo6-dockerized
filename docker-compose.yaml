@@ -352,12 +352,18 @@ services:
 
   sogo6-agent:
     profiles: ["agent"]
-    image: sogo6-server:latest
+    # Reuse the same image the sogo6-server service builds (dev stack) —
+    # a separate :latest tag would not exist locally and break this profile.
+    image: sogo6-server:dev
     restart: unless-stopped
     container_name: sogo6-agent
     environment:
       # ⚠️ Database config is in sogo6/config/process.conf (SOGO_P_DB_* settings)
       SOGO_REDIS_URI: redis://sogo6-redis:6379/0
+      # DB credentials must match the server's (jobs touch the same DB)
+      SOGO_P_DB_PASS: ${SOGO_P_DB_PASS:-}
+      SOGO_P_DB_USER: ${SOGO_P_DB_USER:-sogo}
+      SOGO_P_DB_TYPE: ${SOGO_P_DB_TYPE:-MySQL}
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
     networks:
