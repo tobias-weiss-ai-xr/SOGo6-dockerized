@@ -410,5 +410,6 @@ Consequences for tests:
 | `tests/e2e/specs/jmap-mail-remote.spec.ts` | + unpadded-base64url `inMailboxes` regression and self-cleaning Email/set move round-trip (demo) |
 | `tests/e2e/specs/local-mail-write-path.spec.ts` (new) | local REST mail write path: draft save/update/delete/send, direct send, cross-user SMTP delivery (INBOX ∪ Junk), attachment upload → send |
 | `tests/e2e/scripts/mail-seed.py` | cleanup now purges testuser2 marker mails too + covers Sent Items/Drafts |
+| `sogo6-server … (32b5191)` | unit-regression the `move_mails` expunge contract (8 tests): modern path (`uid_copy(source_folder=…)` → `\Deleted` → `uid_expunge` RFC 4315), `expunge_folder` fallback, per-mail copy fallback, empty/error paths |
 
 Local, gitignored fix: `secrets/sogo6.vault.env` `SOGO_P_DB_PASS` corrected to match the running MariaDB.
