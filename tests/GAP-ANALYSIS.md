@@ -566,3 +566,48 @@ their state.
 
 **@local suite: 103/103** · unit +5 (`test_job_signatures` 4,
 `test_schedule_send_enqueue` 1) → 635 passed.
+
+### 9.3 Fourth pass — folder CRUD, admin user lifecycle, recurrence + reminders (2026-08-30)
+
+Three more defects + two operational throttle traps (submodule `f5f2924`):
+
+10. **`create_user` accepted bare uids** — stored `uid=jdoe` in LDAP and
+    returned 200, but the login flow binds `uid=<full-email>`, so the
+    account could never log in. Now 400 S000300 (uid must equal mail,
+    email-format) before any LDAP access; old unit tests rewritten.
+11. **DELETE of a nonexistent mail folder returned 500 S001302** — now a
+    404 S000304 (existence check before the IMAP rename-to-trash).
+12. **Hard-coded request throttles broke bulk API use**: the per-IP login
+    limiter (20/60 s) and the global API limiter (300/60 s) tripped under
+    the parallel suite (429 storms, mass skip cascades). Both are now
+    env-configurable (`SOGO_P_LOGIN_IP_MAX/_WINDOW`,
+    `SOGO_P_GLOBAL_RATE_LIMIT/_WINDOW`), defaults unchanged; the local
+    compose raises them.
+
+Stalwart ops note: its store seeds default sender throttles on first boot
+("452 4.4.5 Rate limit exceeded" that PERSISTS across restarts). New
+`tests/e2e/scripts/stalwart-clear-throttles.sh` removes them for the
+local/CI stack.
+
+**New e2e specs (+23, suite now 126):**
+- `local-mail-folders.spec.ts` (8): folder create/duplicate-409/list/
+  PATCH-rename/delete-204 + nonexistent-delete 404; batch mark_flagged/
+  unflagged; single move there-and-back; invalid action 400.
+- `local-admin-user-lifecycle.spec.ts` (8): bare-uid 400, uid≠mail 400,
+  valid create → immediate login, wrong password 401, admin list,
+  duplicate create rejected, delete → login 401, ghost delete 404.
+- `local-calendar-recurrence-reminders.spec.ts` (7): daily×5 event →
+  5 expanded occurrences (45-day window), narrow window subsetting,
+  invalid frequency 422, master delete removes series; popup reminder
+  pending in `/reminders`, deleted event clears it.
+
+**API facts pinned:** folder PATCH rename takes the FULL new path; IMAP
+UIDs are per-folder (moves renumber); mail listings lag moves briefly
+(poll, don't assume); a reminder is ACTIVE from `trigger_at` (=
+start − minutes_before) until event end — `/reminders?lookahead` extends
+the tail, not the head.
+
+**@local suite: 126/126** (5 consecutive green full runs) · unit +3
+(`test_admin_user_create`) → 638 passed.
+
+

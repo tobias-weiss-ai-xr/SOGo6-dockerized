@@ -258,6 +258,26 @@ export async function loginRemoteAdmin(page: any): Promise<string | null> {
   }
 }
 
+/** Local admin password: env override first (CI-friendly), then the gitignored
+ * vault file (secrets/sogo6.vault.env). Returns '' when unavailable so specs
+ * can skip cleanly. */
+export function adminPassword(): string {
+  if (process.env.SOGO_ADMIN_PASSWORD) return process.env.SOGO_ADMIN_PASSWORD;
+  try {
+    const vault = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'secrets', 'sogo6.vault.env'),
+      'utf8',
+    );
+    for (const line of vault.split(/\r?\n/)) {
+      const m = line.match(/^SOGO_P_ADMIN_PWD\s*=\s*(.+)$/);
+      if (m) return m[1].replace(/^["']|["']$/g, '');
+    }
+  } catch {
+    /* vault file absent on other machines */
+  }
+  return '';
+}
+
 /** Convenience: standard auth headers for API calls. */
 export function bearer(token: string | null, extra: Record<string, string> = {}) {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...extra };

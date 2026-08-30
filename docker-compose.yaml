@@ -82,6 +82,12 @@ services:
       SOGO_LDAP_BASE_DN: ${SOGO_LDAP_BASE_DN:-dc=example,dc=org}
       SOGO_LDAP_BIND_DN: ${SOGO_LDAP_BIND_DN:-cn=admin,dc=example,dc=org}
       SOGO_LDAP_BIND_PASSWORD: ${SOGO_LDAP_BIND_PASSWORD:-}
+      # Local/E2E: the whole test suite runs against one server from one IP —
+      # raise the request throttles (prod defaults stay 300/60s and 20/60s).
+      SOGO_P_GLOBAL_RATE_LIMIT: "20000"
+      SOGO_P_GLOBAL_RATE_WINDOW: "60"
+      SOGO_P_LOGIN_IP_MAX: "2000"
+      SOGO_P_LOGIN_IP_WINDOW: "60"
       SOGO_SMTP_SERVER: ${SOGO_SMTP_SERVER:-sogo6-stalwart}
       SOGO_SMTP_PORT: ${SOGO_SMTP_PORT:-20025}
       LOG_LEVEL: ${LOG_LEVEL:-info}
