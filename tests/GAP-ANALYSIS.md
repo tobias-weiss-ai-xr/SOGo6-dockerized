@@ -303,13 +303,10 @@ been registered. Per-blueprint status:
   `/scim/v2/Users`, `/branding/<domain>`, `/auth/saml2/providers`). They are
   mounted and now tested at the correct paths.
 
-**Still open (needs config / external dependency — not just missing tests):**
-- `/api/admin/v1/auth/saml2/providers` → **500** (server error; needs a SAML IdP
-  configured or a code bug).
-- `/api/admin/v1/scim/v2/Users` → **401** even with a fresh admin JWT (scope/
-  auth check to investigate).
-- `mfa` / `password-reset` expose only action sub-paths (no read-only root) —
-  acceptable; covered indirectly via the mount checks above.
+**Resolved this pass (were open blockers — now fixed + covered):**
+- `/api/admin/v1/auth/saml2/providers` → was **500** (`ModuleSaml2Provider.list_providers` passed `condition=None` to `select_from_table` → `BugException: Unknown Condition type`). Fixed to use `TrueCondition()` for the default branch (matching the other `list_*` conventions). Covered by `tests/e2e/specs/local-admin-security.spec.ts` (ADMIN-01 200, ADMIN-04 unauthenticated 401/403) and `tests/test_module/test_auth/test_moduleSaml2Provider.py`.
+- `/api/admin/v1/scim/v2/Users` → was **401** because `SCIM_BEARER_TOKEN` was defined in `.env` but never forwarded into the `sogo6-server` container by `docker-compose.yaml`. Added `SCIM_BEARER_TOKEN: ${SCIM_BEARER_TOKEN:-}` to the service environment and set a strong token locally. SCIM is its own token-gated surface (not the admin JWT); covered by `local-admin-security.spec.ts` (ADMIN-02 401 without/wrong token, ADMIN-03 200 ListResponse with the configured token).
+- `mfa` / `password-reset` expose only action sub-paths (no read-only root) — acceptable; covered indirectly via the mount checks above.
 
 **JMAP mail data-plane — chasing the “intermittent” query/get failures (2026-08-29, resolved):**
 The remaining `Email/query` total-0 / `Email/get` misses on the demo were NOT
@@ -428,3 +425,65 @@ string) — the spec escapes them (`\"`) instead.
 | `sogo6-server … (32b5191)` | unit-regression the `move_mails` expunge contract (8 tests): modern path (`uid_copy(source_folder=…)` → `\Deleted` → `uid_expunge` RFC 4315), `expunge_folder` fallback, per-mail copy fallback, empty/error paths |
 
 Local, gitignored fix: `secrets/sogo6.vault.env` `SOGO_P_DB_PASS` corrected to match the running MariaDB.
+
+## 9. Sieve / snooze / iTIP / admin-security coverage (2026-08-30)
+
+Four real server bugs found via e2e probing and fixed with TDD unit regressions;
+five new local Playwright specs; the last two §6 blockers resolved.
+
+**Bugs found + fixed (submodule `22253bf`, 4 commits):**
+
+1. **Sieve filtering 100% broken locally** — Stalwart ManageSieve (4190) requires
+   STARTTLS, and its self-signed cert fails sievelib's hardcoded
+   `ssl.create_default_context()` verification. Fix: `SOGO_D_SIEVE_VERIFY_CERT`
+   boolean (default True) in `DomainSettings.MailSettings` + `ClientSieve`
+   `_SieveTlsClient` subclass overriding the name-mangled `_Client__enable_ssl`
+   to disable verification when False. Stack seed (`sogo6/config/init/domain_settings.json`)
+   set to `StartTLS` + `verify_cert=false`; live DB updated via `JSON_SET`.
+   Unit: `test_module/test_mail/test_SieveVerifyCert.py` (5 tests).
+
+2. **`POST /filters/push` → 500 on idempotent re-push** (`S000318`) —
+   `ModuleFilter._write_filters` treated MySQL's 0 affected rows (no-op UPDATE,
+   identical JSON) as failure. Fix: verify the user row exists via
+   `select_from_table` before raising. Unit: `test_module/test_mail/test_moduleFilter.py`
+   (9 tests). Live: `/filters/push` now 200 twice in a row.
+
+3. **`DELETE /snooze/<id>` and `DELETE /resources/<id>` → 500**
+   (`AttributeError: 'ClientMySQL' has no attribute 'delete_from_table'`) —
+   `ModuleSnooze.unsnooze` and `ModuleResourceBooking.delete` called a method
+   that no backend defines. Fix: use `delete_row_in_table` (the real delete API);
+   snooze delete scoped with `AndCondition(id, user_uid)`. Stale unit tests that
+   pinned `delete_from_table` updated. Unit: `test_module/test_mail/test_moduleSnooze.py`
+   (4 tests) + `test_module/test_calendar/test_moduleResourceBooking.py` (2 tests).
+
+4. **`GET /auth/saml2/providers` → 500** (`BugException: Unknown Condition type`) —
+   `ModuleSaml2Provider.list_providers(active_only=False)` passed `condition=None`
+   into `select_from_table`. Fix: `TrueCondition()` for the default branch.
+   Unit: `test_module/test_auth/test_moduleSaml2Provider.py` (4 tests).
+
+**Stack config fix (parent):**
+5. **`GET /scim/v2/Users` → 401** — `SCIM_BEARER_TOKEN` was defined in `.env` but
+   never forwarded into the `sogo6-server` container by `docker-compose.yaml`.
+   Added `SCIM_BEARER_TOKEN: ${SCIM_BEARER_TOKEN:-}` to the service environment;
+   set a strong token locally. SCIM is its own token-gated surface (not the admin JWT).
+
+**New e2e specs (`@local`, 26 tests total):**
+- `local-sieve.spec.ts` (14): list/create/single-GET/PUT-deactivate/reorder
+  404+200/validate/preview match+no-match/templates/idempotent-push-regression/
+  vacation+forward round-trips/delete + behavioral fileinto-on-delivery (real
+  SMTP through Stalwart, mail lands in the target folder).
+- `local-snooze.spec.ts` (5): baseline list, snooze+unsnooze DELETE regression,
+  unknown-id 404, unknown-id GET 405, unauthenticated 401/403.
+- `local-itip.spec.ts` (3): create-event-with-attendee emits iMIP REQUEST →
+  invitation arrives (Junk Mail, anti-spam) → opening the mail auto-imports the
+  event into the attendee's calendar → attendance accepted + persists. Verifies
+  the full `InterfaceApiMailMail._process_inbound_imip` → `ModuleCalendar.process_imip`
+  → `ImipProcessor.process_request` pipeline. Listing caveat: `/calendars/<key>/events`
+  requires explicit `start_date_time`/`end_date_time` (future events excluded by default).
+- `local-admin-security.spec.ts` (4): SAML2 providers 200 + unauthenticated 401/403;
+  SCIM Users 401 without/wrong token + 200 ListResponse with configured token.
+
+**@local suite: 80/80 passing** (was 54; +14 sieve, +5 snooze, +3 iTIP, +4 admin).
+**Unit suite: 2418 passed / 2 skipped** (test_module+test_api+test_properties: 618
+passed; +22 new tests); the 2 pre-existing `test_api_envelope` errors and the
+integration-dir errors (need a live server) are unchanged.
