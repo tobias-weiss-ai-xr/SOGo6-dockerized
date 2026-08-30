@@ -391,6 +391,20 @@ Consequences for tests:
 - `mail-seed.py cleanup` now also purges testuser2's marker mails (write-path
   cross-sends accumulate in its Junk) and covers Sent Items/Drafts.
 
+## 8. Mail search covered locally (2026-08-30)
+
+`local-mail-search.spec.ts` (10 tests) pins `GET /mailboxes/0/search` against
+the live IMAP SEARCH pipeline: subject/query/from/in_body facets, folder-scoped
+search incl. a folder name with a space (`Junk Mail`), pagination + the
+`X-Pagination` response header, multi-folder comma lists, empty-result case.
+
+Verified sound (no server bug): the search layer escapes IMAP SEARCH
+metacharacters — a literal `*` in `query` does not wildcard-expand to all
+mailbox messages (`zzz*` → 0), and `"`/`(`/`)` in the query match literally.
+Seed-side gotcha discovered: subjects containing `"` break the shell-quoted
+`batch --subjects "…"` seed command (the embedded quote terminated the shell
+string) — the spec escapes them (`\"`) instead.
+
 ---
 
 ## Summary of file changes
@@ -410,6 +424,7 @@ Consequences for tests:
 | `tests/e2e/specs/jmap-mail-remote.spec.ts` | + unpadded-base64url `inMailboxes` regression and self-cleaning Email/set move round-trip (demo) |
 | `tests/e2e/specs/local-mail-write-path.spec.ts` (new) | local REST mail write path: draft save/update/delete/send, direct send, cross-user SMTP delivery (INBOX ∪ Junk), attachment upload → send |
 | `tests/e2e/scripts/mail-seed.py` | cleanup now purges testuser2 marker mails too + covers Sent Items/Drafts |
+| `tests/e2e/specs/local-mail-search.spec.ts` (new) | local REST mail search: subject/query/from/in_body facets, space-folder scoping, pagination + X-Pagination, multi-folder lists, empty case, IMAP metachar-escape regressions (`*` no wildcard expansion, quote/paren literal) |
 | `sogo6-server … (32b5191)` | unit-regression the `move_mails` expunge contract (8 tests): modern path (`uid_copy(source_folder=…)` → `\Deleted` → `uid_expunge` RFC 4315), `expunge_folder` fallback, per-mail copy fallback, empty/error paths |
 
 Local, gitignored fix: `secrets/sogo6.vault.env` `SOGO_P_DB_PASS` corrected to match the running MariaDB.
