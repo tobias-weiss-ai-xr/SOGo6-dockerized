@@ -527,3 +527,42 @@ Three more defects found by probing previously-untested surfaces:
 duplicate blueprint (nicer API with `DELETE /<id>` + `/verify`, never
 registered); the registered `auth/` variant lacks a verify endpoint and
 nothing wires `ModuleAppPassword.verify` into any login/protocol flow yet.
+
+### 9.2 Third pass — scheduled send, calendar subscription + ICS import (2026-08-30)
+
+Two more defects, both in the background-agent path (submodule `5f4a3e7`):
+
+9. **Scheduled send was structurally broken** (three layered defects):
+   (a) `ScheduleSendJob.process` kept the pre-abstract signature — the agent
+   calls `process(payload, user_uid=…, job_id=…)` → every run raised
+   `TypeError` and the mail was silently dropped after 3 retries;
+   (b) the job payload carried no user session and built
+   `ModuleMailOutgoing(ProcessSetting(), …)` — process settings passed where a
+   `User` is required (now persists `user_session`, mirroring UndoSendJob);
+   (c) `agent.enqueue` omitted `user_uid` → `JobState.user_uid=None` →
+   `GET /jobs/<id>` answered **403 S000801** for the user who scheduled the
+   send and the job never appeared in their list. `SnoozeJob` had the same
+   signature drift (fixed; not currently agent-registered).
+   A new **contract test** asserts every `@agent_job`-registered `process`
+   matches the base signature, plus an enqueue-contract regression.
+
+Stack: `sogo6-agent` now bind-mounts the live code (`./sogo6-server:/app`)
+like the server, so agent fixes don't need an image rebuild.
+
+**New e2e specs (+10):**
+- `local-mail-schedule.spec.ts` (4): scheduled send (+5 s) → agent job →
+  delivery (INBOX ∪ Junk); far-future `send_at` → 400 S000489; past `send_at`
+  → immediate delivery; unknown pending-cancel → 404.
+- `local-calendar-subscription-import.spec.ts` (6): public subscription
+  enable → unauthenticated `GET /public/calendars/<token>` (text/calendar) →
+  unknown token 404 → revoke invalidates; full **export → import round-trip**
+  via agent jobs (scratch calendar receives the events, counters asserted);
+  malformed ICS fails the job gracefully.
+
+**API facts pinned:** event/task listing caps the window at
+`MAX_EVENT_FETCH_DAYS = 45` — wider ranges are rejected with **400 S000606**
+(`search` bypasses the cap); jobs may 404 briefly before the agent persists
+their state.
+
+**@local suite: 103/103** · unit +5 (`test_job_signatures` 4,
+`test_schedule_send_enqueue` 1) → 635 passed.
