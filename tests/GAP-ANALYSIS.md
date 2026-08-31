@@ -644,3 +644,68 @@ New specs (13 tests, all `@local`):
 
 Suite status: **139 @local tests green** (3 consecutive full runs, ~50–60 s).
 Unit suite: 643 passed / 2 skipped (7 new: 4 content-type, 3 share semantics).
+
+## 10. Round 11: admin domains, calendar shares, recurrence exceptions (2026-08-31)
+
+Six more real bugs fixed (all unit-verified, e2e-pinned):
+
+17. **Ghost domain DELETE returned a raw DB 500** — `delete_one_domain_setting`
+    trusted `get_one_domain_setting`, which silently returns DEFAULT settings
+    for unknown ids, then crashed in `delete_row_in_table(expected_row=1)` with
+    S000403. Now mirrors the PATCH guard: 404 S000302 "Domain's Name Not Found".
+18. **Calendar share create returned 200** though the route declares
+    `@blp.response(201)` (same family as #14/#15). Now 201.
+19. **DATA-LOSS: `DELETE /events/<master>?recurrence_id=…` ignored the param**
+    and soft-deleted the WHOLE series (master + detached exceptions) with a
+    200. The route now parses `recurrence_id` as a query arg; the module
+    resolves/creates the detached occurrence for the slot and EXDATEs it
+    (master + rest of series survive). Non-recurring target → 404 S000605;
+    malformed value → 422. Without the param, whole-series delete unchanged.
+20. **Duplicate calendar share raised S000603 "Calendar Already Exists"** —
+    clients cannot distinguish share-vs-calendar conflicts. New S000653
+    "Share Already Exists" (409), mirroring #15's S000721.
+21. **Sharee event/task create ACL-checked as the calendar OWNER** —
+    `create_event`/`create_task` resolved the calendar via
+    `calendar_user.owner`, so `get_permissions` returned owner perms and
+    `can_create=false` sharees could write. Now resolved/checked as the
+    ACTING user: 403 S000620 unless the share grants it.
+22. **Duplicate domain create returned HTTP 400** for S000301 (name conflict)
+    — every sibling duplicate code is a 409. `ERROR_DOMAIN_NAME_TAKEN`
+    now CONFLICT.
+
+Unit-suite repairs alongside (stale tests, pre-existing breakage surfaced by
+the full run): `test_module/test_admin/__init__.py` removed (package-name
+collision with `test_interface/test_admin` — 5 collection errors);
+`FakeIMAPConnection.response` routes `LIST` through `list_response` so
+`_mailbox_exists` probes are testable; three `ScheduleSendJob` tests
+rewritten to the worker contract (`user_session` payload + patch set
+mirroring `test_JobUndoSend`); calendar event-delete interface test updated
+for the `recurrence_id` kwarg.
+
+New specs (21 tests, all `@local`):
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-admin-domains.spec.ts` | 7 (DOM-01..07) | domain settings lifecycle: create 200 + list, duplicate 409 S000301 (bug #22), patch persist, ghost patch 404 S000302, ghost delete 404 S000302 (bug #17), delete + gone, unknown GET returns DEFAULT settings (by design) |
+| `local-calendar-shares.spec.ts` | 8 (SH-01..08) | share create 201 + echo (bug #18), duplicate S000653 (bug #20), share listing, sharee sees shared calendar with SHARE-derived permissions, can_create write path, can_delete=false → 403 S000620 (bug #21), view_date_time masks titles as "Busy", share removal → write 403 + read empty + calendar gone from sharee list |
+| `local-calendar-occurrences.spec.ts` | 6 (OCC-01..06) | listing expands occurrences (per-slot recurrence_id, shared master key), PATCH-with-recurrence_id detaches one occurrence, single-occurrence DELETE via `?recurrence_id=` leaves master + rest (bug #19 regression), recurrence_id on non-recurring → 404 S000605, malformed → 422, whole-series delete still cascades |
+
+`local-calendar-advanced.spec.ts` SHARE-01 re-pinned to the corrected share
+contract (201/S000653).
+
+Contract notes pinned this round:
+
+- Domain create body: `domain_name`, `domain_description`, `domain_info`,
+  `settings` — `description` is a 422 unknown-field trap.
+- `GET /calendars` returns `data.calendars` (dict envelope, not a bare array).
+- Event listing params: `start_date_time`/`end_date_time`
+  (`YYYY-MM-DDTHH:MM:SS.mmmZ`; a `+00:00` offset is a 422). No params
+  defaults to the current UTC day.
+- Serialized datetimes carry millisecond precision (`…T09:00:00.000Z`) —
+  compare with `startsWith`, never `===` against `…Z`.
+- Share levels: `none|view_date_time|view_all|respond|modify_if_org|modify`
+  (`view_datetime` without the second underscore is a 422).
+
+Suite status: **160 @local tests green** (5 consecutive full runs, ~55–70 s,
+24 spec files). Unit suite: **2302 passed / 0 failed** (+2 known pre-existing
+errors in `test_api_envelope`).

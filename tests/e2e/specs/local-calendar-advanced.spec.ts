@@ -107,10 +107,10 @@ test.describe('local calendar freebusy + shares + export @local @calendar', () =
       headers: json(),
       data: { user_uid: OTHER.email, public_level: 'view_all' },
     });
-    // 200 on first share; 409 (S000603 "Calendar Already Exists") when the
-    // share already exists from a previous run — both leave the share in place.
-    expect([200, 409]).toContain(create.status());
-    if (create.status() === 200) {
+    // 201 on first share (bug #18: was 200); 409 (S000653 "Share Already
+    // Exists", bug #20: was S000603) when it exists from a previous run.
+    expect([201, 409]).toContain(create.status());
+    if (create.status() === 201) {
       const share = (await create.json()).data;
       expect(share.user_uid).toBe(OTHER.email);
       expect(share.public_level).toBe('view_all');
