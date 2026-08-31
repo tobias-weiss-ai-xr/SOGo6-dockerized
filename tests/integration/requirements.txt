@@ -1,4 +1,4 @@
 pytest>=9.1.1
 requests>=2.34.2
 psycopg2-binary>=2.9.12
-ldap3>=0.9.9  # required for _ldap_available() direct ldap3 bind probe
+ldap3>=2.9.1  # required for _ldap_available() direct ldap3 bind probe
