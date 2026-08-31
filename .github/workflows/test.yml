@@ -596,7 +596,7 @@ jobs:
 
       - name: ZAP Baseline Scan (SOGo6 UI)
         continue-on-error: true
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'https://sogo6.contextual-intelligence.org/'
           rules_file_name: 'tests/zap-rules.tsv'
