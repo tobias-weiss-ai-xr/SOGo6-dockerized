@@ -611,3 +611,36 @@ the tail, not the head.
 (`test_admin_user_create`) → 638 passed.
 
 
+
+### 9.4 Fifth pass — iTIP REPLY/CANCEL, contact sharing + vCard, preferences (2026-08-31)
+
+Four defects (submodule `8cfacc6`):
+
+13. **`contact.export` jobs always failed** — the export blob was stored
+    with `Content-Type: text/vcard; charset=utf-8; version=3.0`, and
+    `DbFileStorage.write`'s allow-list regex matched only the bare
+    `type/subtype` form → `Content type not allowed` → every whole-book
+    export job failed (`GET /jobs/<id>` status=failure). Fix: strip RFC 9110
+    media-type parameters before the allow-list match (parameters are legal,
+    the base type must still be allow-listed).
+14. **Addressbook share create returned 200** while the route declares
+    `@blp.response(201, ...)` (every other create endpoint returns 201).
+    Now honors 201.
+15. **Duplicate share reported the wrong conflict** — reusing
+    S000702 "Address Book Already Exists" for an existing *share*; new
+    S000721 "Share Already Exists" (409).
+16. *(behavioral pin, not a bug)* — import-job counters (contacts/lists
+    inserted/updated/skipped) live in the JOB STATE `result`; the
+    `/jobs/<id>/result` endpoint serves offloaded `large_result` blobs only
+    and 410s otherwise.
+
+New specs (13 tests, all `@local`):
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-itip-cancel-reply.spec.ts` | 4 (ITIP-C01/C02, ITIP-D01/D02) | REPLY leg (attendee accepts → organizer gets `Re: <title>` with `METHOD:REPLY` + `PARTSTAT=ACCEPTED`), CANCEL leg (organizer deletes → attendee gets `Cancelled: <title>`; auto-imported copy vanishes) |
+| `local-contacts-sharing.spec.ts` | 6 (AB-SHARE-01..03, AB-VCARD-01/02, AB-LIST-01) | share with `share_level` view/modify (`role` is a 422 trap), cross-user listing/read, vCard export job round-trip, vCard3 import (multipart, counters from job state), contact list (group) CRUD with member_count |
+| `local-user-preferences.spec.ts` | 3 (PREF-01..03) | GET sections, PATCH persist + revert (`{"settings":{SECTION:{KEY:v}}}`), unknown sections ignored silently |
+
+Suite status: **139 @local tests green** (3 consecutive full runs, ~50–60 s).
+Unit suite: 643 passed / 2 skipped (7 new: 4 content-type, 3 share semantics).
