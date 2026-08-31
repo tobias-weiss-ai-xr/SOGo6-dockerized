@@ -767,3 +767,50 @@ off page 1 of the listing → flake; swept).
 - Global search: `GET /search/global?q=` → `{"contacts": [], "events": [],
   "users": []}`; `q` min 2 chars enforced **softly** (short → 200 empty);
   `limit` = max per section (1–50, default 8); missing `q` → 400.
+
+## 12. Round 13: appointment slots + scheduling polls (2026-08-31)
+
+17 new tests → suite **189 → 206 `@local`**; unit suite **2302/0**; 5
+consecutive green full runs.
+
+Both features were effectively dead-on-arrival surfaces (Redis-backed,
+never before exercised by e2e): every public-facing path was blocked by the
+auth gate, and the owner-facing booking list could never return data.
+
+### Bug ledger
+
+| # | Severity | Where | Symptom → Fix |
+|---|---|---|---|
+| 35 | critical | `ApiAppointmentSlots` `/book` | endpoint is the *anonymous* booking path (create even returns a `booking_url` with token) but had no `public_access = True` → global auth gate answered 401 S000203 for every visitor; booking links were unusable → declare public |
+| 36 | critical | `ApiAppointmentSlots` book handler | stored the booking but never wrote it into the per-slot `appt_booking:index:{slot_id}` list that `/bookings` reads → owner's bookings list was always `[]` → index each booking (replace-safe, 30d TTL like the booking itself) |
+| 37 | critical | `ApiSchedulingPolls` `/respond` | participants are arbitrary external emails (no account exists to log in with) yet respond required a JWT → declare public; the poll id is the capability secret (the stored `token` field is never validated anywhere — vestigial) |
+| 38 | high | `ApiSchedulingPolls` | `expires_at` was stored but never evaluated — expired polls stayed `open` forever → respond flips an expired poll to `closed` (persisted) and rejects with 400 S000530 |
+
+Also: `PollResponseSchema.available_slots` metadata said "time slot indices"
+while the field is `List(fields.String())` — ints are a 422 trap; metadata
+corrected. Dead-code finding: `ApiApiTokens`, `ApiLiveUpdates`, `ApiAI*`,
+`ApiSpamFilter`, `ApiTranscripts`, `ApiPGP` blueprints are fully implemented
+but **never registered** (no routes in the live map) — gap, not fixed.
+
+### New specs (17 tests, all `@local`)
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-appointment-slots.spec.ts` | 7 (AS-01..07) | create echoes config + `booking_url` capability, owner list, create validation (duration 15–240, weekday 0–6, required fields → 422), **anonymous booking works (#35)**, booking validation + unknown slot 404, **owner sees the booking (#36)**, unauthenticated list 401 |
+| `local-scheduling-polls.spec.ts` | 10 (SP-01..10) | create open poll + token, owner list, create validation, **anonymous participant votes (#37)**, int-slot 422 trap, outsider 404 S000531, re-vote replaces (not appends), results aggregate + best slot, unknown results 404, **expired poll rejects votes S000530 (#38)** |
+
+### Contract pins
+
+- Slots: `POST /appointment-slots` → 201 `{id, token, booking_url:
+  "/book/<id>?token=<hex>", enabled: true, created_at: unix-epoch}`; stored
+  in Redis, 30-day TTL; **no PATCH/DELETE** — slots are immutable and
+  disposable; `days_of_week` 0=Sunday.
+- Anonymous booking: `POST /appointment-slots/<id>/book` (no auth) → 201
+  `{id, slot_id, name, email, date, time, created_at}`; unknown slot → 404
+  S000003.
+- Polls: `POST /polls` → 201 poll (status `open`); anonymous
+  `POST /polls/<id>/respond` → `{status: "recorded"}`; outsider → 404
+  S000531; expired/closed → 400 S000530; `GET /polls/<id>/results` →
+  `{poll, response_count, participant_count, best_slot, slot_counts}`.
+- `available_slots` are **string indices** (`["0","1"]`); a re-vote replaces
+  the participant's previous response.
