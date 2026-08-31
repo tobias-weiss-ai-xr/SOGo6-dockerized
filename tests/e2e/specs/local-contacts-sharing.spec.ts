@@ -33,6 +33,7 @@ let tok1 = '';
 let tok2 = '';
 let abKey = '';
 let probeContactKey = '';
+let importedContactKey = '';
 let probeContactName = '';
 let importUid = '';
 let listKey = '';
@@ -94,6 +95,11 @@ test.afterAll(async ({ request }) => {
   if (listKey) {
     await request
       .delete(`${LOCAL_API}/addressbooks/${abKey}/lists/${listKey}`, { headers: auth1() })
+      .catch(() => {});
+  }
+  if (importedContactKey) {
+    await request
+      .delete(`${LOCAL_API}/addressbooks/${abKey}/contacts/${importedContactKey}`, { headers: auth1() })
       .catch(() => {});
   }
   if (probeContactKey) {
@@ -168,13 +174,15 @@ test.describe('local contacts sharing + vCard @local @contacts', () => {
 
   test('AB-VCARD-02 vCard import round-trips a new contact by uid', async ({ request }) => {
     importUid = `e2e-import-${Date.now()}`;
+    // unique email per run: repeated runs must not accumulate duplicates
+    const importEmail = `import.probe.two.${Date.now()}@example.org`;
     const vcf = [
       'BEGIN:VCARD',
       'VERSION:3.0',
       `UID:${importUid}`,
       'FN:Import Probe Two',
       'N:Two;Import;;;',
-      'EMAIL;TYPE=INTERNET:import.probe.two@example.org',
+      `EMAIL;TYPE=INTERNET:${importEmail}`,
       'END:VCARD',
       '',
     ].join('\r\n');
@@ -217,6 +225,7 @@ test.describe('local contacts sharing + vCard @local @contacts', () => {
     const contacts = ((await listed.json()).data ?? {}).contacts ?? [];
     const imported = contacts.find((c: any) => c.uid === importUid);
     expect(imported, 'imported contact present with its vCard uid').toBeTruthy();
+    importedContactKey = imported.key;
   });
 
   test('AB-LIST-01 contact list (group) create, member_count, delete', async ({ request }) => {

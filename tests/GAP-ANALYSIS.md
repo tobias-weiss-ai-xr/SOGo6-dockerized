@@ -709,3 +709,61 @@ Contract notes pinned this round:
 Suite status: **160 @local tests green** (5 consecutive full runs, ~55–70 s,
 24 spec files). Unit suite: **2302 passed / 0 failed** (+2 known pre-existing
 errors in `test_api_envelope`).
+
+## 11. Round 12: resource booking, tasks (VTODO), global search (2026-08-31)
+
+12 new tests → suite **160 → 189 `@local`** (27 spec files); unit suite stays
+**2302 passed / 0 failed**; 5 consecutive green full runs (189/189).
+
+### Bug ledger
+
+| # | Severity | Where | Symptom → Fix |
+|---|---|---|---|
+| 23 | critical | `app/api/v1/user/ApiResourceBooking.py` | 10 handlers declared `@blp.response(200, Schema(many=True))` — flask-smorest dumped the `(envelope, status)` tuple from `create_api_base_response` through the schema: iterating the envelope's 3 keys produced `[{}, {}, {}]` for EVERY user-facing resources endpoint → replaced with bare `@blp.response(200)`/`(201)` |
+| 24 | high | `app/__init__.py` (global JSON gate) | empty-body POST with `Content-Type: application/json` → `loads("")` → 400 S000204 on favorite-toggle → gate now tolerates empty/whitespace bodies (favorite toggle + DELETE work) |
+| 25 | high | `ApiResourceBooking.py` | 3 call sites tuple-unpacked `check_availability`'s dict (`too many values to unpack`); response used dangling `is_available` → use the returned dict + `availability["available"]` |
+| 26 | — | `ModuleResourceBooking` | **No bug**: `sogo6_resource_bookings` is an optional fast-path table that is intentionally never created — bookings live as calendar events with `CalUserType.RESOURCE` attendees |
+| 27 | high | `ModuleResourceBooking.book_resource` | `User(uid=…, email=…, name=…)` invalid kwargs → S999999 → `User(uid=user_email, cn=user_id)` |
+| 28 | high | `ModuleResourceBooking` (2 sites) | `start_time.tzinfo.zone` crashes on stdlib `timezone.utc` → `getattr(tzinfo, "zone", None) or "UTC"` |
+| 29 | critical | `ModuleResourceBooking.get_user_bookings` | always `[]`: inner `select_from_table` swallowed the missing-table error (so the "fallback" was dead) and the fallback passed wrong kwargs (`start_time=`/`end_time=` vs required positional `start`/`end`) → dropped the dead fast-path; scan calendar events with a 1970–2100 window |
+| 30 | critical | `ModuleResourceBooking.get_booking`/`cancel_booking` | called nonexistent repo methods `find_by_uid`/`find_all` (AttributeError → 404 for every id that `get_user_bookings` itself returns) → `find_all_by_uid` + new `_find_event_key_owner` key fallback |
+| 31 | high | `ApiResourceBooking` delete + module | API called `cancel_booking(booking_id)` without the required `user_id` → S999999; also `from app.module.calendar.Serializer import CalendarSources` (wrong module path) → `...source.CalendarSources` |
+| 32 | medium | `InterfaceApiCalendarCalendar` | VTODO `status→completed` never stamped `completed_at` (RFC 5545 COMPLETED) → `_sync_task_completion` stamps on completion and clears the stamp on reopen (create + patch paths) |
+| 33 | medium | `ApiGlobalSearch` + `InterfaceApiGlobalSearch` | `limit` validated by the schema (1–50) but never passed on — all three sections used hardcoded 8 → `global_search(query, limit)` threads it to contacts/events/users |
+| 34 | medium | `CalTaskDeserializerDict` | VTODO created without `status` defaulted to `confirmed` — not even a valid task enum value (the output schema rejects it); the event-level default leaked through, and the API schema's `load_default=None` defeated a `not in body` guard → default to `needs_action` when status is absent OR null |
+
+Also: stale unit test `test_post_new_domain_settings_request_exception` still
+pinned the pre-#22 400 for S000301 → re-pinned to 409. `local-contacts-sharing`
+AB-VCARD-02 hardened: unique import email per run + cleanup of the imported
+contact (16 accumulated `import.probe.*` duplicates had pushed the new import
+off page 1 of the listing → flake; swept).
+
+### New specs (29 tests, all `@local`)
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-resource-booking.spec.ts` | 13 (RB-01..13) | admin-seeded resource visible to users with boolean flags (#23), search/capacity_min filters, detail, unknown 404 S000385, favorite toggle empty-body POST + favorites list (#23+#24), check-availability echo (#25), available-in-window, book 201 (#27/#28), overlapping booking rejected by conflict detection, my-bookings (#29), booking detail resolves listed id (#30), cancel → listed as cancelled (#31), unknown booking 404 S000389 |
+| `local-tasks.spec.ts` | 10 (TK-01..10) | VTODO create defaults (`needs_action`, #34), `date_due` vs `due_date` 422 trap, ms-precision round-trip, invalid status 422 enum, single GET, list + search filter, completing stamps `completed_at` (#32), create-as-completed + reopen clears (#32), percent_complete patch, delete → 404 + unknown 404 |
+| `local-global-search.spec.ts` | 6 (GS-01..06) | grouped contacts/events/users sections, seeded contact + event found by unique token, q<2 chars → 200 empty (soft), limit 0/51 → 400, limit=1 caps every section (#33), missing q → 400 |
+
+### Contract pins
+
+- Resources envelope: `{"data": {"resources": [...], "total_count", …}}`;
+  detail 200 `/404 S000385`; bookings `{"data": {"bookings": [...], "total_count"}}`.
+- Favorite toggle (empty body!) → `{"is_favorite": bool, "resource_id"}`.
+- check-availability → `{"available", "conflicts", "start_time", "end_time", ...}`
+  (ISO `+00:00`); booking → 201 `{booking_id, event_id, calendar_event, message}`;
+  cancel → 200; cancel marks the event CANCELLED (it stays listed with
+  `status: "cancelled"` — the event itself is soft-cancelled, not removed).
+- Overlapping resource booking → conflict error wrapped as S000608
+  ("Resource Is Not Available At The Requested Time").
+- Task status enum: `needs_action | in_process | completed | cancelled`
+  (`confirmed` is a **422 trap** for VTODOs); `date_due` (NOT `due_date`);
+  task default status `needs_action`; `completed_at` auto-stamped/cleared.
+- Task list supports `start_date_time`/`end_date_time`/`search` only —
+  `status`/`calendar_key` query params are silently dropped (webargs unknown
+  params): a `?status=bogus` filter returns the unfiltered list. Documented
+  behavior; treated as a gap, not fixed this round.
+- Global search: `GET /search/global?q=` → `{"contacts": [], "events": [],
+  "users": []}`; `q` min 2 chars enforced **softly** (short → 200 empty);
+  `limit` = max per section (1–50, default 8); missing `q` → 400.
