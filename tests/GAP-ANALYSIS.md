@@ -866,3 +866,68 @@ admin shared-mailbox create takes `member_uids` (not `members`).
 - The parent `pyproject.toml` (`[project]` without `name`) breaks
   `uv pip install -e .` from the submodule (uv walks up and aborts);
   dependency install must go through an explicit requirements list.
+
+---
+
+## 14. Round 15: team calendars + event invitations + Stalwart store repair (2026-09-01)
+
+16 new tests → suite **228 → 244 `@local`**; unit suite **2422 → 2428/0**
+(+6 rate-limiter fail-open tests); 5 consecutive green full runs
+(244 passed ×5, ~1.7m per run).
+
+Round context: the live Stalwart store had drifted from the fresh-seed
+shape (duplicated settings rows from a merge + lost domain registration),
+which broke the whole mail auth chain (IMAP/JMAP/SMTP) and, once fixed,
+exposed three fresh test-infra traps documented below.
+
+### Bug ledger
+
+| # | Severity | Where | Symptom → Fix |
+|---|---|---|---|
+| 41 | high | submodule `RepositoryCalendarInvite.update_status` | bulk status UPDATE passed a flat `values_list=[status, now]` instead of rows → invite accept/decline crashed; e2e INV tests now exercise the endpoint (fix in submodule, commit `feffdee`) |
+| 42 | test-infra | e2e specs `local-mail-data`, `local-snooze` | both specs assumed a pre-seeded INBOX (stale-store artifact); a fresh store ships an empty INBOX → mail-data now seeds its own batch and accepts the edit-seed being permanently consumed by `/edit` (by design: `ModuleMail.open_mail_for_edit` deletes the source after the draft copy); snooze seeds its own marker mail in `beforeAll` |
+| 43 | high | submodule `LoginRateLimiter` | a stale pooled Redis connection raises raw `ValueError: I/O operation on closed file`, which bypasses redis-py's ConnectionError-based retry → `POST /auth/login` 500'd mid-run; every limiter method now fails open (+6 unit tests pinning the contract) |
+
+### Stalwart store repair findings (live store, not test code)
+
+- **Mail auth requires the domain trio.** Stalwart rejects a login whose
+  username's domain is not registered BEFORE consulting the directory —
+  log shows `reason = "Domain not found"` (cache collection `domainName`).
+  The merge had dropped the `example.org` domain row; recreated via
+  `x:Domain/set` (`{"name":"example.org", ...}` → id `b`). Full recipe:
+  domain row + `x:Directory` object + `Authentication.directoryId` = the
+  directory's id.
+- **Duplicate settings rows break listener/TLS state.** The merged store
+  carried 2767 duplicate-value rows; duplicated listener rows made the
+  `tls=false` copy of a listener win, so IMAPS (993) served cleartext →
+  upstream 503 `S000311 IMAP connection failed ... UNEXPECTED_EOF`.
+  Deduped against the fresh-seed key set (fresh keys are authoritative).
+- **`x:Bootstrap/set` is a dead end once settings exist** — forbidden
+  ("only allowed in bootstrap mode") even in recovery mode; repair must go
+  through targeted `x:*/set` operations.
+- **`x:Tracer/set` + restart** (Stdout, level trace) gives full auth
+  internals in docker logs — the fastest route to auth root causes.
+
+### Fresh-store test-infra traps (all fixed in specs)
+
+- **Dynamic IP bans persist across restarts.** Stalwart's bombardiere bans
+  by STORE-backed state (and in-memory dynamic bans survive only until
+  restart). Two triggers: `security.abuse-ban` after ~35 invalid RCPT TOs
+  per day per IP (the guest-mail tests hit this once local delivery works),
+  and the seeded **Sender IP / recipient throttles** (SMTP `452 4.4.5`
+  after sustained submissions — `tests/e2e/scripts/stalwart-clear-throttles.sh`
+  removes those rows). Hardened by setting all four `x:Security` ban rates
+  (auth/abuse/loiter/scan) to 1000000/1d on the test stack.
+- **Per-user job-name concurrency lock (N=1).** `S000804 409` when the
+  previous `calendar.import.ics` job's lock outlives its terminal status by
+  a beat → `submitImport()` retries 409 up to 5× with 2 s backoff.
+- **Stale IMAP SELECT after external-session appends.** The REST `/edit`
+  route resolves the uid on a fresh IMAP session and can briefly 404 right
+  after the seed batch → edit test retries 404 with re-poll.
+
+### New specs (16 tests, all `@local`)
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-team-calendars.spec.ts` | 10 (TC-01..10) | team calendar create (group key, color), listing with source marker, detail echo, update rename, event CRUD inside a team calendar, ACL: non-member write → 403, member read after share, delete team calendar cascades events, unknown key → 404, unauth → 401 |
+| `local-event-invitations.spec.ts` | 6 (INV-01..06) | invite attendee → status `needs-action`, invitee list shows invitation, accept flow flips status (regression **#41**), decline flow, event update propagates to invitee copy, unknown event → 404 |

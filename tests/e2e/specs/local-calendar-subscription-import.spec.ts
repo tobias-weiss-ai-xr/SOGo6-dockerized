@@ -104,6 +104,21 @@ test.describe('local calendar ICS import (agent job) @local @calendar @agent', (
   const scratch = `[local-e2e] import-scratch ${Date.now()}`;
   let scratchKey = '';
 
+  /** POST an import, tolerating 409 S000804 (per-user job-name concurrency lock:
+   * the previous import's lock can outlive its terminal job status by a beat). */
+  async function submitImport(request: any, file: any): Promise<any> {
+    let res: any = null;
+    for (let i = 0; i < 5; i++) {
+      res = await request.post(`${LOCAL_API}/calendars/${scratchKey}/import`, {
+        headers: { ...auth() },
+        multipart: { file },
+      });
+      if (res.status() !== 409) return res;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    return res!;
+  }
+
   test.afterAll(async ({ request }) => {
     if (scratchKey) {
       await request.delete(`${LOCAL_API}/calendars/${scratchKey}`, { headers: auth() }).catch(() => {});
@@ -135,15 +150,10 @@ test.describe('local calendar ICS import (agent job) @local @calendar @agent', (
     expect(create.status(), `calendar create -> ${create.status()}`).toBeLessThan(300);
     scratchKey = (await create.json()).data.key;
 
-    const imp = await request.post(`${LOCAL_API}/calendars/${scratchKey}/import`, {
-      headers: { ...auth() },
-      multipart: {
-        file: {
-          name: 'export.ics',
-          mimeType: 'text/calendar',
-          buffer: Buffer.from(ics, 'utf8'),
-        },
-      },
+    const imp = await submitImport(request, {
+      name: 'export.ics',
+      mimeType: 'text/calendar',
+      buffer: Buffer.from(ics, 'utf8'),
     });
     expect(imp.status(), `import -> ${imp.status()} ${await imp.text()}`).toBe(202);
     const impState = await pollJob(request, (await imp.json()).data.job_id);
@@ -169,15 +179,10 @@ test.describe('local calendar ICS import (agent job) @local @calendar @agent', (
   test('IMP-02 a malformed ICS fails the job gracefully (no hang, no crash)', async ({ request }) => {
     test.setTimeout(90000);
     if (!scratchKey) test.skip(true, 'scratch calendar unavailable');
-    const res = await request.post(`${LOCAL_API}/calendars/${scratchKey}/import`, {
-      headers: { ...auth() },
-      multipart: {
-        file: {
-          name: 'broken.ics',
-          mimeType: 'text/calendar',
-          buffer: Buffer.from('BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nBROKEN', 'utf8'),
-        },
-      },
+    const res = await submitImport(request, {
+      name: 'broken.ics',
+      mimeType: 'text/calendar',
+      buffer: Buffer.from('BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nBROKEN', 'utf8'),
     });
     expect(res.status()).toBe(202);
     const state = await pollJob(request, (await res.json()).data.job_id);

@@ -172,10 +172,18 @@ test.describe('local mail data plane @local @mail', () => {
     // it gets its own dedicated seed and never consumes the 'read' seed that
     // the later JMAP flag tests depend on.
     const it = await findSeed(request, 'edit');
-    const res = await request.get(`${API}/api/user/v1/mailboxes/0/folders/INBOX/mails/${it.uid}/edit`, {
-      headers: auth(),
-    });
-    expect(res.status()).toBe(200);
+    // The /edit route resolves the uid on a fresh IMAP session; immediately
+    // after an external-session seed batch Stalwart can briefly serve a stale
+    // SELECT state, surfacing as 404. Re-list and retry on 404.
+    let res: any = null;
+    for (let i = 0; i < 4; i++) {
+      res = await request.get(`${API}/api/user/v1/mailboxes/0/folders/INBOX/mails/${it.uid}/edit`, {
+        headers: auth(),
+      });
+      if (res.status() !== 404) break;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    expect(res!.status()).toBe(200);
     const body = await res.json();
     expect(body.error_code).toBe('S000000');
     expect(body.data.subject).toBe(seedSubject('edit'));
@@ -211,7 +219,10 @@ test.describe('local mail data plane @local @mail', () => {
     ]);
     const [qname, qres] = env.methodResponses[0];
     expect(qname).toBe('Email/query');
-    expect(qres.total).toBeGreaterThanOrEqual(KINDS.length);
+    // 'edit' is permanently consumed by the REST edit test (open_mail_for_edit
+    // deletes the original after copying it to Drafts — by design), so only
+    // KINDS.length - 1 marker seeds are still in INBOX here.
+    expect(qres.total).toBeGreaterThanOrEqual(KINDS.length - 1);
 
     // Fetch the queried ids explicitly (result back-references like "#q0/ids"
     // are not resolved by this server — see GAP-ANALYSIS); map subjects.

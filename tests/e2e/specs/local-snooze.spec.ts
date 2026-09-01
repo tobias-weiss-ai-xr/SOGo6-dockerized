@@ -7,7 +7,7 @@
 //
 //   npx playwright test local-snooze.spec.ts
 
-import { test, expect, apiLogin, cleanupLocalMail } from '../helpers';
+import { test, expect, apiLogin, cleanupLocalMail, seedLocalMailBatch } from '../helpers';
 
 const API = 'http://localhost:5001';
 const LOCAL_API = `${API}/api/user/v1`;
@@ -17,6 +17,11 @@ let token = '';
 test.beforeAll(async ({ request }) => {
   token = (await apiLogin(request, 'testuser@example.org', 'password123', LOCAL_API))!;
   expect(token).toBeTruthy();
+  // Hermetic: SNOOZE-02 needs an INBOX mail. A fresh store ships with an
+  // empty INBOX, so seed our own marker mail instead of assuming baseline
+  // content (afterAll cleanupLocalMail removes it again).
+  const seeded = seedLocalMailBatch([{ name: 'snooze-seed' }]);
+  expect(seeded.ok, `snooze seed: ${seeded.out.slice(0, 120)}`).toBeTruthy();
 });
 
 const auth = () => ({ Authorization: `Bearer ${token}` });
