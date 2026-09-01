@@ -814,3 +814,55 @@ but **never registered** (no routes in the live map) — gap, not fixed.
   `{poll, response_count, participant_count, best_slot, slot_counts}`.
 - `available_slots` are **string indices** (`["0","1"]`); a re-vote replaces
   the participant's previous response.
+
+## 13. Round 14: external calendars, reminders, shared mailboxes (2026-09-01)
+
+22 new tests → suite **206 → 228 `@local`**; unit suite **2422/0** (new
+submodule added ~120 tests); 5 consecutive green full runs.
+
+Round context: the submodule was rebased externally mid-round
+(`95b840d → 21b8fd1`, TaskFleet/LDAP-cache/invite-endpoints work landed),
+which wiped this round's uncommitted fixes — both were re-applied against
+the new HEAD and verified.
+
+### Bug ledger
+
+| # | Severity | Where | Symptom → Fix |
+|---|---|---|---|
+| 39 | critical | user `ApiSharedMailboxes.SharedMailboxSchema` | user-facing schema declared `created_at = fields.DateTime()` while the module returns strings (`_row_to_dict: str(row[7])`) → the member list 500'd (marshmallow `.isoformat` on a str) the moment ONE shared mailbox existed; the tier0 remote spec had documented this as "create is not guaranteed to persist" — actually the create persisted fine, the LIST crashed → align schema to `fields.String()` (+ nullable `updated_at`), matching the admin schemas |
+| 40 | high | `ModuleCalendar.delete_calendar` | route docstring promises "delete an external calendar and all its mirrored events", but the ICS read-only ACL cap (`can_delete=False` even for the owner) made DELETE answer 403 S000620 for every external calendar → subscriptions could NEVER be removed (dead endpoint) → owner bypass: the ACL DELETE check now runs only for non-owners; foreign-calendar deletes still 403 |
+
+Verified contract quirks (pinned, not fixed): the ICS `lookahead`/`method`
+filters work; `method` OneOf popup/email (bogus → 422); empty `content: ""`
+passes marshmallow `required` (present ≠ missing) → empty notes accepted;
+admin shared-mailbox create takes `member_uids` (not `members`).
+
+### New specs (22 tests, all `@local`)
+
+| Spec | Tests | Covers |
+|---|---|---|
+| `local-external-calendars.spec.ts` | 9 (EC-01..09) | ICS create echo (source_type, include_in_freebusy), list, detail, PUT rename+color, sync status + manual sync → 202 job_id (needs empty JSON body: bare POST → 400 S000205 content-type gate), unknown → 404 S000602, owner unsubscribe (**#40**), foreign calendar delete → 403 S000620, missing url → 422 |
+| `local-reminders.spec.ts` | 6 (RM-01..06) | due popup reminder listed with `trigger_at`/`dates_with_tz`, method filter, bogus method 422, future reminder inactive, lookahead bound 61 → 422, delete event → reminder gone |
+| `local-shared-mailboxes.spec.ts` | 7 (SM-01..07) | admin provision + member_roles, member list (bare array, **no envelope** — the only such endpoint), detail, notes create/list/delete, empty-note quirk + unknown mailbox 403 S000399, admin delete → member no longer sees it (**#39**), unauth 401 |
+
+### Contract pins
+
+- Shared mailbox user list = **bare JSON array** (admin endpoints use
+  `{data: {mailboxes, total_count}}`; user detail/notes are enveloped).
+- Reminders: active window = `trigger_at ≤ now ≤ date_end + lookahead`;
+  `lookahead` 0–60, `method` ∈ {popup, email}.
+- External calendars: create → 201 `{key, source_type:"ics", ctag:0,
+  include_in_freebusy:true, sync_config}`; sync trigger requires a JSON
+  content-type even with an empty body.
+
+### Test-infra findings
+
+- **Playwright failure isolation**: after a test FAILS, subsequent tests in
+  the same file run against a re-imported module — module-level state set by
+  earlier tests is silently lost (a dependent test 404s on an empty id).
+  Specs must therefore keep each test's preconditions self-contained or make
+  earlier tests idempotent-safe; state set in `beforeAll` survives (it
+  re-runs).
+- The parent `pyproject.toml` (`[project]` without `name`) breaks
+  `uv pip install -e .` from the submodule (uv walks up and aborts);
+  dependency install must go through an explicit requirements list.
