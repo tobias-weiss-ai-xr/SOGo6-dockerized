@@ -979,3 +979,98 @@ exposed three fresh test-infra traps documented below.
   OOM-restarts in a loop (exit 137) while the ~2800-test suite runs under swap pressure,
   so redis briefly refuses new connects at suite end. Both pass standalone and in their
   own files 2× in a row — environmental, not deterministic, not related to round-16 changes.
+
+---
+
+## Round 17 — coverage.py: quantified gap closing on mail core + exception contract
+
+### Coverage tooling (the "use coverage.py" mandate)
+
+- `sogo6-server/pyproject.toml` gains `[tool.coverage.run]` (source=`app`, omit
+  `tests/*`) and `[tool.coverage.report]` (`show_missing`, `sort=Miss`,
+  `fail_under = 66` — the round-16 baseline floor, so future work cannot silently
+  regress aggregate coverage).
+- `sogo6-server/tests/run-coverage.sh` — a standalone gate replicating the CI unit
+  command under `coverage run`, then rendering the report and enforcing the floor.
+  Unlike a naive `set -e` script it always renders the report even when
+  env-flaky tests fail, and exits non-zero if either pytest fails OR coverage
+  drops below 66. Not wired into the shared CI (sibling churn risk).
+- Measurement method: `coverage run --source=app -m pytest tests/
+  --ignore=tests/integration --ignore=tests/test_integration --ignore=tests/test_properties`.
+  `__init__.py` is deliberately NOT omitted (`app/api/v1/__init__.py` etc. carry real
+  code — omitting them would inflate the number).
+
+### Coverage result (round-16 baseline → round-17)
+
+| Target | Before | After |
+|---|---|---|
+| `app/module/mail/model/TmpDraftManager.py` (88 stmts) | 33% | **99%** |
+| `app/module/mail/ModuleMailOutgoing.py` (144 stmts) | 36% | **99%** |
+| `app/utils/dynamic_import.py` (16 stmts) | 38% | **81%** |
+| `app/utils/logger/json_logger.py` (37 stmts) | 38% | **100%** |
+| `app/utils/exceptions.py` (17 stmts) | undersized | **100%** |
+| **TOTAL (all `app`)** | **66%** (12 792 missed) | **67%** (12 597 missed) |
+
+Aggregate missed statements dropped by ~195 while the suite grew by 82 tests
+(2811 → 2893 passed).
+
+### New test suites
+
+- `tests/test_module/test_mail/test_tmp_draft_manager.py` (30): fake `ClientSQL`
+  recording `(method, args)` per call; `fetch_row`/`fetch_headers` (dict + non-dict
+  → `{}`, 404 S000371), `check_owner` (403 S000372), `generate_key` (32-hex + randomness),
+  lock/exists/insert/unlock/release/delete paths incl. row-count guards S000374/S000373/
+  S000375, `list_all` owner-filter, `acquire` matrix (unlocked, empty-uid, locked-no-wait 409
+  S000636, locked-wait poll, wait-timeout, new-key insert), `locked()` context manager
+  (unlock-on-exception, no-unlock-on-success).
+- `tests/test_module/test_mail/test_module_mail_outgoing.py` (26): `_get_outgoing_conf`
+  main smtp + sendmail + master-credential + external-account + shared-member paths,
+  shared 404/403, `send_mail` full header assembly (Cc/Bcc/X-Priority/Reply-To/
+  Disposition/Receipt/Message-ID/Date), singlepart vs multipart/alternative, attachments +
+  missing-data S001306, extra_headers no-overwrite, `send_mime_message`
+  (Message/str/bytes/callable, To/Subject/From fill rules), `_open_client_for`
+  dispatch via `REGISTRY_MANAGER` + login/authname.
+- `tests/test_utils/test_dynamic_import.py` (4) + `tests/test_utils/test_json_logger.py`
+  (11): JSON formatter fields/extra kwargs/exception object, `enable_json_logging`
+  opt-in/opt-out/production/dev.
+- `tests/test_utils/test_exceptions.py` (12): the Bug #51 regression contract (below).
+
+### Bug #51 — `RequestException(http_status=…)` TypeError (→500) on six error paths
+
+`SogoException.__init__` only accepted `(message, error)`. Six raise sites used calls
+that could never work and would have crashed with TypeError/AttributeError (a raw 500)
+instead of the intended HTTP error:
+
+| Call site | Had | Would do at runtime |
+|---|---|---|
+| `ModuleMailOutgoing.py` shared 404 | `error=E, m=…, http_status=404` | TypeError |
+| `ModuleMailOutgoing.py` shared 403 | `error=E, m=…, http_status=403` | TypeError |
+| `ModuleMail.py` shared 404/403 | `error=E, m=…, http_status=404/403` | TypeError |
+| `ApiEmailAuth.py` add-domain | `error=…error_code, error_msg=…, http_status=…` | AttributeError (`E` has no `.error_code/.message/.http_status`) |
+
+All six crashed before reaching the global error handler → shared-mailbox send for a
+missing mailbox / non-member and admin email-auth duplicate-domain / bad-DKIM-key-length
+would 500 instead of 404/403/409/400. Fixes:
+
+1. `app/utils/exceptions.py` — `SogoException` now accepts `m`/`error_msg` message
+   aliases plus an explicit `http_status` override (falling back to `error.h`).
+   Fully backward compatible for the many existing `RequestException(msg, error=…)`
+   callers.
+2. `app/__init__.py` — the global `RequestException` handler forwards
+   `status_code=_e.http_status` to `create_api_base_response`, so the override
+   (e.g. 403 reusing the NOT_FOUND code) survives into the real HTTP response.
+3. `app/api/v1/admin/ApiEmailAuth.py` — the two admin call sites now pass the `E`
+   object plus `.h`, matching the legacy contract (previously referenced
+   non-existent `.error_code/.message/.http_status` attributes).
+
+Coverage for these paths is now pinned by `test_exceptions.py` (all six call
+conventions + override semantics) and by the shared-mailbox 403/404 tests in
+`test_module_mail_outgoing.py`.
+
+### Verification
+
+- New suites: 82/82 green (0.7 s) in-container.
+- Full unit gate (CI command): **2893 passed, 2 environmental (identical Redis
+  flakiness as rounds 14–16), 1 skipped**, 83 s.
+- Full coverage gate (`tests/run-coverage.sh`): report renders, TOTAL 67% ≥
+  `fail_under` 66 (gate's non-zero exit is solely the two env-flaky tests).
