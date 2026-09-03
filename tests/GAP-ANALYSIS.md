@@ -931,3 +931,51 @@ exposed three fresh test-infra traps documented below.
 |---|---|---|
 | `local-team-calendars.spec.ts` | 10 (TC-01..10) | team calendar create (group key, color), listing with source marker, detail echo, update rename, event CRUD inside a team calendar, ACL: non-member write → 403, member read after share, delete team calendar cascades events, unknown key → 404, unauth → 401 |
 | `local-event-invitations.spec.ts` | 6 (INV-01..06) | invite attendee → status `needs-action`, invitee list shows invitation, accept flow flips status (regression **#41**), decline flow, event update propagates to invitee copy, unknown event → 404 |
+
+---
+
+## Round 16 — mail SSE hardening + hybrid pagination (UI + backend)
+
+### Fixed bugs
+
+- **Bug #49 — stale SSE handler after last-mounting registration wasn't the subscriber.**
+  When several folders mount the listener, only the FIRST registration ever calls
+  `sseService.subscribe`; every later mount's cleanup closure captured `unsubscribe === null`.
+  If the last mount to unmount was not the subscribing one, the singleton handler and SSE
+  stream were never torn down — the handler kept firing forever and the next visit could
+  not re-subscribe cleanly. Fix in `use-mail-received-listener.ts`: module-level
+  `activeUnsubscribe` captured at first subscribe; teardown only fires when the registry
+  empties, using that module-level handle (so the *last* mount always resets the singleton).
+- **Bug #50 — `GET /api/user/v1/addressbooks/lists` 500s on any request.**
+  The route is decorated with `@collection_paginate`, whose wrapper unpacks
+  `(item_count, response, status_code)` from the handler, but the interface's
+  `list_lists` returned the 2-tuple `(response, status_code)`
+  (`ValueError: not enough values to unpack (expected 3, got 2)`). The interface
+  2-tuple contract is cemented by `test_ldap_list_service`; the endpoint now adapts it,
+  deriving `item_count` from the embedded `total_count` so `X-Pagination` is set and
+  `page`/`page_size` are forwarded to the interface. Also aligned the success envelope
+  to the generic `S000000` (was an empty `error_code`).
+
+### New/updated tests
+
+- **UI jest — `use-mail-received-listener.test.ts` (10 tests):** singleton registry
+  (N mounts → 1 subscribe; unsubscribe only after LAST registration; resubscribe after
+  full unmount), per-folder cache walk via `getState().api.queries` (exactly one
+  `updateQueryData('getFolderMessages', …, recipe)` for the matching folder+accountId),
+  storm dedupe recipe (5 events → 1 cached id, `total` bumped once), safe no-op when
+  query state is absent, plus basic render tests. Full UI jest suite: **574 suites /
+  6004 tests green**.
+- **Backend — hybrid listing tests** updated to the corrected contracts
+  (`test_hybrid_listing_merges_sql_and_ldap` now asserts the forwarded
+  `CollectionPaginateArgs(page=1, page_size=20)`; `test_list_lists_envelope` asserts
+  `S000000`). Suite: **2811 passed** (fixed 3 previously failing hybrid tests).
+
+### Known environmental (not code) flakiness
+
+- `test_check_redis_ok_when_local_redis_up` / `test_health_run_checks_delegates_to_probes`
+  intermittently fail at the very END of the full in-container suite with
+  `Redis server is unavailable network:ConnectionError`. They are the only tests doing a
+  fresh TCP connect to the local redis; on this dev host the `sogo6-agent` sidecar
+  OOM-restarts in a loop (exit 137) while the ~2800-test suite runs under swap pressure,
+  so redis briefly refuses new connects at suite end. Both pass standalone and in their
+  own files 2× in a row — environmental, not deterministic, not related to round-16 changes.
