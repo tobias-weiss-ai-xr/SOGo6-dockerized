@@ -8,24 +8,21 @@
 //
 // Design:
 //   - Tests run against https://sogo6.contextual-intelligence.org
-//   - Uses credentials: [see tests/e2e/.env] / password123
+//   - Uses credentials: testuser2@sogo6.contextual-intelligence.org / password123
 //   - Each story logs pass/fail via test.info() annotations
 //   - Backend API gaps (500/503) are documented in annotations, not failures
 //   - UI tests soft-fail if elements not present (frontend not yet implemented)
 //   - API tests run regardless of UI state
 
-import { test, expect, REMOTE_CREDENTIALS as REMOTE_CREDS } from '../helpers';
+import { test, expect } from '@playwright/test';
 
 // ── Constants for remote SOGo6 instance ────────────────────────────────────
 const REMOTE_BASE = 'https://sogo6.contextual-intelligence.org';
 const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1';
 
-// Local shim ({email, password}) derived from the imported helpers object.
-// (Previously this shadowed the import with a self-referential initializer,
-// which crashed collection for the whole suite.)
 const REMOTE_CREDENTIALS = {
-  email: REMOTE_CREDS.user.email,
-  password: REMOTE_CREDS.user.password || 'password123',
+  email: 'testuser2@sogo6.contextual-intelligence.org',
+  password: 'password123',
 };
 
 // ── Helpers for remote instance ────────────────────────────────────────────
