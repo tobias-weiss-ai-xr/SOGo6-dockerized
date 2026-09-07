@@ -13,7 +13,7 @@ export const REMOTE_API = 'https://sogo6.contextual-intelligence.org/api/user/v1
 export const API_BASE = 'https://sogo6.contextual-intelligence.org';
 
 export const REMOTE_CREDENTIALS = {
-  email: 'testuser2@sogo6.contextual-intelligence.org',
+  email: 'testuser@sogo6.contextual-intelligence.org',
   password: 'password123',
 };
 

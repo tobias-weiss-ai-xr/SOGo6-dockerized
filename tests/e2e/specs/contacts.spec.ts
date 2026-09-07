@@ -19,13 +19,13 @@ test.describe('Contacts / Address Book', () => {
   });
 
   test('contacts page should be accessible', async ({ page }) => {
-    const response = await page.goto(REMOTE_BASE + '/en/u/testuser2%40sogo6.contextual-intelligence.org/contacts');
+    const response = await page.goto(REMOTE_BASE + '/en/u/testuser@sogo6.contextual-intelligence.org/contacts');
     expect(response?.status()).toBeLessThan(500);
     await page.waitForTimeout(3000);
   });
 
   test('clicking on a contact should open contact view or details panel', async ({ page }) => {
-    await page.goto(REMOTE_BASE + '/en/u/testuser2%40sogo6.contextual-intelligence.org/contacts');
+    await page.goto(REMOTE_BASE + '/en/u/testuser@sogo6.contextual-intelligence.org/contacts');
     await page.waitForTimeout(3000);
 
     // Try to find contact entries - could be list items, rows, or cards
@@ -73,7 +73,7 @@ test.describe('Contacts / Address Book', () => {
   });
 
   test('contact list should have at least one entry or create button', async ({ page }) => {
-    await page.goto(REMOTE_BASE + '/en/u/testuser2%40sogo6.contextual-intelligence.org/contacts');
+    await page.goto(REMOTE_BASE + '/en/u/testuser@sogo6.contextual-intelligence.org/contacts');
     await page.waitForTimeout(3000);
 
     // Check for contacts
