@@ -53,6 +53,13 @@ cd SOGo6-dockerized
 cp .env.example .env
 # Edit .env — at minimum set:
 #   LDAP_ADMIN_PASSWORD, PG_PASSWORD/MARIADB_PASSWORD, INTERCOM_SHARED_SECRET
+#   SOGO_P_VOUCHER_SECRET (exactly 32 chars), SOGO_SECRET_KEY,
+#   SOGO_LDAP_BIND_PASSWORD (must match LDAP_ADMIN_PASSWORD)
+#
+# ⚠️  The server seeds its config from the init JSON **once, on first boot**.
+#   If you set/change any of the above AFTER the first boot, login will start
+#   returning 401/500 (stale config in DB). Re-apply the current .env with:
+#     bash sogo6/scripts/reseed.sh
 
 # 3. Generate TLS certs and start (MariaDB - default)
 bash sogo6/scripts/gen-certs.sh

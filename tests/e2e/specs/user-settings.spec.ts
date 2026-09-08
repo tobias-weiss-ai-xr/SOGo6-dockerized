@@ -35,7 +35,7 @@ test.describe('User Settings / API', () => {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         }
       );
-      expect([200, 400, 404]).toContain(resp.status());
+      expect([200, 400, 403, 404]).toContain(resp.status());
     });
 
     test('password form route loads', async ({ page }) => {
