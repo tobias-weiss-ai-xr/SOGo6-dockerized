@@ -7,11 +7,11 @@
 [server]
 
 [server.listener."imap"]
-bind = ["[::]:143"]
+bind = ["[::]:143", "[::]:993"]
 protocol = "imap"
 
 [server.listener."smtp"]
-bind = ["[::]:25"]
+bind = ["[::]:25", "[::]:465"]
 protocol = "smtp"
 
 [server.listener."submissions"]
@@ -19,7 +19,7 @@ bind = ["[::]:587"]
 protocol = "submissions"
 
 [server.listener."sieve"]
-bind = ["[::]:4190"]
+bind = ["[::]:4190", "[::]:995"]
 protocol = "sieve"
 
 # ── Data store ───────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ type = "sqlite"
 path = "/var/lib/stalwart/db.sqlite"
 
 # ── User directory: the SOGo6 OpenLDAP tree ─────────────────────────────────
-# dc=sogo6,dc=contextual-intelligence,dc=org (derived from SOGO_DOMAIN)
+# dc=example,dc=org - main domain for the demo
 #
 # The {username}/{email} placeholder is REQUIRED in `filter` — a bare
 # (objectClass=inetOrgPerson) matches every entry and Stalwart binds the first
@@ -39,10 +39,10 @@ path = "/var/lib/stalwart/db.sqlite"
 [directory."ldap"]
 type = "ldap"
 addresses = ["ldap://sogo6-ldap:389"]
-bind-dn = "cn=admin,dc=sogo6,dc=contextual-intelligence,dc=org"
+bind-dn = "cn=admin,dc=example,dc=org"
 # Password is injected from the vault (.env) — never hardcoded.
 bind-password = { type = "env", value = "LDAP_ADMIN_PASSWORD" }
-base-dn = "ou=users,dc=sogo6,dc=contextual-intelligence,dc=org"
+base-dn = "ou=users,dc=example,dc=org"
 filter = "(|(uid={username})(mail={username}))"
 bind-authentication = true
 
