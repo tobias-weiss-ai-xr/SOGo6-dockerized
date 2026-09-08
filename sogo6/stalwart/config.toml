@@ -7,19 +7,19 @@
 [server]
 
 [server.listener."imap"]
-bind = ["[::]:143", "[::]:993"]
+bind = ["0.0.0.0:143"]
 protocol = "imap"
 
 [server.listener."smtp"]
-bind = ["[::]:25", "[::]:465"]
+bind = ["0.0.0.0:25", "0.0.0.0:465"]
 protocol = "smtp"
 
 [server.listener."submissions"]
-bind = ["[::]:587"]
+bind = ["0.0.0.0:587"]
 protocol = "submissions"
 
 [server.listener."sieve"]
-bind = ["[::]:4190", "[::]:995"]
+bind = ["0.0.0.0:4190"]
 protocol = "sieve"
 
 # ── Data store ───────────────────────────────────────────────────────────────
