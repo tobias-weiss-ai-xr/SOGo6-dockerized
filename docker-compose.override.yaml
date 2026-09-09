@@ -22,14 +22,8 @@
 
 services:
   sogo6-ui:
-    build:
-      target: runner
-    environment:
-      NODE_ENV: development
-      DEBUG: "true"
-    volumes:
-      - ./sogo6-ui:/app:cached
-      - /app/node_modules
+    # Build via Dockerfile.prod (base compose); NO bind mounts here — they
+    # would shadow the standalone output. Demo tweaks: memory/cpu limits only.
     deploy:
       resources:
         limits:
