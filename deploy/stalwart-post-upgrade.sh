@@ -9,7 +9,10 @@
 # This script repairs all three via the JMAP registry API. Idempotent — safe
 # to re-run. Requires: container running, STALWART_RECOVERY_ADMIN creds.
 #
-# Usage: [STALWART_DOMAIN=example.org] ./deploy/stalwart-post-upgrade.sh
+# Usage: [STALWART_DOMAIN=<real login domain>] STALWART_RECOVERY_ADMIN=... ./deploy/stalwart-post-upgrade.sh
+# ⚠️ STALWART_DOMAIN must match the host's ACTUAL user domain (vhrz2392:
+# example.org, contextual: sogo6.contextual-intelligence.org) — a wrong
+# domain gets created in the registry and must be removed by hand.
 set -euo pipefail
 
 DOMAIN="${STALWART_DOMAIN:-example.org}"
