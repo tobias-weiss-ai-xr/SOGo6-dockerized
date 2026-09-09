@@ -23,7 +23,7 @@
 services:
   sogo6-ui:
     build:
-      target: development
+      target: runner
     environment:
       NODE_ENV: development
       DEBUG: "true"
