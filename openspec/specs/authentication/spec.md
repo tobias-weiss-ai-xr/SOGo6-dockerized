@@ -1,4 +1,9 @@
-## ADDED Requirements
+# authentication Specification
+
+## Purpose
+SAML2 service-provider authentication: SP metadata endpoint, signing keypair handling, and assertion requirements for IdP registration.
+
+## Requirements
 
 ### Requirement: SAML2 SP metadata endpoint
 

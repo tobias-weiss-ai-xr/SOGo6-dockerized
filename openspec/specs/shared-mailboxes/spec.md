@@ -1,4 +1,9 @@
-## ADDED Requirements
+# shared-mailboxes Specification
+
+## Purpose
+Extended shared mailbox data model: storage quota, auto-responder, forwarding, signatures, and member roles, with automatic migration of existing mailbox tables.
+
+## Requirements
 
 ### Requirement: Shared mailbox extended data model
 

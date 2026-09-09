@@ -1,4 +1,9 @@
-## ADDED Requirements
+# saml2-federation Specification
+
+## Purpose
+SAML2 IdP federation: metadata fetching and Redis caching, AuthnRequest generation, and assertion signature verification against the configured IdP.
+
+## Requirements
 
 ### Requirement: SAML2 IdP metadata fetching
 
