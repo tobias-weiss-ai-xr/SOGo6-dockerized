@@ -14,7 +14,15 @@ if [ -z "${COMPOSE_FILE:-}" ] && [ ! -f docker-compose.yml ] && [ ! -f docker-co
   exit 1
 fi
 
+git -c submodule.recurse=false fetch origin "$BRANCH" --quiet
+before=$(git rev-parse --short HEAD)
+after=$(git rev-parse --short FETCH_HEAD)
+if [ "$before" = "$after" ]; then
+  exit 0
+fi
+
 # never clobber hand-edits: parent tracked files AND submodule content
+# (checked only when a deploy would actually happen — no log noise otherwise)
 if [ -n "$(git status --porcelain --untracked-files=no --ignore-submodules=all)" ]; then
   echo "$(date -Is) SKIP: local edits to tracked files in $PWD would be destroyed"
   exit 1
@@ -25,13 +33,6 @@ for sub in $(git submodule status --recursive | awk '$1 !~ /^[-U]/ {print $2}');
     exit 1
   fi
 done
-
-git -c submodule.recurse=false fetch origin "$BRANCH" --quiet
-before=$(git rev-parse --short HEAD)
-after=$(git rev-parse --short FETCH_HEAD)
-if [ "$before" = "$after" ]; then
-  exit 0
-fi
 
 echo "$(date -Is) deploying $before -> $after ($(git log -1 --format=%s FETCH_HEAD))"
 git reset --hard "$after"

@@ -14,11 +14,13 @@ redirect target.
 
 ## Install (vhrz2392, root, repo `sogo6-stalwart-openldap-dockerized` at /opt/sogo-test/sogo6)
 
-Script is a standalone copy (its repo is separate):
+Script is a standalone copy (its repo is separate). NOTE: the running project
+uses `docker-compose.yaml` + `docker-compose-sogo6.vhrz2392.yaml` (per
+`docker compose ls`), NOT the file the ansible playbook's post_tasks mention:
 
     scp deploy/gitops-update.sh root@vhrz2392:/opt/sogo-test/
     # root crontab on vhrz2392:
-    */15 * * * * REPO_DIR=/opt/sogo-test/sogo6 COMPOSE_FILE="docker-compose-sogo6.yaml:docker-compose-sogo6.vhrz2392.yaml" /opt/sogo-test/gitops-update.sh >> /opt/sogo-test/sogo6-gitops.log 2>&1
+    */15 * * * * REPO_DIR=/opt/sogo-test/sogo6 COMPOSE_FILE=docker-compose.yaml:docker-compose-sogo6.vhrz2392.yaml /opt/sogo-test/gitops-update.sh >> /opt/sogo-test/sogo6-gitops.log 2>&1
 
 Note: vhrz2392 is also ansible-managed (ansible-hrz); this cron lives outside
 that playbooks by intent (pull-deploy), don't let a playbook "clean" it.
