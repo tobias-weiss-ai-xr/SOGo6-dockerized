@@ -9,8 +9,11 @@ redirect target.
 
 ## Install (contextual-intelligence.org, user `weiss`, repo `SOGo6-dockerized` at ~/sogo6-test)
 
+COMPOSE_FILE must list all three files — the running project uses traefik +
+override (per `docker compose ls`); default resolution would miss traefik.
+
     cd ~/sogo6-test && git pull
-    (crontab -l; echo '*/15 * * * * REPO_DIR=$HOME/sogo6-test $HOME/sogo6-test/deploy/gitops-update.sh >> $HOME/sogo6-test/deploy/gitops.log 2>&1') | crontab -
+    (crontab -l; echo '*/15 * * * * REPO_DIR=$HOME/sogo6-test COMPOSE_FILE=docker-compose.yaml:docker-compose.traefik.yaml:docker-compose.override.yaml $HOME/sogo6-test/deploy/gitops-update.sh >> $HOME/sogo6-test/deploy/gitops.log 2>&1') | crontab -
 
 ## Install (vhrz2392, root, repo `sogo6-stalwart-openldap-dockerized` at /opt/sogo-test/sogo6)
 
