@@ -37,5 +37,9 @@ done
 echo "$(date -Is) deploying $before -> $after ($(git log -1 --format=%s FETCH_HEAD))"
 git reset --hard "$after"
 git submodule update --init --recursive
+# Pull external images (e.g. ghcr stalwart-rewrite) so image-based services
+# update too; build-based services are skipped, failures are logged and non-fatal.
+docker compose pull --ignore-buildable || echo "WARN: image pull failed, using local images"
+
 docker compose up -d --build --wait --wait-timeout 300
 echo "$(date -Is) OK: $(docker compose ps --format '{{.Name}}={{.Health}}' | tr '\n' ' ')"

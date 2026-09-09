@@ -300,7 +300,9 @@ services:
   # Stalwart — IMAP + SMTP + Sieve mail server
   sogo6-stalwart:
     profiles: ["mail-stalwart"]
-    image: stalwartlabs/stalwart:${STALWART_VERSION:-latest}
+    # stalwart-rewrite fork (AGPL, auto-provisions default IMAP folders) via
+    # ghcr; falls back to stock upstream. Set STALWART_IMAGE in .env to switch.
+    image: ${STALWART_IMAGE:-stalwartlabs/stalwart:${STALWART_VERSION:-latest}}
     restart: unless-stopped
     container_name: sogo6-stalwart
     depends_on:
