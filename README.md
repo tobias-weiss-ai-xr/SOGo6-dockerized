@@ -9,7 +9,6 @@
 > official SOGo project.
 
 [![Tests](https://img.shields.io/badge/Tests-passing-success?logo=github)](.github/workflows/test.yml)
-[![K6](https://img.shields.io/badge/Load%20Tests-k6-7d64ff?logo=k6)](tests/load/)
 [![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm)](helm/sogo6/)
 [![Loki](https://img.shields.io/badge/Logs-Loki-F19734?logo=grafana)](sogo6/loki/)
 
@@ -186,12 +185,10 @@ All services expose `/metrics` endpoints. Enable with `--profile monitoring`.
 Structured JSON logs auto-parsed by Promtail (extracts `request_id`, `user`, `domain`, `level`).
 Grafana datasource with `request_id` derived fields for log→trace correlation.
 
-### Load Testing (k6)
-```bash
-bash tests/load/run.sh                # Full suite
-bash tests/load/run.sh --k6-only      # HTTP load only
-bash tests/load/run.sh --quick        # Sync benchmark only
-```
+### Testing
+Backend unit tests live in `sogo6-server/tests/`; Playwright E2E in
+`tests/e2e/`. The protocol/feature suite (incl. k6 load tests) lives in the
+sibling [`SOGo6-testsuite`](../SOGo6-testsuite) repo (`bin/sg`).
 
 ## Security & CRA Readiness
 
