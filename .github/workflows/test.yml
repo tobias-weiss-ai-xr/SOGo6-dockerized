@@ -31,7 +31,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (repo)
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: fs
           scan-ref: .
@@ -42,7 +42,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner (server Dockerfile)
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: config
           scan-ref: sogo6-server/Dockerfile
@@ -52,7 +52,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner (UI Dockerfile)
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: config
           # Scan the artifact that is actually built & shipped (Dockerfile.prod is
@@ -67,7 +67,7 @@ jobs:
       # ── CRA Art. 13: SBOM generation (CycloneDX) ──────────────────────
       - name: Generate SBOM (repo)
         continue-on-error: true
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: fs
           scan-ref: .
