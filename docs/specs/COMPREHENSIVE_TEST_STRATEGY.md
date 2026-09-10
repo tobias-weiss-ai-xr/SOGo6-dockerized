@@ -30,7 +30,7 @@
 | **API Integration** | 29 (bash) + Python | pytest + requests + bash | `tests/integration/`, `tests/admin-api-test.sh` |
 | **Schedule Send Integration** | **4** (new) | pytest + requests | `tests/integration/test_stack.py::TestScheduleSend` |
 | **E2E** | **24** (+1) | Playwright | `tests/e2e/specs/` (5 spec files, +schedule-send) |
-| **Load** | 3 suites | k6 | `tests/load/k6-admin-api.js`, `tests/load/k6-user-api.js`, `tests/load/sync-benchmark.py` |
+| **Load** | 3 suites | k6 | moved to `SOGo6-testsuite` (`tests/load/`) |
 | **SMTP** | 32 | bash | `tests/smtp-test.sh` |
 | **Contract** | **6 properties** (new) | hypothesis | `tests/test_properties/test_api_envelope.py` |
 
