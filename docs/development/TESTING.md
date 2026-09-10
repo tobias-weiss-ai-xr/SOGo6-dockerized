@@ -1,5 +1,11 @@
 # SOGo 6 Testing Guide
 
+> **Moved:** the runnable test suite (shell integration tests, Playwright
+> e2e, Python integration, load tests) now lives in
+> [SOGo6-testsuite](https://github.com/tobias-weiss-ai-xr/SOGo6-testsuite)
+> (`~/git/sogo/SOGo6-testsuite`). This guide covers testing concepts and
+> the in-app pytest modules.
+
 ## Introduction
 
 This guide covers all aspects of testing in the SOGo 6 development environment.
