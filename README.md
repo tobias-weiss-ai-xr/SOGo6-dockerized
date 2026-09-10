@@ -272,8 +272,7 @@ docker compose up -d --build
 # Tests
 cd sogo6-ui && npx jest        # Frontend
 cd sogo6-server && pytest       # Backend
-bash tests/run-all-tests.sh     # Full stack
-bash tests/load/run.sh          # Performance
+cd ../SOGo6-testsuite && bin/sg run --target sogo6  # Full suite (moved)
 
 # Shell access
 docker compose exec sogo6-server bash

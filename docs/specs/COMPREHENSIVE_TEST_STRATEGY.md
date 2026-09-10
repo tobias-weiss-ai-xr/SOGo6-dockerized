@@ -300,7 +300,7 @@ cd sogo6-server && pytest tests/ -v --cov=app
 pytest tests/test_interface/test_mail/ -v
 
 # Integration tests (need running stack)
-cd .. && bash tests/run-all-tests.sh
+# shell suite moved: ../SOGo6-testsuite (bin/sg run --target sogo6)
 
 # Frontend tests
 cd sogo6-ui && npx jest --coverage

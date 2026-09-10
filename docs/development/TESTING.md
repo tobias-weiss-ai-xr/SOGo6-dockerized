@@ -44,16 +44,11 @@ tests/
 │   ├── users.json
 │   └── messages.json
 ├── conftest.py        # Pytest fixtures
-├── api-test.sh        # Shell-based API tests
-├── ldap-test.sh       # LDAP verification
-├── smtp-test.sh       # Email testing
-├── mariadb-test.sh   # Database testing
-├── redis-test.sh      # Redis testing
-├── nginx-test.sh      # Nginx testing
-├── security-test.sh   # Security scanning
-├── concurrent-test.sh # Performance testing
-├── integration-test.sh # Integration test runner
-└── run-all-tests.sh   # Full test suite
+└── e2e/               # Playwright E2E specs
+
+The shell/python test suite (api-test.sh, run-all-tests.sh, integration/)
+moved to the sibling repo `SOGo6-testsuite` (sg harness; protocol parity
+against a SOGo5 reference). Backend unit tests: `sogo6-server/tests/`.
 ```
 
 ## Quick Start
@@ -64,8 +59,8 @@ tests/
 # Using make
 make test
 
-# Or directly
-bash tests/run-all-tests.sh
+# Or: full protocol/feature suite
+cd ../SOGo6-testsuite && bin/sg run --target sogo6
 ```
 
 ### Run in Dev Environment
