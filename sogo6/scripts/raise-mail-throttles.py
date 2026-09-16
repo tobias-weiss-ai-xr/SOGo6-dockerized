@@ -4,24 +4,30 @@
 The stalwart-rewrite image auto-provisions two inbound throttles into its
 settings DB on first boot (crates/common/src/manager/defaults.rs):
 
-  * "Sender IP throttle"                    — 5/s per remote IP  (keep as-is)
+  * "Sender IP throttle"                    — 5/s per remote IP
   * "Sender address to recipient throttle"  — 25/hour per (sender-domain, rcpt)
 
-The 25/hour pair throttle is far too tight for test suites: a single parity
-run delivers ~7 self-addressed mails (api send/search/attachments, mail, sieve
-fileinto), so the budget is exhausted after ~3 runs and RCPT starts answering
-`452 4.4.5 Rate limit exceeded` — which looks exactly like a broken stack.
+Both are too tight for test suites:
 
-This script raises that throttle to 300/hour (≈1 mail per 12s sustained —
-still a runaway guard, but roomy for tests). Idempotent: safe to re-run; it
-only patches when the current rate differs. Applies to the RUNNING stack and
-persists in the settings DB (survives restarts; a FRESH volume re-seeds the
-defaults, so run this once after (re)provisioning).
+  * The 5/s IP throttle fires on parallel bursts — a parity run drives the
+    sogo5 container, sogo6-server and the testsuite host through the same
+    traefik entry point (ONE remote IP), and concurrently running suites
+    easily exceed 5 RCPTs/s. Symptom: `452 4.4.5 Rate limit exceeded` and
+    connections dropped mid-burst — indistinguishable from a broken stack.
+  * The 25/hour pair throttle dies after ~3 parity runs (~7 self-addressed
+    mails per run).
+
+This script raises them to 50/s and 300/hour (still runaway guards, roomy
+for tests). Idempotent: patches only on drift. Values persist in the
+settings DB, but the SMTP core reads throttle objects at BOOT — restart the
+container after changing them (fresh stacks: seed, then restart once).
 
 Usage (from the repo root, against a running stack; set STALWART_SECRET
 if the vault value differs from the dev default):
+
     docker run --rm -i --network sogo6_sogo6-net -e STALWART_SECRET \
         python:3.12-alpine python - < sogo6/scripts/raise-mail-throttles.py
+    docker restart sogo6-stalwart
 """
 import json
 import base64
@@ -35,8 +41,12 @@ JMAP_URL = "http://sogo6-stalwart:8080/jmap"
 ADMIN_USER = "admin"
 ADMIN_PASS = os.environ.get("STALWART_SECRET", "eval_admin_2026")
 
-THROTTLE_DESCRIPTION = "Sender address to recipient throttle"
-TARGET = {"count": 300, "period": 3600000}  # 300/hour, millis
+THROTTLES = {
+    "Sender IP throttle": {"count": 50, "period": 1000},  # 50/s
+    "Sender address to recipient throttle": {"count": 300, "period": 3600000},  # 300/hour
+}
+
+USING = ["urn:ietf:params:jmap:core", "urn:stalwart:jmap"]
 
 auth = base64.b64encode(f"{ADMIN_USER}:{ADMIN_PASS}".encode()).decode()
 headers = {"Content-Type": "application/json", "Authorization": f"Basic {auth}"}
@@ -52,9 +62,6 @@ def jmap(payload: dict) -> dict:
         sys.exit(1)
 
 
-USING = ["urn:ietf:params:jmap:core", "urn:stalwart:jmap"]
-
-
 def main() -> int:
     resp = jmap({"using": USING, "methodCalls": [
         ["x:MtaInboundThrottle/get", {"accountId": "0", "ids": None}, "c1"]]})
@@ -66,25 +73,29 @@ def main() -> int:
         for t in result.get("list", []):
             throttles[t.get("description")] = t
 
-    target = throttles.get(THROTTLE_DESCRIPTION)
-    if target is None:
-        print(f"⏩ '{THROTTLE_DESCRIPTION}' not provisioned — nothing to do")
-        return 0
+    changed = []
+    for desc, target in THROTTLES.items():
+        obj = throttles.get(desc)
+        if obj is None:
+            print(f"⏩ '{desc}' not provisioned — skipping")
+            continue
+        if obj["rate"] == target:
+            print(f"✅ '{desc}' already at {target['count']}/{target['period']}ms")
+            continue
+        jmap({"using": USING, "methodCalls": [["x:MtaInboundThrottle/set", {
+            "accountId": "0",
+            "update": {obj["id"]: {
+                "rate/count": target["count"],
+                "rate/period": target["period"],
+            }}}, "c1"]]})
+        changed.append(desc)
+        print(f"✅ Raised '{desc}': "
+              f"{obj['rate']['count']}/{obj['rate']['period']}ms → "
+              f"{target['count']}/{target['period']}ms")
 
-    if target["rate"] == TARGET:
-        print(f"✅ Already at {TARGET['count']}/{TARGET['period'] // 60000}min — nothing to do")
-        return 0
-
-    tid = target["id"]
-    jmap({"using": USING, "methodCalls": [["x:MtaInboundThrottle/set", {
-        "accountId": "0",
-        "update": {tid: {
-            "rate/count": TARGET["count"],
-            "rate/period": TARGET["period"],
-        }}}, "c1"]]})
-    print(f"✅ Raised '{THROTTLE_DESCRIPTION}': "
-          f"{target['rate']['count']}/{target['rate']['period'] // 60000}min → "
-          f"{TARGET['count']}/{TARGET['period'] // 60000}min")
+    if changed:
+        print("\n⚠️  SMTP core reads throttles at boot — restart to apply:")
+        print("   docker restart sogo6-stalwart")
     return 0
 
 
