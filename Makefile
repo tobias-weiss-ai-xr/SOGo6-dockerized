@@ -16,7 +16,7 @@ PROD_PROFILES   := --profile mail-stalwart --profile db-mariadb --profile auth-l
 ALT_PROFILES    := --profile mail-stalwart --profile db-postgres --profile auth-ldap
 DEV_COMPOSE     := -f docker-compose.dev.yaml
 
-.PHONY: setup build start stop restart status logs clean reset init
+.PHONY: setup build start stop restart status logs clean reset init test-throttles
 .PHONY: dev dev-stop dev-status dev-logs dev-clean dev-reset dev-debug
 .PHONY: test test-smoke test-full test-e2e test-load
 .PHONY: validate-specs validate-links spec-check spec-validate
@@ -35,6 +35,15 @@ secrets:
 
 certs:
 	bash sogo6/scripts/gen-certs.sh
+
+# Test stacks only: raises stalwart sender throttles (50/s, 300/hour) so
+# automated mail delivery doesn't 452. Shipped defaults stay low (5/s,
+# 25/hour) for demo/prod. Run after 'make init' and after recreating the
+# stalwart volume; restarts sogo6-stalwart (SMTP core reads throttles at boot).
+test-throttles:
+	docker run --rm -i --network sogo6_sogo6-net -e STALWART_SECRET python:3.12-alpine python - --test-stack < sogo6/scripts/raise-mail-throttles.py
+	docker restart sogo6-stalwart
+	@echo "Throttles raised + stalwart restarted."
 
 # ── Production Stack ─────────────────────────────────────────────
 build:
@@ -219,6 +228,7 @@ help:
 	@echo "  make clean       Remove containers + volumes"
 	@echo "  make reset       Clean + start + init"
 	@echo "  make init        Initialize via Admin API"
+	@echo "  make test-throttles  Raise stalwart throttles (TEST stacks only)"
 	@echo "  make secrets     Generate secrets vault"
 	@echo "  make certs       Generate TLS certs"
 	@echo ""
