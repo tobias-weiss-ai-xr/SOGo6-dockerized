@@ -67,3 +67,9 @@ directoryId = "ldap"
 # → any recipient outside dc=example,dc=org has no delivery route and is
 #   rejected at RCPT time (550). Internal (example.org) recipients are
 #   delivered to the local SQLite store only.
+#
+# NOTE on throttles: the image auto-provisions a 25/hour sender→recipient
+# throttle into the settings DB on first boot — too tight for test suites
+# (parity runs deliver ~7 self-addressed mails → 452 4.4.5 after ~3 runs).
+# Raise it with: sogo6/scripts/raise-mail-throttles.py (idempotent, persists
+# in the DB; re-run after creating a fresh volume).
