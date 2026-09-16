@@ -71,6 +71,8 @@ directoryId = "ldap"
 # NOTE on throttles: the image auto-provisions a 25/hour sender→recipient
 # throttle into the settings DB on first boot — too tight for test suites
 # (parity runs deliver ~7 self-addressed mails → 452 4.4.5 after ~3 runs).
-# Raise both with: sogo6/scripts/raise-mail-throttles.py (idempotent,
-# persists in the settings DB; re-run + restart sogo6-stalwart after
-# creating a fresh volume — the SMTP core reads throttles at boot).
+# Raise both with: sogo6/scripts/raise-mail-throttles.py --test-stack
+# (idempotent, persists in the settings DB; re-run + restart
+# sogo6-stalwart after creating a fresh volume — the SMTP core reads
+# throttles at boot. TEST STACKS ONLY — the shipped default stays 5/s +
+# 25/hour for demo/prod).

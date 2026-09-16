@@ -17,16 +17,17 @@ Both are too tight for test suites:
   * The 25/hour pair throttle dies after ~3 parity runs (~7 self-addressed
     mails per run).
 
-This script raises them to 50/s and 300/hour (still runaway guards, roomy
-for tests). Idempotent: patches only on drift. Values persist in the
-settings DB, but the SMTP core reads throttle objects at BOOT — restart the
-container after changing them (fresh stacks: seed, then restart once).
+This script raises them to 50/s and 300/hour — **TEST STACKS ONLY**. The
+shipped defaults (defaults.rs, fresh volumes) stay low; never run this
+against a demo/production stack. Values persist in the settings DB, but
+the SMTP core reads throttle objects at BOOT — restart the container
+after changing them (fresh test stacks: seed, then restart once).
 
-Usage (from the repo root, against a running stack; set STALWART_SECRET
-if the vault value differs from the dev default):
+Usage (from the repo root, against a running TEST stack; set
+STALWART_SECRET if the vault value differs from the dev default):
 
     docker run --rm -i --network sogo6_sogo6-net -e STALWART_SECRET \
-        python:3.12-alpine python - < sogo6/scripts/raise-mail-throttles.py
+        python:3.12-alpine python - < sogo6/scripts/raise-mail-throttles.py -- --test-stack
     docker restart sogo6-stalwart
 """
 import json
@@ -63,6 +64,10 @@ def jmap(payload: dict) -> dict:
 
 
 def main() -> int:
+    if "--test-stack" not in sys.argv:
+        print("Refusing: this raises rate limits (50/s, 300/hour) and is for TEST stacks only.")
+        print("Shipped defaults stay low. Re-run with '--test-stack' after '--' to confirm.")
+        return 2
     resp = jmap({"using": USING, "methodCalls": [
         ["x:MtaInboundThrottle/get", {"accountId": "0", "ids": None}, "c1"]]})
     throttles = {}
