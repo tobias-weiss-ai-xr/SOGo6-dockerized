@@ -26,6 +26,9 @@ Current code swaps the `w-1/5` date `<span>` for a `w-1/5` actions `<div>` (`gro
 `move-folder-dialog.tsx` already renders a folder picker for single-mail moves; the backend already supports `batch-action {action:"move", data:"<dest>"}` (used by bulk-archive fallback). Add one `bulk-move` entry to the `MailActionsBar` actions list in `list-toolbar.tsx`, wire it to open `MoveFolderDialog` in multi-select mode, and on confirm call the same `useBatchMailActionMutation` move path with `selectedIds`.
 - *Alternative rejected*: building a new standalone dialog — duplicate code.
 
+**D3a — (implemented) dedicated `BulkMoveDialog` instead of `MoveFolderDialog`.**
+`MoveFolderDialog` moves a *folder* (`newPath` = target parent + folderName), which is a different domain from moving *mails* into a destination folder. Reusing it in multi-select mode would render a misleading UI (no destination-selectable folder list for mails). Implemented a small `bulk-move-dialog.tsx` that reuses the same `flattenFolderPaths` helper (extracted + exported) and the same Select/AlertDialog primitives, plus the shared `batch-action move` mutation. Net diff smaller than bending `MoveFolderDialog` with a mode prop; replaces rejected D3 alternative.
+
 **D4 — Search contrast via classic-scoped CSS.**
 Idle pill uses `text-gray-500` + `border`, unreadable on `#4D8080`. Add `.sogo5-classic` rules: neutral/white text with sufficient contrast against teal, lighter pill background, readable border. Active-query pill (`bg-blue-50 text-blue-700`) already has strong contrast but clashes with teal band visually — restyle it to a light pill with dark text for classic. Single CSS block in `globals.css` covers all four search components (they share the same class pattern), avoiding 4× component edits.
 - *Alternative rejected*: editing each search component's className — 4 files × 2 states, CSS does it in one place.
