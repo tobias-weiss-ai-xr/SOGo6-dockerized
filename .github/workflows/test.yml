@@ -268,6 +268,27 @@ jobs:
             "cd /app && pip3 install -q hypothesis 2>/dev/null; \
              python3 -m pytest tests/test_properties/ -v --tb=short -x" 2>&1 | tail -30
 
+      # ── Cross-repo: private SOGo6-testsuite (needs PAT — github GITHUB_TOKEN
+      #    is scoped to this repo only) ──────────────────────────────
+      - name: Checkout SOGo6-testsuite (private)
+        uses: actions/checkout@v7
+        with:
+          repository: tobias-weiss-ai-xr/SOGo6-testsuite
+          token: ${{ secrets.SOGO6_TESTSUITE_PAT }}
+          path: SOGo6-testsuite
+
+      - name: Run testsuite API suite against CI stack
+        env:
+          SG_ADMIN_USER: admin
+          SG_ADMIN_PASS: ${{ env.SOGO_ADMIN_PASSWORD }}
+        run: |
+          cd SOGo6-testsuite
+          # api-test.suite.sh exercises health/auth/edge cases over HTTP
+          # against the stack just booted on this runner (API on :5001).
+          # Admin creds are the vault-generated ones seeded by init-sogo6.sh.
+          ./bin/sg run --target sogo6 --suite suites/feature/api-test.suite.sh 2>&1 | tail -40
+        shell: bash
+
   owasp-zap:
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-24.04
