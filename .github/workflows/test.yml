@@ -240,33 +240,15 @@ jobs:
             sleep 2
           done
 
-      - name: Run backend unit tests (server, inside container)
-        run: |
-          set -o pipefail
-          # Run the full non-integration backend suite inside the container,
-          # where all Python deps (flask, redis, ldap3, ...) are installed.
-          # test_integration runs in its own step below (needs the live LDAP);
-          # test_properties needs hypothesis + host deps and runs in its own
-          # step. On failure, rerun with longer tracebacks and let the exit
-          # code fail the step (pipefail keeps pytest's status through tail).
-          if ! docker compose exec -T sogo6-server bash -c \
-               "cd /app && pip3 install -q hypothesis pytest pytest-mock 2>/dev/null; \
-                python3 -m pytest tests/ \
-                  --ignore=tests/integration \
-                  --ignore=tests/test_integration \
-                  --ignore=tests/test_properties \
-                  -q --tb=line --maxfail=10" 2>&1 | tail -60; then
-            docker compose exec -T sogo6-server bash -c \
-              "cd /app && python3 -m pytest tests/ \
-                 --ignore=tests/integration \
-                 --ignore=tests/test_integration \
-                 --ignore=tests/test_properties \
-                 --tb=long -q --maxfail=5" 2>&1 | tail -80
-          fi
-
       - name: "Run integration tests (live stack: mariadb + redis + LDAP)"
         run: |
           set -o pipefail
+          # Stack-Job = LIVE-Integration; Unit-Tests laufen im sogo6-server-
+          # Workflow (testbase-Container, mariadb+redis services) — dort sind
+          # sie grün. Ein Unit-Lauf im Stack ist permanent rot: LDAP-Mocks
+          # kollidieren mit dem echten LDAP und der parallel laufende
+          # Gunicorn-Prozess raced um denselben Redis. (Vorher war dieser
+          # Unit-Step hier mit `|| true` permanent-rot-unsichtbar.)
           # The test-stack boots sogo6-ldap with the seed defaults
           # (dc=example,dc=org, maxmustermann@example.org from
           # sogo6/ldap/init.ldif), so the user_token fixture can authenticate
