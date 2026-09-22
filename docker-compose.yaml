@@ -102,6 +102,12 @@ services:
       SOGO_SECRET_KEY: ${SOGO_SECRET_KEY:-}
       # Admin API password — CRA Art. 15: server refuses to start if empty/default
       SOGO_P_ADMIN_PWD: ${SOGO_P_ADMIN_PWD:-}
+      # THEME-1: default theme for fresh/re-provisioned preference records
+      # (read-time fallback when a stored record lacks SOGO_U_THEME)
+      SOGO_DEFAULT_THEME: ${SOGO_DEFAULT_THEME:-sogo5-classic}
+      # S/MIME trust anchoring: PEM CA bundle; signer certs chaining to it get
+      # trusted=true in verification results. Unset => trusted=None (legacy).
+      SOGO_SMIME_TRUST_BUNDLE: ${SOGO_SMIME_TRUST_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}
       # SCIM bearer token — gates /scim/v2/* (SCIM's own token; empty disables)
       SCIM_BEARER_TOKEN: ${SCIM_BEARER_TOKEN:-}
       # ── SAML2 SP keypair ───────────────────────────────────────────────────
