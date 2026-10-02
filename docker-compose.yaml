@@ -151,7 +151,7 @@ services:
 
   # Redis — session cache + Celery broker
   sogo6-redis:
-    image: redis:7-alpine
+    image: redis:alpine
     restart: unless-stopped
     container_name: sogo6-redis
     networks:
@@ -248,7 +248,7 @@ services:
   # PostgreSQL — application database (alternative to MariaDB)
   sogo6-postgres:
     profiles: ["db-postgres"]
-    image: postgres:15-alpine
+    image: postgres:15
     restart: unless-stopped
     container_name: sogo6-postgres
     environment:
@@ -405,7 +405,7 @@ services:
 
   sogo6-minio:
     profiles: ["minio"]
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    image: minio/minio:latest
     restart: unless-stopped
     container_name: sogo6-minio
     environment:
@@ -435,7 +435,7 @@ services:
 
   sogo6-prometheus:
     profiles: ["monitoring"]
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:latest
     restart: unless-stopped
     container_name: sogo6-prometheus
     ports:
@@ -457,7 +457,7 @@ services:
 
   sogo6-grafana:
     profiles: ["monitoring"]
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:latest
     restart: unless-stopped
     container_name: sogo6-grafana
     environment:
@@ -491,7 +491,7 @@ services:
   # ── Loki (log aggregation, monitoring profile) ──────────────
   sogo6-loki:
     profiles: ["monitoring"]
-    image: grafana/loki:3.4.2
+    image: grafana/loki:latest
     restart: unless-stopped
     container_name: sogo6-loki
     ports:
@@ -517,7 +517,7 @@ services:
   # ── Promtail (log collector, monitoring profile) ────────────
   sogo6-promtail:
     profiles: ["monitoring"]
-    image: grafana/promtail:3.4.2
+    image: grafana/promtail:latest
     restart: unless-stopped
     container_name: sogo6-promtail
     networks:
@@ -583,7 +583,7 @@ services:
   # ── Collabora Online (Document Preview, Tier 3 #42) ──────
   sogo6-collabora:
     profiles: ["collabora"]
-    image: collabora/code:24.04.9.3.1
+    image: collabora/code:latest
     restart: unless-stopped
     container_name: sogo6-collabora
     environment:

@@ -64,7 +64,7 @@ services:
 
   # ── Extra: PgAdmin (PostgreSQL admin UI) ───────────────────
   sogo6-pgadmin:
-    image: dpage/pgadmin4:8.14
+    image: dpage/pgadmin4:latest
     container_name: sogo6-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: dev@example.org
@@ -80,7 +80,7 @@ services:
 
   # ── Extra: Redis Insight (Redis admin UI) ───────────────────
   sogo6-redisinsight:
-    image: redis/redisinsight:2.66
+    image: redis/redisinsight:latest
     container_name: sogo6-redisinsight
     ports:
       - "5540:5540"
@@ -90,7 +90,7 @@ services:
 
   # ── Extra: Mailhog (SMTP test server) ──────────────────────
   sogo6-mailhog:
-    image: mailhog/mailhog:v1.0.1
+    image: mailhog/mailhog:latest
     container_name: sogo6-mailhog
     ports:
       - "1025:1025"
@@ -101,7 +101,7 @@ services:
 
   # ── Extra: LDAP Admin UI ───────────────────────────────────
   sogo6-ldapadmin:
-    image: osixia/phpldapadmin:0.9.0
+    image: osixia/phpldapadmin:latest
     container_name: sogo6-ldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: sogo6-ldap
@@ -116,7 +116,7 @@ services:
 
   # ── Extra: LDAP Account Manager ────────────────────────────
   sogo6-lam:
-    image: ldapaccountmanager/lam:9.0
+    image: ldapaccountmanager/lam:latest
     container_name: sogo6-lam
     ports:
       - "8082:80"
