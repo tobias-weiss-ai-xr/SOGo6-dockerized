@@ -69,6 +69,9 @@ services:
       target: development
     environment:
       FLASK_ENV: ${FLASK_ENV:-development}
+      # Public origin for CORS on /api/* — set in .env for reverse-proxied
+      # deployments (defaults to http://localhost:3000 when empty).
+      SOGO_P_PUBLIC_BASE_URL: ${SOGO_P_PUBLIC_BASE_URL:-}
       # Database credentials — override process.conf when set via environment
       SOGO_P_DB_PASS: ${SOGO_P_DB_PASS:-}
       SOGO_P_DB_USER: ${SOGO_P_DB_USER:-sogo}
