@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           submodules: 'true'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CI_SUBMODULE_TOKEN }}
 
       # No repository-root package manifest exists (the UI keeps its lockfile in
       # sogo6-ui/), so `cache: npm` would hard-fail setup-node looking for a root
