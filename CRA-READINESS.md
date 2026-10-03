@@ -84,4 +84,4 @@ operator task · ⬜ = operator/manufacturer obligation (outside project scope)
 
 - `SECURITY.md` — vulnerability reporting policy & supported versions
 - `.github/workflows/test.yml` — Trivy scans, SBOM generation
-- `MAILING-LIST-CALL.md` — community discussion on CRA for open source
+- `docs/archive/MAILING-LIST-CALL.md` — community discussion on CRA for open source

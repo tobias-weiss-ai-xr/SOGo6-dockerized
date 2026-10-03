@@ -155,7 +155,7 @@ make test-load
 
 ### Key Documents
 - [docs/guides/ROADMAP.md](../docs/guides/ROADMAP.md) - Complete feature roadmap
-- [docs/reports/SUMMARY.md](../docs/reports/SUMMARY.md) - Implementation summary
+- [docs/archive/reports/SUMMARY.md](../docs/archive/reports/SUMMARY.md) - Implementation summary
 - [docs/development/DEVELOPMENT.md](../docs/development/DEVELOPMENT.md) - Development guide
 - [docs/guides/DATABASE_SWITCH.md](../docs/guides/DATABASE_SWITCH.md) - DB migration guide
 

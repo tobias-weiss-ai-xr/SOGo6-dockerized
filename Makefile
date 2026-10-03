@@ -18,7 +18,7 @@ DEV_COMPOSE     := -f docker-compose.dev.yaml
 
 .PHONY: setup build start stop restart status logs clean reset init test-throttles
 .PHONY: dev dev-stop dev-status dev-logs dev-clean dev-reset dev-debug
-.PHONY: test test-smoke test-full test-e2e test-load
+.PHONY: test test-smoke test-full test-e2e test-dev
 .PHONY: validate-specs validate-links spec-check spec-validate
 .PHONY: shell shell-ui shell-db shell-redis shell-ldap
 .PHONY: help
@@ -166,33 +166,26 @@ shell-ldap:
 
 # ── Tests ───────────────────────────────────────────────────────
 test:
-	bash tests/run-all-tests.sh
+	cd sogo6-server && python3 -m pytest tests/ -v --tb=short --ignore=tests/test_integration --ignore=tests/test_properties
+	cd sogo6-ui && npx jest --passWithNoTests --maxWorkers=2
 
 test-smoke:
-	bash tests/api-test.sh
-	bash tests/smtp-test.sh
-	bash tests/ldap-test.sh
+	@command -v curl >/dev/null 2>&1 || { echo "curl not installed"; exit 1; }
+	curl -sf http://localhost:5001/api/user/v1/system && echo " → API healthy" || echo "API not running (start with: make dev)"
+	curl -sf http://localhost:3000 >/dev/null && echo " → UI healthy" || echo "UI not running"
 
-test-full:
-	bash tests/run-all-tests.sh
-	SOGO_INTEGRATION_TESTS=1 python3 -m pytest tests/integration/ -v --tb=short -x 2>/dev/null || true
-	$(MAKE) test-contract 2>/dev/null || true
+test-full: test test-contract
+	@echo "Full test suite complete."
 
 test-dev:
 	SOGO_INTEGRATION_TESTS=1 docker compose $(DEV_COMPOSE) exec sogo6-server \
 	  python -m pytest /app/tests -v --tb=short
 
 test-e2e:
-	cd tests/e2e && npx playwright test --config=playwright.config.ts
-
-test-load:
-	bash tests/load/run.sh
-
-test-load-quick:
-	bash tests/load/run.sh --sync-only
-
-test-load-k6:
-	bash tests/load/run.sh --k6-only
+	@echo "E2E tests are in the SOGo6-testsuite repository."
+	@echo "Clone https://github.com/tobias-weiss-ai-xr/SOGo6-testsuite"
+	@echo "Then: ./bin/sg run --target sogo6 --suite suites/feature/api-test.suite.sh"
+	@exit 1
 
 test-contract:
 	cd sogo6-server && python3 -m pytest tests/test_properties/ -v --tb=short -x 2>/dev/null || \
@@ -219,8 +212,8 @@ help:
 	@echo "=== PRODUCTION STACK ==="
 	@echo "  make setup       First-time setup (clone + build)"
 	@echo "  make build       Build Docker images"
-	@echo "  make start       Start full stack (Stalwart + PostgreSQL + LDAP)"
-	@echo "  make start-alt   Start with MariaDB"
+	@echo "  make start       Start full stack (Stalwart + MariaDB + LDAP)"
+	@echo "  make start-alt   Start with PostgreSQL"
 	@echo "  make start-minimal  Start core only"
 	@echo "  make stop        Stop stack"
 	@echo "  make status      Container status"
@@ -244,9 +237,9 @@ help:
 	@echo "  make dev-monitoring Start Prometheus + Grafana"
 	@echo ""
 	@echo "=== TESTS ==="
-	@echo "  make test        Shell test suite"
-	@echo "  make test-smoke  Quick smoke tests"
-	@echo "  make test-full   All tests (shell + Python + contract)"
-	@echo "  make test-e2e    Playwright browser tests"
-	@echo "  make test-load   k6 load tests"
+	@echo "  make test        Backend + frontend unit tests"
+	@echo "  make test-smoke  Quick health check (API + UI)"
+	@echo "  make test-full   All unit tests + contract tests"
+	@echo "  make test-dev    Run tests inside the dev container"
+	@echo "  make test-e2e    E2E tests (requires SOGo6-testsuite repo)"
 	@echo "  make test-contract  Hypothesis property-based tests"

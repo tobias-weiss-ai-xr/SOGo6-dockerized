@@ -61,11 +61,11 @@ cp .env.example .env
 #     bash sogo6/scripts/reseed.sh
 
 # 3. Generate TLS certs and start (MariaDB - default)
-bash sogo6/scripts/gen-certs.sh
-docker compose --profile mail-stalwart --profile db-mariadb --profile auth-ldap up -d --build
+make certs
+make start
 
 # 4. Initialize SOGo (creates DB tables + default config)
-bash sogo6/scripts/init-sogo6.sh
+make init
 
 # 5. Open the UI
 open http://localhost:3000
@@ -186,9 +186,17 @@ Structured JSON logs auto-parsed by Promtail (extracts `request_id`, `user`, `do
 Grafana datasource with `request_id` derived fields for log→trace correlation.
 
 ### Testing
-Backend unit tests live in `sogo6-server/tests/`; Playwright E2E in
-`tests/e2e/`. The protocol/feature suite (incl. k6 load tests) lives in the
-sibling [`SOGo6-testsuite`](../SOGo6-testsuite) repo (`bin/sg`).
+Backend unit tests live in `sogo6-server/tests/` (296 pytest files);
+frontend tests in `sogo6-ui/src/**/__tests__/` (568 jest files). The
+protocol/feature suite (API, parity, soak) lives in the sibling
+[`SOGo6-testsuite`](../SOGo6-testsuite) repo (`bin/sg`).
+
+```bash
+make test           # backend + frontend unit tests
+make test-smoke     # quick health check (API + UI)
+make test-contract  # hypothesis property-based tests
+make test-dev       # tests inside the dev container
+```
 
 ## Security & CRA Readiness
 
@@ -218,7 +226,7 @@ assessment significantly less costly:
 > ⚠️ The operator still carries the formal conformity obligations (CRA
 > conformity assessment, technical documentation, vulnerability reporting).
 > We welcome discussion and contributions on closing the remaining gaps —
-> see `MAILING-LIST-CALL.md` and `CRA-READINESS.md`.
+> see `CRA-READINESS.md`.
 
 ## Project Structure
 
@@ -227,14 +235,13 @@ assessment significantly less costly:
 ├── sogo6-ui/             # Next.js frontend (submodule)
 ├── docker-compose.yaml   # Production stack
 ├── helm/sogo6/           # Kubernetes Helm chart
-├── deploy/mariadb-e2e/   # MariaDB E2E test suite
+├── deploy/               # Deployment configs + gitops
 ├── sogo6/                # Service configs
 │   ├── loki/             #  Loki/Promtail configuration
 │   ├── grafana/          #  Grafana datasource provisioning
 │   └── prometheus/       #  Prometheus rules, alerts, dashboards
-├── tests/                # Integration & load tests
-│   ├── load/             #  k6 performance tests
-│   └── e2e/              #  Playwright browser tests
+├── scripts/              # typecheck-gate, validate-specs, validate-links
+├── openspec/             # Spec-driven development artifacts
 └── docs/                 # Documentation
 ```
 
