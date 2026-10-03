@@ -50,8 +50,10 @@ cd SOGo6-dockerized
 
 # 2. Copy and configure environment
 cp .env.example .env
-# Edit .env — at minimum set:
-#   LDAP_ADMIN_PASSWORD, PG_PASSWORD/MARIADB_PASSWORD, INTERCOM_SHARED_SECRET
+# Generate all required secrets automatically:
+make secrets
+# Or edit .env manually — at minimum set:
+#   LDAP_ADMIN_PASSWORD, MARIADB_PASSWORD, INTERCOM_SHARED_SECRET
 #   SOGO_P_VOUCHER_SECRET (exactly 32 chars), SOGO_SECRET_KEY,
 #   SOGO_LDAP_BIND_PASSWORD (must match LDAP_ADMIN_PASSWORD)
 #

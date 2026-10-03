@@ -20,6 +20,8 @@ DEV_COMPOSE     := -f docker-compose.dev.yaml
 .PHONY: dev dev-stop dev-status dev-logs dev-clean dev-reset dev-debug
 .PHONY: test test-smoke test-full test-e2e test-dev
 .PHONY: validate-specs validate-links spec-check spec-validate
+.PHONY: typecheck sbom translations verify-dev
+.PHONY: validate-specs validate-links spec-check spec-validate
 .PHONY: shell shell-ui shell-db shell-redis shell-ldap
 .PHONY: help
 
@@ -205,6 +207,19 @@ spec-validate: validate-specs validate-links
 spec-check: validate-specs
 	@echo "OpenSpec validation complete."
 
+# ── Developer Tools ─────────────────────────────────────────────
+typecheck:
+	@bash scripts/typecheck-gate.sh
+
+sbom:
+	@bash scripts/generate-sbom.sh
+
+translations:
+	@python3 scripts/generate-translations.py
+
+verify-dev:
+	@bash scripts/verify-dev.sh
+
 # ── Info ────────────────────────────────────────────────────────
 help:
 	@echo "SOGo 6 Development & Production Makefile"
@@ -243,3 +258,10 @@ help:
 	@echo "  make test-dev    Run tests inside the dev container"
 	@echo "  make test-e2e    E2E tests (requires SOGo6-testsuite repo)"
 	@echo "  make test-contract  Hypothesis property-based tests"
+	@echo ""
+	@echo "=== DEVELOPER TOOLS ==="
+	@echo "  make typecheck    TypeScript regression gate (sogo6-ui)"
+	@echo "  make sbom         Generate CycloneDX SBOMs (CRA Art. 13)"
+	@echo "  make translations  Generate locale translation files"
+	@echo "  make verify-dev   Verify dev environment setup"
+	@echo "  make spec-check   Validate OpenSpec specs"
