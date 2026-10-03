@@ -41,5 +41,16 @@ git submodule update --init --recursive
 # update too; build-based services are skipped, failures are logged and non-fatal.
 docker compose pull --ignore-buildable || echo "WARN: image pull failed, using local images"
 
+# Pre-pull base images for BuildKit (docker compose build --build uses buildx
+# which does NOT inherit the docker daemon's proxy; on hosts behind a proxy
+# like vhrz2392 it times out reaching auth.docker.io). The daemon CAN pull
+# (systemd HTTP_PROXY), so we pre-pull here — fast no-op if already cached.
+# ponytail: grep FROM from Dockerfiles instead of a hardcoded list — stays
+# correct when base images change.
+grep -rh '^FROM ' sogo6-server/deploy/local/Dockerfile.local \
+  sogo6-ui/Dockerfile.prod sogo6/ldap/Dockerfile 2>/dev/null \
+  | awk '{print $2}' | sed 's/ AS .*//' | sort -u \
+  | while read -r img; do docker pull "$img" 2>/dev/null || true; done
+
 docker compose up -d --build --wait --wait-timeout 300
 echo "$(date -Is) OK: $(docker compose ps --format '{{.Name}}={{.Health}}' | tr '\n' ' ')"
