@@ -26,6 +26,7 @@ services:
     image: sogo6-ui:latest
     restart: unless-stopped
     container_name: sogo6-ui
+    labels: ["com.centurylinklabs.watchtower.enable=false"]  # local build
     build:
       context: ./sogo6-ui
       dockerfile: Dockerfile.prod
@@ -63,6 +64,7 @@ services:
     image: sogo6-server:dev
     restart: unless-stopped
     container_name: sogo6-server
+    labels: ["com.centurylinklabs.watchtower.enable=false"]  # local build
     build:
       context: ./sogo6-server
       dockerfile: deploy/local/Dockerfile.local
@@ -205,6 +207,7 @@ services:
     profiles: ["auth-ldap"]
     image: sogo6-ldap:latest
     restart: unless-stopped
+    labels: ["com.centurylinklabs.watchtower.enable=false"]  # local build
     build:
       context: ./sogo6/ldap
       dockerfile: Dockerfile
