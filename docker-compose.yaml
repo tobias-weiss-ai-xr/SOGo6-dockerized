@@ -123,6 +123,12 @@ services:
       SOGO_SAML2_SP_KEY_FILE: ${SOGO_SAML2_SP_KEY_FILE:-/etc/sogo/saml/sp-key.pem}
       SOGO_SAML2_METADATA_CACHE_TTL: ${SOGO_SAML2_METADATA_CACHE_TTL:-21600}
       SOGO_SAML2_CLOCK_SKEW: ${SOGO_SAML2_CLOCK_SKEW:-60}
+      # ── AI / LLM (Ollama) ──────────────────────────────────────────────────
+      # If SOGO_AI_OLLAMA_URL is set, AI features use the local Ollama LLM.
+      # Empty = rule-based fallback heuristics.
+      SOGO_AI_OLLAMA_URL: ${SOGO_AI_OLLAMA_URL:-}
+      SOGO_AI_OLLAMA_MODEL: ${SOGO_AI_OLLAMA_MODEL:-qwen2.5:1.5b}
+      SOGO_AI_OLLAMA_TIMEOUT: ${SOGO_AI_OLLAMA_TIMEOUT:-30}
     volumes:
       - ./sogo6/config/process.conf:/etc/sogo/process.conf:ro
       - ./sogo6/config/init:/etc/sogo/init:ro
