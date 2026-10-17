@@ -42,6 +42,9 @@ entries:
 
 - `SOGO_P_VOUCHER_SECRET` → an obviously-dummy value (e.g. `test-only-voucher-secret`)
 - `SOGO_AES_ENC_KEY` → a fixed, obviously-dummy 32-byte base64 value
+- `SOGO_P_ADMIN_PWD` → an obviously-dummy value (added during implementation:
+  `init_sogo()` → `_check_admin_password_hardening()` at import time rejects an
+  empty or literal `admin` password)
 
 Both must be clearly test-only and never usable as real credentials, and both keep the
 existing behaviour where a real environment variable overrides the default. Add a comment
@@ -50,12 +53,20 @@ mirroring the current `_proc_setting()` / "raw environment takes precedence" rat
 **Acceptance:** `python -m pytest tests/ -q` collects and runs — no conftest
 ImportError/ValidationError.
 
+**Implementation finding — hermeticity is not purely env-vars.** After the three
+settings, import proceeds but `init_sogo()` → `init_infra()` pings Redis and raises
+`AggravatedException("Redis server is unavailable")` when unreachable. A coverage run
+therefore still requires a live Redis, exactly as `python_tests.yaml` provides via a
+`redis:7-alpine` service. (CI also does not set `SOGO_AES_ENC_KEY` — a separate latent
+CI issue, out of scope here.)
+
 ### C2 — Backend ratchet (`sogo6-server/pyproject.toml`)
 
-Once C1 lands, measure once with the runner that has the real deps:
+Once C1 lands, measure once with the runner that has the real deps and a live Redis:
 
 ```
-PYTHON=.venv/bin/python ./tests/run-coverage.sh
+docker run -d --name sogo6-cov-redis -p 127.0.0.1:6379:6379 redis:7-alpine
+PYTHON=.venv/bin/python SOGO_P_REDIS_URL=redis://localhost:6379/0 ./tests/run-coverage.sh
 ```
 
 (System `python3` lacks `flask_smorest`; `.venv` has pytest 9.1.1 + coverage 7.16.1.)
@@ -65,6 +76,9 @@ the existing 66** unless measurement proves 66 unreachable — and if it is unre
 is a finding to report, not a silent lowering. Keep `run-coverage.sh` as the single entry
 point; no new scripts.
 
+**Measured 2026-10-17:** total **79%** (40009 statements, 8532 missing; 330 files
+skipped-fully-covered; 4984 passed, 1 env-flaky failure). Floor raised `66 → 79`.
+
 ### C3 — UI ratchet (`sogo6-ui/jest.config.ts`)
 
 Measure with a clean full run:
@@ -73,11 +87,25 @@ Measure with a clean full run:
 npx jest --coverage --coverageReporters=json-summary,text-summary
 ```
 
-The default `maxWorkers` previously caused an OOM/Termination on this workstation, so the
-implementation must tune `maxWorkers`/memory until a full clean run completes.
+The default `maxWorkers` previously caused a Termination on this workstation; in the end
+the configured `maxWorkers: '50%'` completed a full clean run (≈44 min) with no tuning
+needed. Run it in the background and wait — do not use `--maxWorkers=1`, which stalls.
 
 Add `coverageThreshold.global = { statements, branches, functions, lines }`, each set to
 the floor of the measured value, rounded down. **No per-module thresholds** (YAGNI).
+
+**Measured 2026-10-17** (clean full run, `npx jest --coverage`, 584 suites / 6058 tests,
+~44 min, `maxWorkers: '50%'`):
+
+| metric | measured | floor set |
+|---|---|---|
+| statements | 55.15% (64411/116788) | 55 |
+| lines | 55.15% (64411/116788) | 55 |
+| branches | 72.46% (5624/7761) | 72 |
+| functions | 52.91% (1525/2882) | 52 |
+
+Note: the husky hooks run jest with `--coverage=false`, so this threshold is enforced by
+`npm test` / `npm run test:coverage`, **not** by pre-commit/pre-push.
 
 ## Data flow / error handling
 
@@ -100,8 +128,9 @@ the floor of the measured value, rounded down. **No per-module thresholds** (YAG
 Three changes across two submodules, then a parent submodule-pointer bump:
 
 - `sogo6-server`: `tests/conftest.py` + `pyproject.toml`
-- `sogo6-ui`: `jest.config.ts` (note: husky pre-push runs the full jest suite, so the
-  threshold change must be validated before pushing)
+- `sogo6-ui`: `jest.config.ts` (note: husky pre-push runs the full jest suite **with
+  `--coverage=false`**, so it does not validate the new threshold — validate separately
+  with `npm test`)
 - `SOGo6-dockerized`: submodule pointer bump
 
 ## Risks
@@ -110,3 +139,24 @@ Three changes across two submodules, then a parent submodule-pointer bump:
   implementation must record the measured totals and the machine used in this doc.
 - **jest full-run flakiness/OOM** on this workstation may require lowering `maxWorkers`;
   that is an implementation detail, not a design change.
+
+## Results (2026-10-17, workstation `pcrz1334`)
+
+| Change | Location | Result |
+|---|---|---|
+| C1 hermetic bootstrap | `sogo6-server/tests/conftest.py` | 3 settings pre-seeded; suite collects on a bare checkout (still needs live Redis) |
+| C2 backend floor | `sogo6-server/pyproject.toml` | `fail_under` 66 → **79** (measured 79%) |
+| C3 UI floors | `sogo6-ui/jest.config.ts` | `coverageThreshold.global` 55/72/52/55 (measured 55.15/72.46/52.91) |
+
+**Verification performed:**
+1. Backend: `run-coverage.sh` with a throwaway `redis:7-alpine` → TOTAL 79%, gate passes (log
+   `/tmp/opencode/cov-backend.log`).
+2. UI: clean full `npx jest --coverage` → 584 suites, 6058 passed / 6 skipped, exit 0
+   (log `/tmp/opencode/cov-ui2.log`, 2631 s).
+3. **Negative check (positive):** inflated thresholds to 99% → jest printed
+   `"global" coverage threshold … not met` and exited **1** while all tests passed —
+   the gate fires.
+4. Both submodules and the parent tracked files committed; the throwaway Redis container
+   removed.
+
+**Commits:** `sogo6-server` → `d7b0a4f`; `sogo6-ui` → `2ae4d79`; parent pointer bump (this doc).
