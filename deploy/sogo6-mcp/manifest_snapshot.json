@@ -1,0 +1,198 @@
+{
+ "data": {
+  "version": 1,
+  "actions": [
+   {
+    "id": "agent.manifest",
+    "method": "GET",
+    "path": "/api/user/v1/agent/manifest",
+    "description": "This manifest: list all available agent actions",
+    "scope": "read"
+   },
+   {
+    "id": "mail.messages.list",
+    "method": "GET",
+    "path": "/api/user/v1/agent/mail/messages",
+    "description": "List mails of a folder as compact summaries (snippets, no bodies)",
+    "scope": "mail:read"
+   },
+   {
+    "id": "mail.messages.get",
+    "method": "GET",
+    "path": "/api/user/v1/agent/mail/messages/{uid}",
+    "description": "Get one mail with strip_quotes/max_chars body truncation",
+    "scope": "mail:read"
+   },
+   {
+    "id": "mail.send",
+    "method": "POST",
+    "path": "/api/user/v1/agent/mail/send",
+    "description": "Send a mail in one call, attachments inline as base64",
+    "scope": "mail:send"
+   },
+   {
+    "id": "mail.search",
+    "method": "GET",
+    "path": "/api/user/v1/agent/mail/search",
+    "description": "Cross-folder mail search returning compact summaries",
+    "scope": "mail:read"
+   },
+   {
+    "id": "mail.messages.batch_action",
+    "method": "POST",
+    "path": "/api/user/v1/agent/mail/messages/batch-action",
+    "description": "Apply one action (delete/move/mark_read/\u2026) to many mails",
+    "scope": "mail:send"
+   },
+   {
+    "id": "mail.folders.list",
+    "method": "GET",
+    "path": "/api/user/v1/agent/mail/folders",
+    "description": "List mail folders with unread/total counts",
+    "scope": "mail:read"
+   },
+   {
+    "id": "mail.drafts.create",
+    "method": "POST",
+    "path": "/api/user/v1/agent/mail/drafts",
+    "description": "Save a draft",
+    "scope": "mail:send"
+   },
+   {
+    "id": "mail.drafts.send",
+    "method": "POST",
+    "path": "/api/user/v1/agent/mail/drafts/{key}/send",
+    "description": "Send an existing draft by key",
+    "scope": "mail:send"
+   },
+   {
+    "id": "calendar.events.list",
+    "method": "GET",
+    "path": "/api/user/v1/agent/calendar/events",
+    "description": "List events in a time range (?from&to, recurrence expanded)",
+    "scope": "calendar:read"
+   },
+   {
+    "id": "calendar.events.get",
+    "method": "GET",
+    "path": "/api/user/v1/agent/calendar/events/{key}",
+    "description": "Get one event",
+    "scope": "calendar:read"
+   },
+   {
+    "id": "calendar.events.create",
+    "method": "POST",
+    "path": "/api/user/v1/agent/calendar/events",
+    "description": "Create event with attendees (invitations dispatched) in one call",
+    "scope": "calendar:write"
+   },
+   {
+    "id": "calendar.events.update",
+    "method": "PATCH",
+    "path": "/api/user/v1/agent/calendar/events/{key}",
+    "description": "Partial event update (invitations dispatched on attendee change)",
+    "scope": "calendar:write"
+   },
+   {
+    "id": "calendar.events.delete",
+    "method": "DELETE",
+    "path": "/api/user/v1/agent/calendar/events/{key}",
+    "description": "Delete an event (or one occurrence via ?recurrence_id)",
+    "scope": "calendar:write"
+   },
+   {
+    "id": "calendar.freebusy",
+    "method": "GET",
+    "path": "/api/user/v1/agent/calendar/freebusy",
+    "description": "Free/busy periods (?uids=&from=&to=)",
+    "scope": "calendar:read"
+   },
+   {
+    "id": "calendar.slots.list",
+    "method": "GET",
+    "path": "/api/user/v1/agent/calendar/slots",
+    "description": "List appointment slots",
+    "scope": "calendar:read"
+   },
+   {
+    "id": "calendar.slots.book",
+    "method": "POST",
+    "path": "/api/user/v1/agent/calendar/slots/{slot_id}/book",
+    "description": "Book an appointment slot as the current user",
+    "scope": "calendar:write"
+   },
+   {
+    "id": "calendar.invitations.respond",
+    "method": "POST",
+    "path": "/api/user/v1/agent/calendar/invitations/{event_key}/respond",
+    "description": "Respond to an event invitation (accepted/tentative/declined)",
+    "scope": "calendar:write"
+   },
+   {
+    "id": "contacts.search",
+    "method": "GET",
+    "path": "/api/user/v1/agent/contacts/search",
+    "description": "Search contacts across addressbooks (?q=)",
+    "scope": "contacts:read"
+   },
+   {
+    "id": "contacts.create",
+    "method": "POST",
+    "path": "/api/user/v1/agent/contacts",
+    "description": "Create a contact (addressbook_key optional)",
+    "scope": "contacts:write"
+   },
+   {
+    "id": "contacts.get",
+    "method": "GET",
+    "path": "/api/user/v1/agent/contacts/{key}",
+    "description": "Get one contact (?addressbook_key=)",
+    "scope": "contacts:read"
+   },
+   {
+    "id": "contacts.update",
+    "method": "PATCH",
+    "path": "/api/user/v1/agent/contacts/{key}",
+    "description": "Partial contact update (?addressbook_key=)",
+    "scope": "contacts:write"
+   },
+   {
+    "id": "contacts.delete",
+    "method": "DELETE",
+    "path": "/api/user/v1/agent/contacts/{key}",
+    "description": "Delete a contact (?addressbook_key=)",
+    "scope": "contacts:write"
+   },
+   {
+    "id": "contacts.addressbooks.list",
+    "method": "GET",
+    "path": "/api/user/v1/agent/contacts/addressbooks",
+    "description": "List addressbooks",
+    "scope": "contacts:read"
+   },
+   {
+    "id": "ai.summarize_mail",
+    "method": "POST",
+    "path": "/api/user/v1/agent/ai/summarize/{mail_uid}",
+    "description": "Summarize a mail (fetched server-side)",
+    "scope": "mail:read"
+   },
+   {
+    "id": "ai.suggest_reply",
+    "method": "POST",
+    "path": "/api/user/v1/agent/ai/suggest-reply/{mail_uid}",
+    "description": "Suggest a reply for a mail (fetched server-side)",
+    "scope": "mail:read"
+   },
+   {
+    "id": "ai.nl_search",
+    "method": "POST",
+    "path": "/api/user/v1/agent/ai/nl-search",
+    "description": "Natural language \u2192 structured mail search params",
+    "scope": "mail:read"
+   }
+  ]
+ },
+ "error_code": "S000000",
+ "error_msg": ""
+}

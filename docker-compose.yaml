@@ -618,6 +618,34 @@ services:
           cpus: "2.0"
           memory: 512M
 
+  # MCP sidecar: mirrors the agent action facade as MCP tools (streamable
+  # HTTP at /mcp). Holds no credentials/business logic — forwards the
+  # caller's bearer token. Enabled with: docker compose --profile agents up
+  sogo6-mcp:
+    profiles: ["agents"]
+    image: sogo6-mcp:dev
+    restart: unless-stopped
+    container_name: sogo6-mcp
+    labels: ["com.centurylinklabs.watchtower.enable=false"]  # local build
+    build:
+      context: ./deploy/sogo6-mcp
+      dockerfile: Dockerfile
+    environment:
+      # Facade mount (internal); the sidecar needs no DB/Redis access
+      SOGO_AGENT_API_URL: http://sogo6-server:5000/api/user/v1
+      SOGO_MCP_PORT: "9000"
+    ports:
+      - "127.0.0.1:9000:9000"  # bind localhost by default; front with a reverse proxy for remote agents
+    networks:
+      - sogo6-net
+    depends_on:
+      - sogo6-server
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+
 volumes:
   sogo6-postgres-data:
   sogo6-mariadb-data:

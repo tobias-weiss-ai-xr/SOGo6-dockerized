@@ -25,22 +25,22 @@ The system SHALL accept `Authorization: Bearer <token>` where the token starts w
 Every agent-facade endpoint SHALL declare the scope it requires, and the system SHALL reject authenticated requests whose token lacks that scope with HTTP 403 and error code `S000513`. The scopes `read`, `write`, and `admin` SHALL act as module-wide grants (`mail:*`, `calendar:*`, `contacts:*` respectively for `read`/`write`; `admin` grants all).
 
 #### Scenario: Insufficient scope rejected
-- **WHEN** a token with scopes `["mail:read"]` calls `POST /api/v1/agent/mail/send` (requires `mail:send`)
+- **WHEN** a token with scopes `["mail:read"]` calls `POST /api/user/v1/agent/mail/send` (requires `mail:send`)
 - **THEN** the system responds HTTP 403 with `S000513` and no mail is sent
 
 #### Scenario: Module-wide grant accepted
-- **WHEN** a token with scopes `["write"]` calls `POST /api/v1/agent/mail/send`
+- **WHEN** a token with scopes `["write"]` calls `POST /api/user/v1/agent/mail/send`
 - **THEN** the request is authorized because `write` grants `mail:send`
 
 ### Requirement: Agent endpoints never allow anonymous access
 Agent-facade endpoints SHALL reject unauthenticated requests with HTTP 401 regardless of any UI anonymous-guest configuration.
 
 #### Scenario: No credentials on facade
-- **WHEN** a request to `/api/v1/agent/*` carries no Authorization header
+- **WHEN** a request to `/api/user/v1/agent/*` carries no Authorization header
 - **THEN** the system responds HTTP 401 and the request is not dispatched
 
 ### Requirement: Admin-issued impersonation tokens
-An authenticated admin SHALL be able to create an impersonation token via `POST /api/v1/admin/impersonation-tokens` with a target user UID, scopes, optional label, and optional expiry. The token SHALL start with `sogoimp_`, SHALL bind the issuing admin and the target user, and SHALL only be created by an authenticated admin. Requests presenting it SHALL execute as the target user with the target user's ACLs and permissions.
+An authenticated admin SHALL be able to create an impersonation token via `POST /api/admin/v1/impersonation-tokens` with a target user UID, scopes, optional label, and optional expiry. The token SHALL start with `sogoimp_`, SHALL bind the issuing admin and the target user, and SHALL only be created by an authenticated admin. Requests presenting it SHALL execute as the target user with the target user's ACLs and permissions.
 
 #### Scenario: Admin creates impersonation token
 - **WHEN** an authenticated admin posts `{target_uid, scopes: ["mail:read"], label}` to the impersonation-token endpoint
@@ -51,7 +51,7 @@ An authenticated admin SHALL be able to create an impersonation token via `POST 
 - **THEN** module calls execute as user U under U's ACLs, and the access log records issuer and acted-as identity
 
 #### Scenario: Non-admin cannot issue impersonation tokens
-- **WHEN** a basic-tier (non-admin) credential calls `POST /api/v1/admin/impersonation-tokens`
+- **WHEN** a basic-tier (non-admin) credential calls `POST /api/admin/v1/impersonation-tokens`
 - **THEN** the system responds with the admin-authentication failure (HTTP 401/403) and no token is issued
 
 #### Scenario: Unknown target rejected

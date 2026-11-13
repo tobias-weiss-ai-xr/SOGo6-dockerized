@@ -6,11 +6,11 @@ AI agents (OpenCode, Pi, custom LLM pipelines) and the SOGo6 UI assistant cannot
 
 ## What Changes
 
-- **New blueprint `/api/v1/agent/`** with ~20 semantic action endpoints across mail, calendar, contacts, and AI-assist; thin controllers delegating to existing `Interface*`/`Module*` layers. Compact, token-efficient response shapes (message summaries without bodies, `strip_quotes`/`max_chars` on reads, inline attachments on send).
+- **New blueprint `/api/user/v1/agent/`** with ~20 semantic action endpoints across mail, calendar, contacts, and AI-assist; thin controllers delegating to existing `Interface*`/`Module*` layers. Compact, token-efficient response shapes (message summaries without bodies, `strip_quotes`/`max_chars` on reads, inline attachments on send).
 - **Wire API tokens into authentication**: `Authorization: Bearer sogo_…` resolved via `verify_api_token()` in the auth middleware; scope enforcement (`mail:read`, `mail:send`, `calendar:read`, `calendar:write`, `contacts:read`, `contacts:write`, `read`, `write`, `admin`) per endpoint via a `require_scope` guard. Facade always requires authentication (no anonymous path).
-- **Admin impersonation tokens**: `POST /api/v1/admin/impersonation-tokens` issues scoped `sogoimp_…` tokens bound to `(admin, target_uid)`; actions execute as the target user with the target's ACLs, logged as `admin → acted_as target`.
-- **Agent manifest + real OpenAPI**: `GET /api/v1/agent/manifest` returns the action catalog; facade endpoints carry full marshmallow schemas so `/openapi-basic.json` becomes agent-importable (tag `agent`).
-- **MCP sidecar** (`deploy/sogo6-mcp/` + compose service): FastMCP streamable-HTTP server exposing each facade action as one tool (≤25 tools), forwarding the user's bearer token, holding no credentials or state.
+- **Admin impersonation tokens**: `POST /api/admin/v1/impersonation-tokens` issues scoped `sogoimp_…` tokens bound to `(admin, target_uid)`; actions execute as the target user with the target's ACLs, logged as `admin → acted_as target`.
+- **Agent manifest + real OpenAPI**: `GET /api/user/v1/agent/manifest` returns the action catalog; facade endpoints carry full marshmallow schemas so `/openapi-basic.json` becomes agent-importable (tag `agent`).
+- **MCP sidecar** (`deploy/sogo6-mcp/` + compose service): FastMCP streamable-HTTP server exposing each facade action as one tool (≤30 tools; the v1 catalog has 26), forwarding the user's bearer token, holding no credentials or state.
 - **UI AI panel action executor**: the UI assistant's outputs can carry a structured `action` object (send draft, create event, create contact) that the user executes with one click against the facade — reviewed, not auto-executed.
 - New error codes: `S000513 SCOPE_INSUFFICIENT`, `S000514 IMPERSONATION_TARGET_INVALID`.
 
@@ -29,7 +29,7 @@ Non-goals (v1): no SSE/streaming on the facade, no batch JSON-RPC, no cross-user
 
 ## Impact
 
-- **sogo6-server** `app/__init__.py` (`register_before_request`/`get_user` token branch), new `app/api/v1/agent/` blueprint + schemas, `app/api/v1/user/ApiApiTokens.py` (scope constants shared), new admin endpoint in `app/api/v1/admin/`, `app/utils/errors.py` (2 new codes).
+- **sogo6-server** `app/__init__.py` (`register_before_request`/`get_user` token branch), new `app/api/user/v1/agent/` blueprint + schemas, `app/api/v1/user/ApiApiTokens.py` (scope constants shared), new admin endpoint in `app/api/v1/admin/`, `app/utils/errors.py` (2 new codes).
 - **Deployment**: new compose service `sogo6-mcp` (`deploy/sogo6-mcp/`, Dockerfile + ~300-line FastMCP app).
 - **sogo6-ui**: AI panel action-executor component (submodule bump).
 - **Tests**: scope-matrix unit tests, facade integration tests on the live stack (token create → act → revoke → 401), OpenAPI snapshot, manifest==facade==MCP single-source test.
