@@ -12,6 +12,7 @@ Run:  SOGO_AGENT_API_URL=http://sogo6-server:5000/api/user/v1 python server.py
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import time
@@ -24,6 +25,13 @@ from fastmcp.tools import Tool
 
 API_URL = os.environ.get("SOGO_AGENT_API_URL", "http://sogo6-server:5000/api/user/v1").rstrip("/")
 PORT = int(os.environ.get("SOGO_MCP_PORT", "9000"))
+
+# Build-time copy of the facade's ACTIONS registry (gen_manifest_snapshot.py).
+# The live /agent/manifest endpoint is authenticated (the facade rejects
+# anonymous callers), so an uncredentialed sidecar can never fetch it at
+# boot; the snapshot keeps the exported tool list correct without the
+# sidecar holding any credentials.
+SNAPSHOT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "manifest_snapshot.json")
 
 mcp = FastMCP(
     "sogo6",
@@ -108,12 +116,12 @@ def _register_tools(manifest: dict) -> int:
     return count
 
 
-def load_manifest(max_attempts: int = 30, delay: float = 2.0) -> dict:
-    """Fetch the action manifest from the facade, retrying while it boots.
+def load_manifest(max_attempts: int = 3, delay: float = 1.0) -> dict:
+    """Fetch the action manifest from the facade (best effort, brief retry).
 
-    The sidecar's depends_on only orders container start; the facade may
-    still be warming up. A bounded retry (~60s) avoids a startup
-    crash-loop when the server is slower than the sidecar.
+    Transient boot 503s from a warming facade are retried a couple of times;
+    any remaining failure is handled by the caller via the bundled snapshot
+    (see ``_resolve_manifest``).
     """
     last_error: Exception | None = None
     for _attempt in range(max_attempts):
@@ -128,13 +136,42 @@ def load_manifest(max_attempts: int = 30, delay: float = 2.0) -> dict:
     raise RuntimeError(f"facade manifest unavailable at {API_URL}/agent/manifest: {last_error}")
 
 
+def _load_snapshot() -> dict:
+    """Read the bundled manifest snapshot (full facade envelope)."""
+    with open(SNAPSHOT_FILE) as fh:
+        return json.load(fh)
+
+
+def _resolve_manifest() -> dict:
+    """Live manifest when reachable, otherwise the bundled snapshot.
+
+    The live path keeps the tool list current on facades that grant the
+    sidecar access (e.g. test/demo hosts). On real deployments the facade's
+    /agent/manifest is authenticated, the fetch fails with 401, and the
+    snapshot is used — the exported tools stay identical to the ACTIONS
+    registry because the snapshot is generated from that same source.
+    """
+    try:
+        manifest = load_manifest()
+        print(f"sogo6-mcp: {len(manifest.get('data', {}).get('actions', []))} tools from live manifest {API_URL}", flush=True)
+        return manifest
+    except Exception as exc:  # noqa: BLE001 - any fetch failure falls back
+        try:
+            snapshot = _load_snapshot()
+            actions = snapshot.get("data", {}).get("actions", [])
+            print(f"sogo6-mcp: live manifest unavailable ({exc}); using bundled snapshot ({len(actions)} actions)", flush=True)
+            return snapshot
+        except Exception as snap_exc:
+            raise RuntimeError(f"manifest unavailable (live: {exc}; snapshot: {snap_exc})") from exc
+
+
 def build() -> FastMCP:
-    """Fetch the manifest and register tools (server entry + tests)."""
-    _register_tools(load_manifest())
+    """Fetch the manifest (or snapshot) and register tools (server entry + tests)."""
+    _register_tools(_resolve_manifest())
     return mcp
 
 
 if __name__ == "__main__":
-    tool_count = _register_tools(load_manifest())
-    print(f"sogo6-mcp: {tool_count} tools from {API_URL}/agent/manifest", flush=True)
+    tool_count = _register_tools(_resolve_manifest())
+    print(f"sogo6-mcp: {tool_count} tools ready", flush=True)
     mcp.run(transport="http", host="0.0.0.0", port=PORT, path="/mcp")

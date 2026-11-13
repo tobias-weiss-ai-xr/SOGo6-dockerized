@@ -6,6 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server.py .
+COPY manifest_snapshot.json .
 
 # Non-root
 RUN useradd -m -u 10001 sogo

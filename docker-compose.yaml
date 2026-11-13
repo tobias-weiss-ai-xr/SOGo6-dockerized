@@ -634,6 +634,14 @@ services:
       # Facade mount (internal); the sidecar needs no DB/Redis access
       SOGO_AGENT_API_URL: http://sogo6-server:5000/api/user/v1
       SOGO_MCP_PORT: "9000"
+      # Docker injects the daemon's proxy env into containers; bypass it for
+      # internal sogo6-net calls (else an external proxy 503s on the facade).
+      http_proxy: ""
+      https_proxy: ""
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      no_proxy: "sogo6-server,localhost,127.0.0.1,172.16.0.0/12,172.20.0.0/16"
+      NO_PROXY: "sogo6-server,localhost,127.0.0.1,172.16.0.0/12,172.20.0.0/16"
     ports:
       - "127.0.0.1:9000:9000"  # bind localhost by default; front with a reverse proxy for remote agents
     networks:

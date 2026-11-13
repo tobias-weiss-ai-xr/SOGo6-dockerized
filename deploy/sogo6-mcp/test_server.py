@@ -45,6 +45,36 @@ def _tool_dict():
     return {t.name: t for t in asyncio.run(_tool_list())}
 
 
+class TestManifestResolution:
+    """Live fetch first, bundled snapshot as fallback (real facades return 401
+    to an uncredentialed sidecar, so boot must not hard-fail)."""
+
+    def test_resolve_prefers_live_manifest(self, monkeypatch):
+        fake = {"data": {"actions": [{"id": "agent.manifest", "method": "GET",
+                                        "path": "/api/user/v1/agent/manifest",
+                                        "scope": "read", "description": "d"}]}}
+        monkeypatch.setattr(server, "load_manifest", lambda **kw: fake)
+        assert server._resolve_manifest() is fake
+
+    def test_resolve_falls_back_to_snapshot(self, monkeypatch):
+        def boom(**kw):
+            raise RuntimeError("401 UNAUTHORIZED")
+        monkeypatch.setattr(server, "load_manifest", boom)
+        manifest = server._resolve_manifest()
+        actions = manifest["data"]["actions"]
+        assert len(actions) == len(_manifest()["data"]["actions"]) == 27
+        assert "agent.manifest" in {a["id"] for a in actions}
+
+    def test_build_registers_tools_from_snapshot(self, monkeypatch):
+        def boom(**kw):
+            raise RuntimeError("401 UNAUTHORIZED")
+        monkeypatch.setattr(server, "load_manifest", boom)
+        server.build()
+        tools = _tool_dict()
+        assert "agent.manifest" in tools
+        assert len(tools) >= 27
+
+
 class TestToolParity:
     def test_every_action_is_a_tool(self):
         server._register_tools(_manifest())
