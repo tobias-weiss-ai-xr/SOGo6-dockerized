@@ -655,7 +655,7 @@ services:
         - CMD
         - python
         - -c
-        - "import sys,json,urllib.request as u; b=json.dumps({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'hc','version':'0'}}}).encode(); r=u.urlopen(u.Request('http://127.0.0.1:9000/mcp',data=b,headers={'Content-Type':'application/json','Accept':'application/json'}),timeout=5); sys.exit(0 if r.status==200 else 1)"
+        - "import sys,json,urllib.request as u; b=json.dumps({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'hc','version':'0'}}}).encode(); r=u.urlopen(u.Request('http://127.0.0.1:9000/mcp',data=b,headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'}),timeout=5); sys.exit(0 if r.status==200 else 1)"
       interval: 15s
       timeout: 8s
       retries: 5
