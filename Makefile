@@ -141,6 +141,24 @@ dev-ldap-tools:
 dev-agent:
 	docker compose $(DEV_COMPOSE) --profile agent up -d
 
+# Agent action layer: MCP sidecar (profile: agents)
+dev-mcp:
+	docker compose $(DEV_COMPOSE) --profile agents up -d sogo6-mcp
+
+mcp-build:
+	docker compose $(DEV_COMPOSE) --profile agents build sogo6-mcp
+
+# Regenerate the MCP sidecar's manifest snapshot from the facade's ACTIONS
+# registry (run after adding/renaming actions; the sidecar's tool list is
+# registry-exact only while the snapshot is current).
+snapshot:
+	cd sogo6-server && ../deploy/sogo6-mcp/gen_manifest_snapshot.py
+
+# MCP sidecar tests (needs ./deploy/sogo6-mcp/.venv with fastmcp+httpx+pytest)
+#   python3 -m venv deploy/sogo6-mcp/.venv && deploy/sogo6-mcp/.venv/bin/pip install -r deploy/sogo6-mcp/requirements.txt pytest
+test-mcp:
+	deploy/sogo6-mcp/.venv/bin/python -m pytest deploy/sogo6-mcp/test_server.py -q
+
 dev-minio:
 	docker compose $(DEV_COMPOSE) --profile minio up -d
 

@@ -648,6 +648,18 @@ services:
       - sogo6-net
     depends_on:
       - sogo6-server
+    healthcheck:
+      # Minimal MCP initialize round-trip; the slim image has no curl/wget, and
+      # a bare GET /mcp needs an MCP session (400), so probe via a POST.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,json,urllib.request as u; b=json.dumps({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'hc','version':'0'}}}).encode(); r=u.urlopen(u.Request('http://127.0.0.1:9000/mcp',data=b,headers={'Content-Type':'application/json','Accept':'application/json'}),timeout=5); sys.exit(0 if r.status==200 else 1)"
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 10s
     deploy:
       resources:
         limits:

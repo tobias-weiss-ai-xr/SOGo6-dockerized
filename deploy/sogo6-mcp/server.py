@@ -17,6 +17,7 @@ import os
 import re
 import time
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 from fastmcp import FastMCP
@@ -67,9 +68,14 @@ def _forward(method: str, path_template: str, payload: dict[str, Any]) -> Any:
 
 
 def _substitute(template: str, params: dict[str, Any]) -> str:
+    """Substitute ``{param}`` placeholders with URL-encoded values.
+
+    Values are percent-encoded (safe="") so path segments can never smuggle
+    slashes, query separators or braces into the facade URL.
+    """
     out = template
     for key, value in params.items():
-        out = out.replace("{" + key + "}", str(value))
+        out = out.replace("{" + key + "}", quote(str(value), safe=""))
     return out
 
 

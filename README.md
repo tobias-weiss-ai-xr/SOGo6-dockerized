@@ -29,6 +29,7 @@ graph TD
     ldap["OpenLDAP<br/>Authentication"]
     stalwart["Stalwart<br/>Mail / IMAP / SMTP"]
     monitoring["Monitoring <i>(optional)</i><br/>Prometheus · Grafana · Loki · Promtail"]
+    mcp["MCP Sidecar <i>(optional)</i><br/>agent tools · :9000"]
 
     ingress -- "/api" --> server
     ingress -- "/" --> ui
@@ -37,6 +38,8 @@ graph TD
     server --> db
     server --> ldap
     server --> stalwart
+    mcp -.->|"agent facade"| server
+    mcp -- "MCP tools" --> mcp_client["AI client<br/>Claude / Cursor / ..."]
     ldap --> monitoring
 ```
 ```
@@ -95,6 +98,7 @@ docker compose --profile mail-stalwart --profile db-postgres --profile auth-ldap
 | `auth-ldap` | OpenLDAP user directory | `docker compose --profile auth-ldap up -d` |
 | `nginx` | Nginx reverse proxy + TLS | `docker compose --profile nginx up -d` |
 | `agent` | Celery async job worker | `docker compose --profile agent up -d` |
+| `agents` | MCP sidecar (agent action tools on :9000) | `docker compose --profile agents up -d` |
 | `minio` | S3-compatible object storage | `docker compose --profile minio up -d` |
 | `monitoring` | Prometheus + Grafana + Loki | `docker compose --profile monitoring up -d` |
 
@@ -145,7 +149,7 @@ bash sogo6/scripts/init-sogo6.sh
 
 **Admin**: System config, domain/rule/user management, DNS wizard, theme/branding, backup, DB migration, audit log, usage quotas, webhooks, approval workflows, helpdesk, CRM-light, workflow builder
 
-**AI/Intelligence**: Smart calendar, spam filter, meeting transcripts, scheduling polls, appointment slots
+**AI/Intelligence**: Smart calendar, spam filter, meeting transcripts, scheduling polls, appointment slots, AI mail assistant (summarize/suggest-reply), **agent action layer** (MCP tools + UI one-click assistant actions)
 
 **Collaboration**: Shared drafts, file sharing, resource booking, collaborative document editing (Collabora)
 
@@ -178,6 +182,33 @@ docker compose up -d
 ```
 Supports any target host: `./run-e2e-tests.sh --host vhrz2392`
 
+## Agent Action Layer
+
+SOGo6 exposes a machine-usable **agent action facade** under `/api/user/v1/agent/*` — 27 actions
+covering mail (send/drafts/folders/search/batch), calendar (events/free-busy/slots/invitations),
+contacts (CRUD/search) and AI assist (summarize/suggest-reply/natural-language search).
+
+- **Single source of truth**: every action is registered in the facade's `ACTIONS` registry and
+  advertised through `GET /api/user/v1/agent/manifest` (scopes, methods, paths, descriptions).
+- **Auth**: API-token bearer tokens (`sogo_…` user, `sogoimp_…` impersonation) with explicit
+  scopes (`read` / `write` / `admin` / domain-specific) — see `docs/specs` and the agent-auth
+  spec. The facade **never** serves anonymous calls; missing/invalid bearer → `S000203`/`S000510`.
+- **MCP sidecar** (`deploy/sogo6-mcp`, profile `agents`): exposes the whole facade as one MCP
+  tool per action on `127.0.0.1:9000`, forwarding the client's bearer token verbatim.
+  See [`deploy/sogo6-mcp/README.md`](deploy/sogo6-mcp/README.md).
+- **UI assistant actions**: the AI panel can attach reviewable one-click actions (send draft,
+  create event, create contact) executed through the same facade with the browser session.
+
+```bash
+# Bring up the sidecar
+make dev-mcp            # or: docker compose --profile agents up -d sogo6-mcp
+
+# Check it (login -> manifest -> MCP tool)
+curl -s -X POST http://127.0.0.1:5001/api/user/v1/auth/login -H "Content-Type: application/json" \
+  -d '{"username":"you@example.org","password":"..."}' | jq .data.jwt_token
+docker compose --profile agents ps          # sogo6-mcp  healthy
+```
+
 ## Observability
 
 ### Metrics (Prometheus)
@@ -193,8 +224,13 @@ frontend tests in `sogo6-ui/src/**/__tests__/` (568 jest files). The
 protocol/feature suite (API, parity, soak) lives in the sibling
 [`SOGo6-testsuite`](../SOGo6-testsuite) repo (`bin/sg`).
 
+The agent action layer has its own suites: `tests/test_service/test_AgentSpecContract.py`
+(spec-contract + scenario traceability, server), `src/components/__tests__/action-executor.test.tsx`
+(UI), and `deploy/sogo6-mcp/test_server.py` (sidecar).
+
 ```bash
 make test           # backend + frontend unit tests
+make test-mcp       # MCP sidecar tests (needs deploy/sogo6-mcp/.venv)
 make test-smoke     # quick health check (API + UI)
 make test-contract  # hypothesis property-based tests
 make test-dev       # tests inside the dev container
@@ -238,6 +274,7 @@ assessment significantly less costly:
 ├── docker-compose.yaml   # Production stack
 ├── helm/sogo6/           # Kubernetes Helm chart
 ├── deploy/               # Deployment configs + gitops
+│   └── sogo6-mcp/        #  MCP sidecar (agent action tools)
 ├── sogo6/                # Service configs
 │   ├── loki/             #  Loki/Promtail configuration
 │   ├── grafana/          #  Grafana datasource provisioning

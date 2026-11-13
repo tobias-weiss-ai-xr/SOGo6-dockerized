@@ -63,6 +63,32 @@ make test
 cd ../SOGo6-testsuite && bin/sg run --target sogo6
 ```
 
+### Agent action layer suites
+
+The agent facade + auth, the MCP sidecar and the UI executor each have dedicated suites:
+
+```bash
+# Server — spec-contract + behaviour (37 tests, incl. facade/auth/registry/OpenAPI)
+cd sogo6-server && \
+  SOGO_P_VOUCHER_SECRET=... SOGO_AES_ENC_KEY=... .venv/bin/python -m pytest \
+    tests/test_service/test_AgentSpecContract.py tests/test_service/test_AgentFacade.py \
+    tests/test_service/test_AgentAuth.py tests/test_integration/test_agent_actions.py -q
+
+# MCP sidecar — tool parity, token passthrough, snapshot fallback (10 tests)
+make test-mcp          # requires deploy/sogo6-mcp/.venv (fastmcp + httpx + pytest)
+
+# E2E smoke — fake facade + real sidecar over streamable HTTP
+# docker run: see deploy/sogo6-mcp/README.md
+
+# UI — action executor + agent client (11 tests)
+cd sogo6-ui && npx jest src/components/__tests__/action-executor.test.tsx src/lib/api/__tests__/agent.test.ts --coverage=false
+```
+
+> With a reachable facade (S 5001), the sidecar fetches the manifest live; otherwise it falls
+> back to `deploy/sogo6-mcp/manifest_snapshot.json`. Regenerate that snapshot after any change to
+> the `ACTIONS` registry: `make snapshot`.
+
+
 ### Run in Dev Environment
 
 ```bash

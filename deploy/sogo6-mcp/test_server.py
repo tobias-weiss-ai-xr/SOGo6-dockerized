@@ -100,6 +100,14 @@ class TestToolParity:
         send_draft = tools["mail.drafts.send"].parameters
         assert "key" in send_draft.get("required", []), send_draft
 
+    def test_path_param_values_are_url_encoded(self):
+        """Path values must be percent-encoded (no slash/query smuggling)."""
+        url = server._substitute(
+            "/agent/mail/folders/{key}/messages/{uid}",
+            {"key": "a/b?c&d", "uid": "42"},
+        )
+        assert url == "/agent/mail/folders/a%2Fb%3Fc%26d/messages/42"
+
 
 class TestTokenPassthrough:
     def test_missing_token_reported(self, monkeypatch):
