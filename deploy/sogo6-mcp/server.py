@@ -177,7 +177,12 @@ def build() -> FastMCP:
     return mcp
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Server entrypoint: register tools from the manifest and serve HTTP."""
     tool_count = _register_tools(_resolve_manifest())
     print(f"sogo6-mcp: {tool_count} tools ready", flush=True)
     mcp.run(transport="http", host="0.0.0.0", port=PORT, path="/mcp")
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover - process entrypoint, exercised via test_main()

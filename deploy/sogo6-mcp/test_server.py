@@ -75,6 +75,117 @@ class TestManifestResolution:
         assert len(tools) >= 27
 
 
+class TestForwardErrors:
+    """Edge paths of the pass-through forwarder."""
+
+    def test_non_json_response_becomes_http_envelope(self, monkeypatch):
+        """A non-JSON facade reply (e.g. proxy error page) must not crash and
+        must be surfaced as an HTTP_<status> envelope."""
+
+        class FakeResp:
+            status_code = 502
+            text = "<html>bad gateway</html>"
+
+            def json(self):
+                raise ValueError("no json")
+
+        class FakeClient:
+            def __init__(self, timeout=None):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def request(self, method, url, **kwargs):
+                return FakeResp()
+
+        monkeypatch.setattr(server.httpx, "Client", FakeClient)
+        monkeypatch.setattr(server, "get_http_headers", lambda **kw: {"authorization": "Bearer x"})
+        result = server._forward("GET", "/agent/mail/folders", {})
+        assert result == {"error_code": "HTTP_502", "error_msg": "<html>bad gateway</html>"}
+
+
+class TestLoadManifest:
+    """Retry-failure and success paths of the manifest fetch."""
+
+    def test_exhausts_retries_and_raises(self, monkeypatch):
+        calls = {"n": 0}
+
+        class FakeClient:
+            def __init__(self, timeout=None):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def get(self, url):
+                calls["n"] += 1
+                raise httpx.ConnectError("boom")
+
+        monkeypatch.setattr(server.httpx, "Client", FakeClient)
+        with pytest.raises(RuntimeError, match="boom"):
+            server.load_manifest(max_attempts=2, delay=0)
+        assert calls["n"] == 2
+
+    def test_returns_json_on_success(self, monkeypatch):
+        class FakeResp:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"data": {"actions": []}}
+
+        class FakeClient:
+            def __init__(self, timeout=None):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def get(self, url):
+                assert url == f"{server.API_URL}/agent/manifest"
+                return FakeResp()
+
+        monkeypatch.setattr(server.httpx, "Client", FakeClient)
+        assert server.load_manifest() == {"data": {"actions": []}}
+
+
+class TestManifestResolutionBroken:
+    """Both live fetch and snapshot failing must surface a clear error."""
+
+    def test_both_live_and_snapshot_fail_raises(self, monkeypatch):
+        def boom(**kw):
+            raise RuntimeError("live down")
+
+        def snap_boom():
+            raise FileNotFoundError("no snapshot")
+
+        monkeypatch.setattr(server, "load_manifest", boom)
+        monkeypatch.setattr(server, "_load_snapshot", snap_boom)
+        with pytest.raises(RuntimeError, match="live down; snapshot: no snapshot"):
+            server._resolve_manifest()
+
+
+class TestMain:
+    def test_main_registers_tools_and_runs_http(self, monkeypatch):
+        monkeypatch.setattr(server, "_resolve_manifest", lambda: _manifest())
+        captured = {}
+        monkeypatch.setattr(server.mcp, "run", lambda **kw: captured.update(kw))
+        server.main()
+        assert captured["transport"] == "http"
+        assert captured["path"] == "/mcp"
+        assert captured["port"] == server.PORT
+
+
 class TestToolParity:
     def test_every_action_is_a_tool(self):
         server._register_tools(_manifest())
